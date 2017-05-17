@@ -1,35 +1,66 @@
 /*reservation js operations*/
-function getModalSelection(type, modal, ID, value, weekday, weekend, holiday) {
-    var output_field = "#guest_" + type;
-    var hidden_field = "#guest_" + type + "_id";
+function getModalSelection(prefix, type, modal, ID, value, weekday, weekend, holiday) {
+    var output_field = "#" + prefix + "_" + type;
+    var hidden_field = "#" + prefix + "_" + type + "_id";
     console.log('output_field ' + output_field);
     console.log('hidden_field ' + hidden_field);
     $(hidden_field).val(ID);
     $(output_field).val(value);
-    $('#guest_weekday').val(weekday);
-    $('#guest_weekend').val(weekend);
-    $('#guest_holiday').val(holiday);
-    if (type == "roomtype") {
-        $('#guest_room_number').val("");
-        $('#guest_room_number_id').val("");
-        $('#guest_price_rate').val("");
-        $('#guest_price_rate_id').val("");
-        console.log('weekday ' + weekday);
-        console.log('weekend ' + weekend);
-        console.log('holiday ' + holiday);
+
+    if (prefix == "guest") {
+        $('#guest_weekday').val(weekday);
+        $('#guest_weekend').val(weekend);
+        $('#guest_holiday').val(holiday);
+        if (type == "roomtype") {
+            $('#guest_room_number').val("");
+            $('#guest_room_number_id').val("");
+            $('#guest_price_rate').val("");
+            $('#guest_price_rate_id').val("");
+            console.log('weekday ' + weekday);
+            console.log('weekend ' + weekend);
+            console.log('holiday ' + holiday);
+        }
     }
+
     $(modal).modal('hide');
-    reservation.calcRoomPrice();
+    if (prefix == "guest") {
+        reservation.calcRoomPrice();
+    }
 
 }
 
-function fetchModalGridData(grid_type) {
+function closeResvModal(modal){
+    $(modal).removeClass("in").css('display', 'none');
+    location.reload();}
+
+function deleteReservation() {
+    /*chk if resv is not departed,..
+     * show prompt for confirmation & remark..
+     * if yes & remark exists on prompt update reservation status to cancelled,
+     * log details of this action,
+     * display updated cancelled resrvations*/
+
+    var resv_id = $('.booking_radio.active .booking_hidden_id').val();
+    var status = $('.booking_radio.active .booking_hidden_status').text();
+    console.log('status is ' + status);
+    if (status !== "departed") {
+        $("#delete_resv_reason").val("");
+        $("#delete_resv_id").val(resv_id);
+        $("#delete_resv_type").val("reservation");
+        $("#delete_resv_oldvalue").val(status);
+        $("#delete_resv_newvalue").val("cancelled");
+        $("#delete_resv_modal").modal({backdrop: false, keyboard: false});
+    }
+}
+
+function fetchModalGridData(prefix, grid_type) {
     var url = "";
     console.log('grid_type ' + grid_type);
     switch (grid_type) {
         case 'room_number':
         case 'price_rate':
-            var roomtype = $('#guest_roomtype').val();
+            var field = "#" + prefix + "_roomtype";
+            var roomtype = $(field).val();
             var trimedroomtype = roomtype.trim();
             if (trimedroomtype) {
                 url = BASE_URL + "resv/fetchModalData/" + grid_type + "/0/" + trimedroomtype;
@@ -107,7 +138,7 @@ function fetchModalGridData(grid_type) {
                     ];
                     break;
             }
-            reservation.grid(datafields_data, columndata, data, grid_type, "100%");
+            reservation.grid(datafields_data, columndata, data, grid_type, "100%", prefix);
 
         },
         error: function () {
@@ -211,8 +242,11 @@ var reservation = {
         //search for client, if not existing prompt staff to add
 
     },
-    grid: function (datafields_data, columndata, fetched_data, grid_type, width) {
-        var weekday = $('#guest_weekday').val(), weekend = $('#guest_weekend').val(), holiday = $('#guest_holiday').val();
+    grid: function (datafields_data, columndata, fetched_data, grid_type, width, prefix) {
+        if (prefix == "guest") {
+            var weekday = $('#guest_weekday').val(), weekend = $('#guest_weekend').val(), holiday = $('#guest_holiday').val();
+        }
+
         var select_button = "#" + grid_type + "_popup_select";
         var grid_location = "#" + grid_type + "_popup_data";
         var modal = "#" + grid_type + "_popup_modal";
@@ -245,7 +279,7 @@ var reservation = {
             var row_data = args.row;
             var ID = row_data.ID;
             var title = row_data.title;
-            if (grid_type == "price_rate") {
+            if (grid_type == "price_rate" && (prefix == "guest")) {
                 weekday = row_data.weekday;
                 weekend = row_data.weekend;
                 holiday = row_data.holiday;
@@ -253,7 +287,7 @@ var reservation = {
             console.log('single ID ' + ID);
             console.log('single title ' + title);
             console.log('single weekend ' + weekend);
-            $(select_button).attr("onclick", "getModalSelection('" + grid_type + "','" + modal + "','" + ID + "','" + title + "','" + weekday + "','" + weekend + "','" + holiday + "')");
+            $(select_button).attr("onclick", "getModalSelection('" + prefix + "','" + grid_type + "','" + modal + "','" + ID + "','" + title + "','" + weekday + "','" + weekend + "','" + holiday + "')");
         });
 
         $(grid_location).on('rowdoubleclick', function (event) {
@@ -262,15 +296,15 @@ var reservation = {
             var data = $(grid_location).jqxGrid('getrowdata', rowid);
             var ID = data.ID;
             var title = data.title;
-            if (grid_type == "price_rate") {
+            if (grid_type == "price_rate" && (prefix == "guest")) {
                 weekday = data.weekday;
                 weekend = data.weekend;
                 holiday = data.holiday;
             }
             console.log('dblclick: ' + title);
-            getModalSelection(grid_type, modal, ID, title, weekday, weekend, holiday);
+            getModalSelection(prefix, grid_type, modal, ID, title, weekday, weekend, holiday);
         });
-//
+
         $(grid_location).jqxGrid('selectrow', 0);
         $(modal).modal({backdrop: false, keyboard: false});
     }

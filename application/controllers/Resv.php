@@ -6,6 +6,8 @@ class Resv extends App {
 
     public function __construct() {
         parent::__construct();
+        $this->data['rooms'] = $this->app_model->getDisplayedItems('room')['data'];
+        $this->data['prices'] = $this->app_model->getDisplayedItems('price')['data'];
     }
 
     public function searchClient($type, $search_phrase) {
@@ -15,7 +17,108 @@ class Resv extends App {
         echo $results;
     }
 
-    public function showReservation($type, $ID = 0, $action = "", $errors = FALSE) {
+    public function checkIn($mode, $resv_ID, $errors = FALSE) {
+        /* get reservation details, set mode */
+
+        $this->chkLoggedIn();
+        $access = $this->session->reservation;
+        if ($access < 2) {//read access
+            $redirect = "app";
+            redirect($redirect);
+        }
+        $data = $this->data;
+        $data["header_title"] = ucwords("checkin");
+        $data["type"] = "reservation";
+        $data["module"] = "reservation";
+        $data["mode"] = $mode;
+
+        if ($errors) {
+            $data['received'][0]['form_error'] = $this->session->form_error;
+            $data['received'][0]['ID'] = $this->input->post('checkin_ID');
+            $data['received'][0]['reservation_id'] = $this->input->post('checkin_reservation_id');
+            $data['received'][0]['price_title'] = $this->input->post('checkin_price_title');
+            $data['received'][0]['room_number_id'] = $this->input->post('checkin_room_number_id');
+            $data['received'][0]['mode'] = $this->input->post('checkin_mode');
+            $data['received'][0]['nights'] = $this->input->post('checkin_nights');
+            $data['received'][0]['reservation_id'] = $this->input->post('checkin_reservation_id');
+            $data['received'][0]['client_name'] = $this->input->post('checkin_client_name');
+            $data['received'][0]['guest2'] = $this->input->post('checkin_guest2');
+            $data['received'][0]['roomtype'] = $this->input->post('checkin_roomtype');
+            $data['received'][0]['room_number'] = $this->input->post('checkin_room_number');
+            $data['received'][0]['price_rate'] = $this->input->post('checkin_price_rate');
+            $data['received'][0]['status'] = $this->input->post('checkin_status');
+            $data['received'][0]['weekday'] = $this->input->post('checkin_weekday');
+            $data['received'][0]['weekend'] = $this->input->post('checkin_weekend');
+            $data['received'][0]['holiday'] = $this->input->post('checkin_holiday');
+            $data['arrivaldate'] = $this->input->post('checkin_arrival');
+            $data['departuredate'] = $this->input->post('checkin_departure');
+        } else {
+            $data['received'] = $this->resv_model->getClientResvInfo($resv_ID);
+            $data['received'][0]['form_error'] = "";
+            $data['arrival'] = $data['received'][0]['arrival'];
+            $data['departure'] = $data['received'][0]['departure'];
+        }
+
+        if (!file_exists(APPPATH . 'views/app/templates/checkin' . '.php')) {
+            echo base_url() . 'views/app/templates/checkin' . '.php';
+            show_404();
+        }
+
+        $this->load->view('app/scripts/header_scripts_side_navigation', $data);
+        $this->load->view('app/templates/top_reservation', $data);
+        $this->load->view('app/templates/checkin', $data);
+        $this->load->view('app/scripts/footer', $data);
+    }
+
+    public function processCheckin() {
+        $this->chkLoggedIn();
+        $access = $this->session->reservation;
+        if ($access < 3) {//write access
+            $redirect = "app";
+            redirect($redirect);
+        }
+        $room_number_id = $this->input->post('checkin_room_number_id');
+        $mode = $this->input->post('checkin_mode');
+        $ID = $this->input->post('checkin_ID');
+        $reservation_id = $this->input->post('checkin_reservation_id');
+        if ($this->resv_model->checkin($ID, $room_number_id)) {
+            //GO TO STAYING 
+            $redirect = "resv/staying";
+            redirect($redirect);
+        } else {
+            $this->session->set_flashdata('form_error', "Room is not vacant, select another");
+            $errors = TRUE;
+            $this->checkIn($mode, $reservation_id, $errors);
+        }
+    }
+
+    public function processResvDelete() {
+        $this->chkLoggedIn();
+        $access = $this->session->delete_group;
+        if ($access < 1) {//delete access
+            $redirect = "app";
+            redirect($redirect);
+        }
+
+        $this->form_validation->set_rules('delete_resv_reason', 'Reason', 'required');
+        $redirect = $this->session->back_uri;
+
+        if ($this->form_validation->run() == FALSE) {
+            $this->session->set_flashdata('delete_error', validation_errors());            
+            redirect($redirect);
+        } else {
+            $res_id = $this->resv_model->deleteResv();
+            if ($res_id) {
+                $redirect = "resv/cancelled";
+                redirect($redirect);
+            } else {
+                $this->session->set_flashdata('delete_error', "Delete Operation Failed");
+                redirect($redirect);
+            }
+        }
+    }
+
+    public function showReservation($type, $resv_ID = 0, $page_number = 0, $action = "", $mode = "", $errors = FALSE) {
         /* displays paginised list of items */
 
         $this->chkLoggedIn();
@@ -29,11 +132,20 @@ class Resv extends App {
         $data["type"] = "reservation";
         $data["module"] = "reservation";
         $data["action"] = $action;
+        $data['received'][0]['price_title'] = "";
+        $data['received'][0]['arrival_error'] = "";
+        $data['received'][0]['client_name_error'] = "";
+        $data['received'][0]['roomtype_error'] = "";
+        $data['received'][0]['price_rate_error'] = "";
+        $data['received'][0]['form_error'] = "";
 
         $item_id = $type . "_ID";
         $item_action = $type . "_action";
+        $item_page_number = $type . "_page_number";
         $item_client_type = $type . "_client_type";
         $item_status = $type . "_status";
+        $item_arrival = $type . "_arrival";
+        $item_departure = $type . "_departure";
         $item_client_name = $type . "_client_name";
         $item_nights = $type . "_nights";
         $item_agency_name = $type . "_agency_name";
@@ -70,6 +182,7 @@ class Resv extends App {
             $data['received'][0]['roomtype_error'] = $this->session->roomtype_error;
             $data['received'][0]['price_rate_error'] = $this->session->price_rate_error;
             $data['received'][0]['action'] = $this->input->post($item_action);
+            $data['received'][0]['page_number'] = $this->input->post($item_page_number);
             $data['received'][0]['ID'] = $this->input->post($item_id);
             $data['received'][0]['client_type'] = $this->input->post($item_client_type);
             $data['received'][0]['status'] = $this->input->post($item_status);
@@ -100,13 +213,19 @@ class Resv extends App {
             $data['received'][0]['roomtype_id'] = $this->input->post($item_roomtype_id);
             $data['received'][0]['room_number_id'] = $this->input->post($item_room_number_id);
             $data['received'][0]['price_rate_id'] = $this->input->post($item_price_rate_id);
-        } else {
-            $data['received'][0]['form_error'] = "";
+            $data['arrivaldate'] = $this->input->post($item_arrival);
+            $data['departuredate'] = $this->input->post($item_departure);
+        } elseif (!empty($resv_ID)) {
+            $data['received'] = $this->resv_model->getClientResvInfo($resv_ID);
+            $data['received'][0]['ID'] = $resv_ID;
+            $data['arrival'] = $data['received'][0]['arrival'];
+            $data['departure'] = $data['received'][0]['departure'];
             $data['received'][0]['arrival_error'] = "";
             $data['received'][0]['client_name_error'] = "";
             $data['received'][0]['roomtype_error'] = "";
             $data['received'][0]['price_rate_error'] = "";
-            $data['received'][0]['action'] = $action;
+            $data['received'][0]['form_error'] = "";
+        } else {
             $data['received'][0]['ID'] = 0;
             $data['received'][0]['nights'] = "1";
             $data['received'][0]['client_type'] = "";
@@ -139,6 +258,12 @@ class Resv extends App {
             $data['received'][0]['price_rate_id'] = "";
         }
 
+        //defaults
+        $data['received'][0]['type'] = "reservation";
+        $data['received'][0]['action'] = $action;
+        $data['received'][0]['page_number'] = $page_number;
+        $data['received'][0]['mode'] = $mode;
+
         if (!file_exists(APPPATH . 'views/app/templates/' . $type . '.php')) {
             echo base_url() . 'views/app/templates/' . $type . '.php';
             show_404();
@@ -146,15 +271,18 @@ class Resv extends App {
 
         $this->load->view('app/scripts/header_scripts_side_navigation', $data);
         $this->load->view('app/templates/top_reservation', $data);
-        $this->load->view('app/templates/' . $type, $data);
+        if (!empty($mode)) {
+            $this->load->view('app/templates/' . $type, $data);
+        }
         $this->load->view('app/scripts/footer', $data);
     }
 
     public function processGuest() {
         //check status..could be useful later
-        //chk if key fields are empty
+        //chk if key fields are empty,if arrival date,nights is valid
         //??invalid status
         //save data
+        //if status=confirmed & arrival is app_date, attempt check in
         $this->chkLoggedIn();
         $access = $this->session->reservation;
         if ($access < 3) {//write access
@@ -167,9 +295,12 @@ class Resv extends App {
         $ID = $this->input->post('guest_ID');
         $type = $this->input->post('guest_type');
         $action = $this->input->post('guest_action');
+        $mode = $this->input->post('guest_mode');
+        $page_number = $this->input->post('guest_page_number');
         $client_name = trim($this->input->post('guest_client_name'));
         $roomtype = trim($this->input->post('guest_roomtype'));
         $price_rate = trim($this->input->post('guest_price_rate'));
+        $status = $this->input->post('guest_status');
         $errors = FALSE;
 
         if (empty($client_name)) {
@@ -188,6 +319,7 @@ class Resv extends App {
         $arrival_temp = $this->input->post('guest_arrival');
         $temp_date = str_replace('/', '-', $arrival_temp);
         $arrival = strtotime($temp_date);
+
         if ($arrival < $app_date) {
             //ensure arrival is not in the past
             $this->session->set_flashdata('arrival_error', "Invalid Arrival Date");
@@ -203,12 +335,16 @@ class Resv extends App {
         if ($errors || $this->form_validation->run() == FALSE) {
             $errors = TRUE;
             $this->session->set_flashdata('error_message', validation_errors());
-            $this->showReservation("guest", $ID, $action, $errors);
+            $this->showReservation("guest", $ID, $page_number, $action, $mode, $errors);
         } else {
             $res_id = $this->resv_model->saveGuest($type);
             if ($res_id) {
                 $this->session->set_flashdata('form_success', 'Operation Successful');
-                $redirect = "resv/showClients/" . $type . "/" . $res_id . "/" . $page_number . "/" . $action;
+                if (($status === "confirmed") && ($arrival === $app_date)) {
+                    $redirect = "resv/checkin/" . $mode . "/" . $res_id;
+                } else {
+                    $redirect = "resv/" . $mode;
+                }
                 redirect($redirect);
             }
         }
@@ -324,9 +460,11 @@ class Resv extends App {
         $this->load->view('app/templates/' . $type, $data);
         $this->load->view('app/scripts/footer', $data);
     }
-    
+
     public function viewLists($type, $offset = 0) {
         /* displays paginised list of reservation items */
+        $this->session->back_uri = base_url() . uri_string();
+        
         $this->chkLoggedIn();
         $access = $this->session->reservation;
         if ($access < 2) {//read access
@@ -337,21 +475,23 @@ class Resv extends App {
         $data = $this->data;
         $data["header_title"] = ucwords($type);
         $data["module"] = "reservation";
-        
+        $data["type"] = $type;
+
 //        if (!$filter) {
 //            $filter = "0";
 //        }
-        
+
         $config = array();
         $limit = 20;
         $page = "reservation";
         $data["received"][0]["type"] = $type;
-        $data['rooms'] = $this->app_model->getDisplayedItems('room')['data'];
-        
-        $results = $this->resv_model->getReservations($type, $offset, $limit);
-        $data["collection"] = $results['data'];        
+        $data["received"][0]["offset"] = $offset;
 
-        $config["base_url"] = base_url() . 'resv/viewLists/' . $type ;
+        $results = $this->resv_model->getReservations($type, $offset, $limit);
+        $data["collection"] = $results['data'];
+        $data["total"] = $results['count'];
+
+        $config["base_url"] = base_url() . 'resv/viewLists/' . $type;
         $config["total_rows"] = $results['count'];
         $config["per_page"] = $limit;
 
@@ -389,76 +529,6 @@ class Resv extends App {
         $this->load->view('app/templates/' . $page, $data);
         $this->load->view('app/scripts/footer', $data);
     }
-    
-    public function showGuests($type, $ID = 0, $page_number = 0, $action = "", $errors = FALSE) {
-        /* displays paginised list of items */
-
-        $this->chkLoggedIn();
-        $access = $this->session->reservation;
-        if ($access < 2) {//read access
-            $redirect = "app";
-            redirect($redirect);
-        }
-
-        $data = $this->data;
-        $data["header_title"] = ucwords("guest");
-        $data["module"] = "reservation";
-        $data["type"] = "reservation";
-        $data["page_number"] = $page_number;
-        $data["action"] = $action;
-
-        $item_id = $type . "_ID";
-        $item_action = $type . "_action";
-        $item_type = $type . "_type";
-        $item_title = $type . "_title";
-        $item_title_ref = $type . "_title_ref";
-        $item_email = $type . "_email";
-        $item_phone = $type . "_phone";
-        $item_city = $type . "_city";
-        $item_state = $type . "_state";
-        $item_country = $type . "_country";
-        $item_street = $type . "_street";
-        $item_sex = $type . "_sex";
-        $item_occupation = $type . "_occupation";
-        $item_birth_location = $type . "_birth_location";
-        $item_passport_no = $type . "_passport_no";
-        $item_pp_issued_at = $type . "_pp_issued_at";
-        $item_spg_no = $type . "_spg_no";
-        $item_visa = $type . "_visa";
-        $item_resident_permit_no = $type . "_resident_permit_no";
-        $item_destination = $type . "_destination";
-        $item_group_name = $type . "_group_name";
-        $item_plate_number = $type . "_plate_number";
-        $item_remarks = $type . "_remarks";
-        $item_payment_method = $type . "_payment_method";
-
-
-        if ($errors) {
-            $data['received'][0]['form_error'] = $this->session->error_message;
-            $data['received'][0]['title'] = $this->input->post($item_title);
-            $data['received'][0]['type'] = $this->input->post($item_type);
-            $data['received'][0]['action'] = $this->input->post($item_action);
-            $data['received'][0]['ID'] = $this->input->post($item_id);
-            $data['received'][0]['count'] = $this->app_model->getDisplayedItems($type, FALSE, $ID)['count'];
-        } else {
-            $data['received'][0]['form_error'] = "";
-            $data['received'][0]['title'] = "";
-            $data['received'][0]['type'] = $type;
-            $data['received'][0]['action'] = $action;
-            $data['received'][0]['ID'] = 0;
-            $data['received'][0]['count'] = $this->app_model->getDisplayedItems($type, FALSE, $ID)['count'];
-        }
-
-        if (!file_exists(APPPATH . 'views/app/templates/' . $type . '.php')) {
-            echo base_url() . 'views/app/templates/' . $type . '.php';
-            show_404();
-        }
-
-        $this->load->view('app/scripts/header_scripts_side_navigation', $data);
-        $this->load->view('app/templates/' . $type, $data);
-        $this->load->view('app/scripts/footer', $data);
-    }
-
 
     public function processPerson() {
         //save data

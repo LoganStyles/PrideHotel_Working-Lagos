@@ -20,6 +20,7 @@ class App extends MY_Controller {
             $data = $this->data;
             $data["header_title"] = ucwords("reservation");
             $data["type"] = "reservation";
+            $data["module"] = "reservation";
             $data['received'][0]['type'] = "reservation";
             $data["action"] = "";
             
@@ -35,7 +36,7 @@ class App extends MY_Controller {
     }    
     
     public function processUpdate($type, $ID, $value) {
-        $result = $this->app_model->updateItems($type, $ID, $value);
+        $result = $this->app_model->updateItems($type, $ID,"status", $value);
         if ($result) {
             $this->session->set_flashdata('form_success', 'Operation Successful');
 //            if(){}

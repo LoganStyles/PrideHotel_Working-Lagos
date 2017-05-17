@@ -68,6 +68,8 @@
     </div>
 </div>
 
+
+
 <footer>
     &copy; <?php echo date('Y'); ?>  Powered by <a href="http://webmobiles.com.ng/" target="_blank" >Webmobiles IT Services Ltd</a>
 </footer>
@@ -93,8 +95,12 @@
         window.location = url;
     }
 
-    function closeWindow() {
-        window.location = BASE_URL + "app";
+    function closeWindow(type) {
+        if (!type) {
+            window.location = BASE_URL + "app";
+        } else {
+            window.location = BASE_URL + "resv/" + type;
+        }
     }
 
     function printAll(type) {
@@ -226,11 +232,6 @@
             default:
                 break;
         }
-//        if (type === "guest") {
-//            console.log('type is guest');
-//            $('#guest_arrival ').jqxDateTimeInput('setDate', new Date(2012, 1, 3));
-////                    $('#guest_arrival').jqxDateTimeInput({width: 80, height: 25});
-//        }
     }
 
 
@@ -273,8 +274,15 @@
             var url = BASE_URL + "app/" + show + "/" + type + "/0/" + page_number;
             window.location = url;
         }
+    }
 
-
+    function processResv(type, page_number, mode) {/*handler for reservation actions
+     * gets the resv id & type of operation, then calls controller*/
+        var resv_id = $('.booking_radio.active .booking_hidden_id').val();
+        console.log('resv_id is ' + resv_id);
+        console.log('type is ' + type);
+        var redirect = BASE_URL + "resv/guest/" + resv_id + "/" + page_number + "/" + type + "/" + mode;
+        window.location = redirect;
     }
 
 
@@ -364,7 +372,7 @@
             case 'access_denied':
                 $("#access_modal").modal({backdrop: false, keyboard: false});
         }
-        //calender
+        //calenders
         if (header_title === "Guest") {
             var app_date = "<?php echo $app_date; ?>";
             var t = app_date.split(/[- :]/);
@@ -378,6 +386,42 @@
 
             $('#guest_departure').jqxDateTimeInput({width: 100, height: 25, disabled: true});
             $('#guest_departure').jqxDateTimeInput('setDate', NEXT_DATE);
+
+            var arrival = "<?php echo $arrival; ?>";
+            var departuredate = "<?php echo $departuredate; ?>";
+            var arrivaldate = "<?php echo $arrivaldate; ?>";
+            if (arrival) {//data from db
+                var arrival_date = "<?php echo date('d/m/Y', strtotime($arrival)); ?>";
+                $('#guest_arrival').jqxDateTimeInput('setDate', arrival_date);
+
+                var departure_date = "<?php echo date('d/m/Y', strtotime($departure)); ?>";
+                $('#guest_departure').jqxDateTimeInput('setDate', departure_date);
+
+            }
+            if (arrivaldate) {//errors exist
+                $('#guest_arrival').jqxDateTimeInput('setDate', arrivaldate);
+                $('#guest_departure').jqxDateTimeInput('setDate', departuredate);
+            }
+        }
+
+        if (header_title === "Checkin") {
+            $('#checkin_arrival').jqxDateTimeInput({width: 100, height: 25});
+            $('#checkin_departure').jqxDateTimeInput({width: 100, height: 25, disabled: true});
+
+            var arrival = "<?php echo $arrival; ?>";
+            var departuredate = "<?php echo $departuredate; ?>";
+            var arrivaldate = "<?php echo $arrivaldate; ?>";
+            if (arrival) {//data from db
+                var arrival_date = "<?php echo date('d/m/Y', strtotime($arrival)); ?>";
+                $('#checkin_arrival').jqxDateTimeInput('setDate', arrival_date);
+
+                var departure_date = "<?php echo date('d/m/Y', strtotime($departure)); ?>";
+                $('#checkin_departure').jqxDateTimeInput('setDate', departure_date);
+            }
+            if (arrivaldate) {//errors exist
+                $('#checkin_arrival').jqxDateTimeInput('setDate', arrivaldate);
+                $('#checkin_departure').jqxDateTimeInput('setDate', departuredate);
+            }
         }
 
         if (header_title === "Clients") {
@@ -447,6 +491,17 @@
         $('#guest_form').submit(function () {
             $('#guest_status').prop('disabled', false);
             $('#guest_comp_visits').prop('disabled', false);
+        });
+
+        $('#checkin_form').submit(function () {
+            $('#checkin_reservation_id').prop('disabled', false);
+        });
+
+        $('body').on('click', '.booking_radio', function () {//select or deselect a row
+            console.log('a radio was clicked');
+            var $this = $(this);
+            $('.booking_radio').removeClass('active');
+            $this.addClass('active');
         });
     });
 

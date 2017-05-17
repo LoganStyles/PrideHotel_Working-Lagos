@@ -8,14 +8,18 @@ class App_model extends CI_Model {
         $this->load->database();
     }
 
-    public function updateItems($type, $ID, $value) {
+    public function updateItems($type, $ID, $field,$value) {
         $tableitems = strtolower($type) . "items";
 
-        $data = array(
-            'status' => $value
-        );
+//        $data = array(
+//            'status' => $value
+//        );
+//        $this->db->where('ID', $ID);
+//        $res = $this->db->update($tableitems, $data);
+        
+        $this->db->set($field,$value);
         $this->db->where('ID', $ID);
-        $res = $this->db->update($tableitems, $data);
+        $res = $this->db->update($tableitems);
         return $res;
     }
 

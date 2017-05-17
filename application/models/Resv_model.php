@@ -23,6 +23,38 @@ class Resv_model extends App_model {
         return json_encode($results);
     }
 
+    public function deleteResv() {
+        $reason = $this->input->post('delete_resv_reason');
+        $resv_id = $this->input->post('delete_resv_id');
+        $type = $this->input->post('delete_resv_type');
+        $oldvalue = $this->input->post('delete_resv_oldvalue');
+        $newvalue = $this->input->post('delete_resv_newvalue');
+        $description = "Reservation " . $resv_id . " was deleted by " . $this->session->us_signature;
+        //update reservation status
+        $this->updateItems("reservation", $resv_id, "status", "cancelled");
+        //update reservation remarks
+        $this->updateItems("reservation", $resv_id, "remarks", $reason);
+        //log this action
+        $log_id = $this->createLog($type, "delete", $description, $oldvalue, $newvalue, $reason);
+        return $log_id;
+    }
+
+    private function createLog($module, $action, $description, $oldvalue, $newvalue, $reason) {
+        $data = array(
+            'section' => $module,
+            'action' => $action,
+            'description' => $description,
+            'old_value' => $oldvalue,
+            'new_value' => $newvalue,
+            'reason' => $reason,
+            'signature_created' => $this->session->us_signature,
+            'date_created' => date("Y-m-d H:i:s")
+        );
+        $this->db->insert("logitems", $data);
+        $insert_id = $this->db->insert_id();
+        return $insert_id;
+    }
+
     public function getModalItems($type, $return_json = FALSE, $ID = 0, $filter_val = FALSE) {
         /* gets all fields for a table with filters,limit & offsets
          * ::used for page navigations etc */
@@ -328,10 +360,10 @@ class Resv_model extends App_model {
         }
     }
 
-    public function getReservations($type,$offset = 0, $limit_val = FALSE) {
+    public function getReservations($type, $offset = 0, $limit_val = FALSE) {
         /* gets all fields for a reservation with filters,limit & offsets
          * ::used for page navigations etc */
-        $app_date=$this->getAppInfo();
+        $app_date = $this->getAppInfo();
 
         $tableitems = "reservationitems";
         $limit = $filter = "";
@@ -342,10 +374,12 @@ class Resv_model extends App_model {
         if ($limit_val) {
             $limit = "LIMIT $offset,$limit_val";
         }
-       
+
         switch ($type) {
             case "confirmed":
-                $sort = "and status='confirmed' AND account_type='ROOM' order by ID DESC";
+            case "cancelled":
+            case "provisional":
+                $sort = "and status='$type' AND account_type='ROOM' order by ID DESC";
                 break;
             case "arriving":
                 $sort = "and status='confirmed' and arrival='$app_date' AND account_type='ROOM' order by ID DESC";
@@ -353,22 +387,18 @@ class Resv_model extends App_model {
             case "departing":
                 $sort = "and status='staying' and departure<='$app_date' AND account_type='ROOM' order by ID DESC";
                 break;
-
+            case "all":
+                $sort = " AND account_type='ROOM' order by ID DESC";
+                break;
+            case "staying":
+                $sort = " and status='$type' and departure >='$app_date' and arrival <='$app_date' AND account_type='ROOM' order by ID DESC";
+                break;
             default:
                 break;
         }
-        
+
         $q = "SELECT * from $tableitems where 1=1 $sort $limit";
-            $q_total = "SELECT * from $tableitems where 1=1 $sort ";
-
-//        if (empty($ID)) {
-//            $q = "SELECT * from $tableitems where 1=1 $sort $limit";
-//            $q_total = "SELECT * from $tableitems where 1=1 $sort ";
-//        } else {
-//            $q = "SELECT * from $tableitems where 1=1 and ID='$ID' $sort $limit ";
-//            $q_total = "SELECT * from $tableitems where 1=1 and ID='$ID' $sort";
-//        }
-
+        $q_total = "SELECT * from $tableitems where 1=1 $sort ";
 //                    echo $q;echo '<br>';
 //                    echo $q_total;
 //                    exit;
@@ -381,6 +411,59 @@ class Resv_model extends App_model {
             $results['count'] = $query->num_rows();
 
         return $results;
+    }
+
+    public function checkin($r_ID, $room_id) {
+        if ($this->isRoomVacant($room_id)) {
+            $this->updateItems("reservation", $r_ID, "status", "staying");
+            $this->updateItems("room", $room_id, "status", 3);
+            //update reservation just in case room was changed
+            $this->updateItems("reservation", $r_ID, "room_number", $room_id);
+            return TRUE;
+        }
+        return FALSE;
+    }
+
+    private function isRoomVacant($room_id) {
+        /* check if a room is vacant or vacant_dirty */
+        $test = FALSE;
+//        $q = "SELECT ro.status from roomitems as ro "
+//                . "left join reservationitems as ri "
+//                . "on (ro.ID=ri.room_number) "
+//                . "where ri.reservation_id='$resv_id'";
+        $q = "SELECT status from roomitems where ID='$room_id'";
+//        echo $q;exit;
+
+        $query = $this->db->query($q);
+        if ($query->num_rows() > 0) {
+            $result = $query->row_array();
+            $status = intval($result["status"]);
+            if ($status == 1 || $status == 2) {
+                $test = TRUE;
+            }
+        }
+        return $test;
+    }
+
+    public function getClientResvInfo($resv_id) {
+        /* get info for reservation,prices, etc for a client */
+        $q = "SELECT ri.*,ri.room_number as room_number_id,ri.roomtype as roomtype_id,"
+                . "ro.title as room_number,"
+                . "rt.title as roomtype,rp.*,rp.price_rate as price_rate_id,"
+                . "pi.title as price_title from reservationitems as ri "
+                . "left join reservationpriceitems as rp "
+                . "on (ri.reservation_id = rp.reservation_id) "
+                . "left join roomitems as ro "
+                . "on (ri.room_number = ro.ID) "
+                . "left join roomtypeitems as rt "
+                . "on (ri.roomtype = rt.ID) "
+                . "left join priceitems as pi "
+                . "on (rp.price_rate = pi.ID)"
+                . "where ri.reservation_id='$resv_id'";
+
+        $query = $this->db->query($q);
+        if ($query->num_rows() > 0)
+            return $query->result_array();
     }
 
 }

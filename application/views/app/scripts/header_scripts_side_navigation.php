@@ -154,7 +154,7 @@ function getTitle($titles, $id) {
                                         $module == "reservation") {
                                     echo "active";
                                 }
-                                ?>"><a href="<?php echo base_url() . 'resv/guest'; ?>"> Guest Rooms</a></li>
+                                ?>"><a href="<?php echo base_url() . 'app'; ?>"> Guest Rooms</a></li>
                                 <li class="<?php
                                 if ($type == "groups") {
                                     echo "active";

@@ -15,6 +15,11 @@ class MY_Controller extends CI_Controller {
         $this->data['site'] = $this->app_model->getDisplayedItems('site')['data']; //get site info
         $this->data['app_date']=  $this->app_model->getAppInfo();//app info 
         $this->data['module']="";
+        $this->data['action']="";
+        $this->data['arrival'] = "";
+        $this->data['departure'] = "";
+        $this->data['arrivaldate'] = "";
+        $this->data['departuredate'] = "";
     }
     
     protected function chkLoggedIn() {
