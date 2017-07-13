@@ -7,7 +7,7 @@
         <meta name="author" content="">
         <link rel="shortcut icon" href="#" type="image/png">
 
-        <title>Pride Task Manager  | 404 Page</title>
+        <title>Hotel Management Software  | 404 Page</title>
 
         <!--common-->
         <link href="<?php echo base_url(); ?>css_admin/style.css" rel="stylesheet" type="text/css">

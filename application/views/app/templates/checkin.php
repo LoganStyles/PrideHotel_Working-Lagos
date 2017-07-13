@@ -3,31 +3,6 @@ $current = $received[0];
 extract($current);
 
 $price_rate = getTitle($roomtypes, $price_title); //price title
-
-//$access = $this->session->reservation;
-//if ($access < 4) {//set readonly fields
-//    $readonly_field = "readonly";
-//} else {
-//    $readonly_field = "";
-//}
-
-//$disabled = "";
-//if ($action == "view") {
-//    $disabled = "disabled";
-//}
-
-//$client_name_class = $roomtype_class = $price_rate_class = "";
-//
-////chk for specific errors
-//if ($client_name_error) {
-//    $client_name_class = "brightyellow";
-//}
-//if ($roomtype_error) {
-//    $roomtype_class = "brightyellow";
-//}
-//if ($price_rate_error) {
-//    $price_rate_class = "brightyellow";
-//}
 ?>
 
 <!--body wrapper start-->
@@ -164,7 +139,7 @@ $price_rate = getTitle($roomtypes, $price_title); //price title
                 </div>
                 <div class="pull-right">
                     <input class="btn btn-success btn-sm" type="submit" name="submit" value="Check In" />
-                    <button type="button" class="btn btn-default" onclick="closeWindow('<?php echo $mode; ?>');">Cancel</button>
+                    <button type="button" class="btn btn-default" onclick="closeWindow('<?php echo $mode; ?>','0');">Cancel</button>
                 </div>
                 <div class="clearfix"></div>
                 </form>

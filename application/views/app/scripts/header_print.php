@@ -64,6 +64,8 @@ function getTitle($titles, $id) {
         return "";
     }
 }
+
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -102,6 +104,12 @@ function getTitle($titles, $id) {
     <body class="" style="background: #fff;">
 
         <!--body wrapper start-->
+        <?php
+        if (($paper_type=="letter")) {?>
+        
+        <div class="wrapper" style="margin-top: 220px;">
+                    
+        <?php }else{        ?>
         <div class="wrapper">
             <div class="row">
                 <div class="col-sm-5"></div>
@@ -133,3 +141,4 @@ function getTitle($titles, $id) {
                 <div class="col-sm-5"></div>
                 <div class="col-sm-7"><?php echo $header_title;?></div>
             </div>
+        <?php } ?>

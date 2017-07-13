@@ -1,6 +1,3 @@
-<?php
-
-?>
 
 <!-- page heading start-->
 <div class="page-heading">

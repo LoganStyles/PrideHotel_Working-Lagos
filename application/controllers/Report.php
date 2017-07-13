@@ -1,70 +1,190 @@
 <?php
-
-/**
- * Description of Report
- *
- * @author EMMANUEL
- */
-class Report extends MY_Controller {
-
+class Report extends App {
+//controller for printing
     public function __construct() {
         parent::__construct();
+        $this->data["rooms"] = $this->app_model->getDisplayedItems('room'); //get room info
+        $this->data['print'] = "yes";
+        $this->data["paper_type"] = "plain";
     }
 
     public function printAllItems($type, $offset = 0) {
-
-        $this->chkLoggedIn();
-        $access = $this->session->reports;
-        if ($access < 2) {//read access
-            $redirect = "app";
-            redirect($redirect);
-        }
-        
-        $config = array();
-        $limit = 20;
-
+        //currently prints housekeeping only
+        $this->checkAccess($this->session->reports, 2);
+        $limit = FALSE;
         $data = $this->data;
         $data["header_title"] = strtoupper("housekeeping");
-        $results = $this->app_model->getDisplayedItems('room'); //get room info
-        $data['roomtypes'] = $this->app_model->getDisplayedItems('roomtype')['data'];//possible modify
+        $data["type"] = $type;
         $data['room_status'] = $this->app_model->getDisplayedItems('room_status')['data'];
+        $data[$type] = $data['rooms']['data'];
 
-        $data[$type] = $results['data'];
-        $config["base_url"] = base_url() . 'report/printAllItems/' . $type;
-        $config["total_rows"] = $results['count'];
-        $config["per_page"] = $limit;
-
-        //various pagination configuration
-        $config['full_tag_open'] = '<ul class="pagination">';
-        $config['full_tag_close'] = '</ul>';
-        $config['prev_link'] = '«Previous';
-        $config['prev_tag_open'] = '<li>';
-        $config['prev_tag_close'] = '</li>';
-        $config['next_link'] = 'Next»';
-        $config['next_tag_open'] = '<li>';
-        $config['next_tag_close'] = '</li>';
-        $config['cur_tag_open'] = '<li class="active"><a href="#">';
-        $config['cur_tag_close'] = '</a></li>';
-        $config['num_tag_open'] = '<li>';
-        $config['num_tag_close'] = '</li>';
-
-        $config['first_tag_open'] = '<li>';
-        $config['first_tag_close'] = '</li>';
-        $config['last_tag_open'] = '<li>';
-        $config['last_tag_close'] = '</li>';
-
-        $config['first_link'] = '&lt;&lt;';
-        $config['last_link'] = '&gt;&gt;';
-        $this->pagination->initialize($config);
+        $page_nav = $this->page_nav;
+        $page_nav["base_url"] = base_url() . 'report/printAllItems/' . $type;
+        $page_nav["total_rows"] = $data['rooms']['count'];
+        $page_nav["per_page"] = $limit;
+        $this->pagination->initialize($page_nav);
         $data['pagination'] = $this->pagination->create_links();
 
-        if (!file_exists(APPPATH . 'views/app/prints/' . $type . '.php')) {
-            echo base_url() . 'views/app/prints/' . $type . '.php';
+        $this->showPage($data, $type);
+    }
+
+    public function printReservations($type,$guest_type, $offset = 0) {
+        //prints reservations
+        $this->checkAccess($this->session->reports, 2);
+        $limit = FALSE;
+        $page = "reservation";
+
+        $data = $this->data;
+        $data["header_title"] = strtoupper($type);
+        $data["type"] = $type;
+        $data["rooms_r"] = $data['rooms']['data'];
+        if($guest_type==="guest"){
+          $results = $this->resv_model->getReservations($type, $offset, $limit);  
+        }else{
+          $results = $this->resv_model->getGroupReservations($type, $offset, $limit);
+        } 
+        $data["collection"] = $results['data'];
+        $data["sum_data"] = $results['sum'];
+
+        $page_nav = $this->page_nav;
+        $page_nav["base_url"] = base_url() . 'report/printReservations/' . $type.'/'.$guest_type;
+        $page_nav["total_rows"] = $results['count'];
+        $page_nav["per_page"] = $limit;
+        $this->pagination->initialize($page_nav);
+        $data['pagination'] = $this->pagination->create_links();
+
+        $this->showPage($data, $page);
+    }
+
+    public function printFolios($resv_id, $paper_type, $filter) {
+        //prints folios
+        $this->checkAccess($this->session->reports, 2);
+
+        $limit = FALSE;
+        $page = "folio";
+
+        $data = $this->data;
+        $data["header_title"] = strtoupper("Folio");
+        $data["type"] = "folio";
+        $data["paper_type"] = $paper_type;
+        $data["bill_type"] = strtoupper($filter);
+
+        if ($filter == "all") {
+            $filter = FALSE;
+        }
+        $results = $this->resv_model->getFoliosForPrint($resv_id, $filter);
+
+        $data["collection"] = $results['data'];
+        $totals = $results['totals'];
+
+        $data['sale_total'] = $totals['SALE_TOTAL'];
+        $data['payment_total'] = $totals['PAYMENT_TOTAL'];
+        $data['balance_left'] = $totals['FOLIO_DIFF'];
+
+        $page_nav = $this->page_nav;
+        $page_nav["base_url"] = base_url() . 'report/printFolios/' . $resv_id . '/' . $paper_type;
+        $page_nav["per_page"] = $limit;
+        $this->pagination->initialize($page_nav);
+        $data['pagination'] = $this->pagination->create_links();
+
+        $this->showPage($data, $page);
+    }
+
+    public function printCheckout($resv_id, $paper_type, $filter = NULL) {
+        //prints checkout details
+        $this->checkAccess($this->session->reservation, 2);
+
+        $limit = FALSE;
+        $page = "checkout";
+
+        $data = $this->data;
+        $data["header_title"] = strtoupper("Checkout");
+        $data["type"] = "reservation";
+        $data["paper_type"] = $paper_type;
+        $results = $this->resv_model->checkout($resv_id, $filter);
+
+        $data["collection"] = $results['data'];
+        $totals = $results['totals'];
+        $data['sale_total'] = $totals['SALE_TOTAL'];
+        $data['payment_total'] = $totals['PAYMENT_TOTAL'];
+        $data['balance_left'] = $totals['FOLIO_DIFF'];
+
+        $personal = $results['personal'];
+        $data['client_name'] = $personal['client_name'];
+        $data['actual_arrival'] = date("Y-m-d", strtotime($personal['actual_arrival']));
+        $data['actual_departure'] = date("Y-m-d", strtotime($personal['actual_departure']));
+        $data['nights'] = $personal['nights'];
+        $data['room_number'] = $personal['folio_room_number'];
+
+        $page_nav = $this->page_nav;
+        $page_nav["base_url"] = base_url() . 'report/printCheckout/' . $resv_id . '/' . $paper_type;
+        $page_nav["per_page"] = $limit;
+        $this->pagination->initialize($page_nav);
+        $data['pagination'] = $this->pagination->create_links();
+
+        $this->showPage($data, $page);
+    }
+
+    public function getReports() {
+        //prints reports
+        $this->checkAccess($this->session->reports, 2);
+        $type = $this->input->post('report_type');
+        $from = $this->input->post('report_from');
+        $to = $this->input->post('report_to');
+        switch ($type) {
+            case 'arrivals':
+            case 'departures':
+            case 'staying guests':
+                $page = "report";
+                break;
+            case 'sales summary':
+                $page = "report_sales";
+                break;
+            case 'cashier summary':
+                $page = "report_cashier";
+                break;
+            case 'audit trail':
+                $page = "report_audit";
+                break;
+            case 'ledger':
+                $page = "report_ledger";
+                break;
+            case 'police':
+                $page = "report_police";
+                break;
+            case 'client history':
+                $page = "report_client";
+                break;
+            default:
+                break;
+        }
+
+        $data = $this->data;
+        $data["header_title"] = strtoupper($type . " (" . $from . " - " . $to . ")");
+        $data["type"] = $type;
+        if ($type == "ledger") {
+            $data["collection"] = $this->resv_model->getLedger();
+        } else {
+            $results = $this->resv_model->getReports($type);
+            $data["collection"] = $results['data'];
+        }
+
+        if ($type == "sales summary" || $type == "cashier summary") {
+            $data["collection2"] = $results['totals'];
+        }
+
+        $this->showPage($data, $page);
+    }
+
+    private function showPage($data, $page) {
+        //        displays print out
+        if (!file_exists(APPPATH . 'views/app/prints/' . $page . '.php')) {
+            echo base_url() . 'views/app/prints/' . $page . '.php';
             show_404();
         }
 
         $this->load->view('app/scripts/header_print', $data);
-        $this->load->view('app/prints/' . $type, $data);
+        $this->load->view('app/prints/' . $page, $data);
         $this->load->view('app/scripts/footer', $data);
     }
 

@@ -19,14 +19,17 @@ if ($action == "view") {
 $client_name_class = $roomtype_class = $price_rate_class = "";
 
 //chk for specific errors
-if ($client_name_error) {
+if (!empty($client_name_error)) {
     $client_name_class = "brightyellow";
+    $form_error.="**".$client_name_error;
 }
-if ($roomtype_error) {
+if (!empty($roomtype_error)) {
     $roomtype_class = "brightyellow";
+    $form_error.="**".$roomtype_error;
 }
-if ($price_rate_error) {
+if (!empty($price_rate_error)) {
     $price_rate_class = "brightyellow";
+    $form_error.="**".$price_rate_error;
 }
 ?>
 
@@ -35,11 +38,11 @@ if ($price_rate_error) {
     <div class="row">
         <div class="col-lg-12">
             <section class="panel">
-                <header class="panel-heading" style="text-align:center">
+                <header class="panel-heading" style="text-align:left">
                     <?php if ($action == "insert") {
                         echo "Reservation (NEW)";
-                    } ?>&nbsp;&nbsp;&nbsp;<span>Check In:</span>&nbsp;&nbsp;<span>14:00</span>
-                    &nbsp;&nbsp;&nbsp;<span>Check Out:</span>&nbsp;<span>12:00</span>
+                    } ?>&nbsp;&nbsp;&nbsp;<span>Check In Time:</span>&nbsp;&nbsp;<span>14:00</span>
+                    &nbsp;&nbsp;&nbsp;<span>Check Out Time:</span>&nbsp;<span>12:00</span>
                 </header>
 
                 <?php
@@ -89,13 +92,13 @@ if ($price_rate_error) {
 
                             <label for="guest_client_type" class="col-sm-2 control-label">Client Type</label>
                             <div class="col-lg-2 col-sm-2">
-                                <select <?php echo $disabled; ?> class="form-control " name="guest_client_type" id="guest_client_type">
+                                <select <?php echo $disabled; ?> <?php echo $readonly_field; ?> class="form-control " name="guest_client_type" id="guest_client_type">
                                     <option value="person" <?php
                                     if ($client_type === "person") {
                                         echo 'selected';
                                     }
                                     ?>>PERSON</option>
-                                    <option value="0" <?php
+                                    <option value="group" <?php
                                     if ($client_type === "group") {
                                         echo 'selected';
                                     }
@@ -130,13 +133,17 @@ if ($price_rate_error) {
 
                         <div class="form-group ">
                             <label for="guest_agency_contact" class="col-sm-2 control-label">Agency Contact</label>
-                            <div class="col-sm-3">
+                            <div class="col-sm-2">
                                 <input <?php echo $disabled; ?> class=" form-control" id="guest_agency_contact" name="guest_agency_contact" type="text" value="<?php echo $agency_contact; ?>" />
                             </div>
 
                             <label for="guest_guest1" class="col-sm-2 control-label">Guest (1)</label>
-                            <div class="col-sm-3">
+                            <div class="col-sm-2">
                                 <input <?php echo $disabled; ?> class=" form-control" id="guest_guest1" name="guest_guest1" type="text" value="<?php echo $guest1; ?>" />
+                            </div>
+                            <label for="guest_master_id" class="col-sm-2 control-label">Master ID</label>
+                            <div class="col-sm-2">
+                                <input readonly class=" form-control" id="guest_master_id" name="guest_master_id" type="text" value="<?php echo $master_id; ?>" />
                             </div>
                             <div class="clearfix"></div>                           
 
@@ -218,6 +225,11 @@ if ($price_rate_error) {
                                         echo 'selected';
                                     }
                                     ?>>PROVISIONAL</option>
+                                    <option value="ledger" <?php
+                                    if ($status === "ledger") {
+                                        echo 'selected';
+                                    }
+                                    ?>>LEDGER</option>
                                 </select>                                
                             </div>                            
 
@@ -244,6 +256,11 @@ if ($price_rate_error) {
                                         echo 'selected';
                                     }
                                     ?>>BILL4</option>
+                                    <option value="INV" <?php
+                                    if ($folio_room === "INV") {
+                                        echo 'selected';
+                                    }
+                                    ?>>INV</option>
                                 </select>                                
                             </div>
 
@@ -270,6 +287,11 @@ if ($price_rate_error) {
                                         echo 'selected';
                                     }
                                     ?>>BILL4</option>
+                                    <option value="INV" <?php
+                                    if ($folio_extra === "INV") {
+                                        echo 'selected';
+                                    }
+                                    ?>>INV</option>
                                 </select>                                
                             </div>    
 
@@ -296,6 +318,11 @@ if ($price_rate_error) {
                                         echo 'selected';
                                     }
                                     ?>>BILL4</option>
+                                    <option value="INV" <?php
+                                    if ($folio_other === "INV") {
+                                        echo 'selected';
+                                    }
+                                    ?>>INV</option>
                                 </select>                                
                             </div>
 
@@ -412,7 +439,7 @@ if ($price_rate_error) {
                         <input class="btn btn-success btn-sm" type="submit" name="submit" value="Save" />
                     <?php } ?>
                     
-                    <button type="button" class="btn btn-default" onclick="closeWindow('');">Cancel</button>
+                    <button type="button" class="btn btn-default" onclick='closeWindow("<?php echo $mode."\",\"".$page_number;?>");'>Cancel</button>
                 </div>
                 <div class="clearfix"></div>
                 </form>

@@ -1,9 +1,9 @@
 <?php
 
 class App extends MY_Controller {
-    /* controller for app
-     * displays reservation area by default
-     * if no other section is loaded
+    /* controller for app configurations, settings & most operations 
+     * which all users use
+     * displays reservation area by default if no other section is loaded
      */
 
     public function __construct() {
@@ -12,34 +12,42 @@ class App extends MY_Controller {
         $this->data['accountsale'] = $this->app_model->getDisplayedItems('account_sale')['data'];
         $this->data['roomclasses'] = $this->app_model->getDisplayedItems('roomclass')['data'];
     }
+    
+    private function showPage($data, $page,$top_nav=FALSE) {
+        //displays resv pages        
+        if (!file_exists(APPPATH . 'views/app/templates/' .$page. '.php')) {
+            echo base_url() . 'views/app/templates/' .$page. '.php';
+            show_404();
+        }
+        $this->load->view('app/scripts/header_scripts_side_navigation', $data);
+        if($top_nav){
+          $this->load->view('app/templates/top_reservation', $data);  
+        }        
+        $this->load->view('app/templates/'. $page, $data);
+        $this->load->view('app/scripts/footer', $data);
+    }
 
     public function index() {
+        //default method
         if (!isset($_SESSION['us_signature'])) {
             $this->showLogin(); //user has not logged in so redirect to login
         } else {
             $data = $this->data;
+            $data['room_stats'] = $this->app_model->getRoomMonitor();
             $data["header_title"] = ucwords("reservation");
             $data["type"] = "reservation";
             $data["module"] = "reservation";
             $data['received'][0]['type'] = "reservation";
             $data["action"] = "";
-            
-            if (!file_exists(APPPATH . 'views/app/templates/top_reservation.php')) {
-            echo base_url() . 'views/app/templates/top_reservation.php';
-            show_404();
+            $this->showPage($data, "top_reservation", 0);
         }
+    }
 
-        $this->load->view('app/scripts/header_scripts_side_navigation', $data);
-        $this->load->view('app/templates/top_reservation' , $data);
-        $this->load->view('app/scripts/footer', $data);
-        }
-    }    
-    
     public function processUpdate($type, $ID, $value) {
-        $result = $this->app_model->updateItems($type, $ID,"status", $value);
+        //updates a single field for most app tables
+        $result = $this->app_model->updateItems($type, $ID, "status", $value);
         if ($result) {
             $this->session->set_flashdata('form_success', 'Operation Successful');
-//            if(){}
             $redirect = "app/housekeeping";
             redirect($redirect);
         }
@@ -51,23 +59,21 @@ class App extends MY_Controller {
                 case 'housekeeping':
                     $filter = " and status='" . $value . "'";
                     break;
-
                 default:
                     break;
             }
         } else {
             $filter = "";
         }
-
         $this->fetchJsonData($type, $ID, $filter);
     }
 
     public function fetchJsonData($type, $ID, $filter = FALSE) {
-        if (!isset($this->session->us_signature)) {
+        //get data in json format for tables
+        if(!isset($this->session->us_signature) ){//chk if logged in
             $redirect = "app";
             redirect($redirect);
         }
-
         switch ($type) {
             case 'user':
             case 'roomtype':
@@ -78,6 +84,7 @@ class App extends MY_Controller {
             case 'terminals':
             case 'price':
             case 'housekeeping':
+            case 'folio_sale':
                 $result = $this->app_model->getJoinedItems($type, TRUE, $ID, $filter);
                 break;
             default:
@@ -136,7 +143,7 @@ class App extends MY_Controller {
     }
 
     public function logout() {
-        //delete sesssions
+        //delete sesssions & loggs users out
         $res = $this->app_model->logout();
         if ($res) {
             $this->session->sess_destroy();
@@ -146,13 +153,8 @@ class App extends MY_Controller {
     }
 
     public function showSite($ID, $type, $errors = NULL) {
-        /* displays section items */
-        $this->chkLoggedIn();
-        $access = $this->session->configuration;
-        if ($access < 3) {//write access
-            $redirect = "app";
-            redirect($redirect);
-        }
+        /* displays site section items */
+        $this->checkAccess($this->session->configuration, 3);
 
         $page = $type;
         $item_id = $type . "_ID";
@@ -222,24 +224,13 @@ class App extends MY_Controller {
                 redirect($redirect);
             }
         }
-        if (!file_exists(APPPATH . 'views/app/templates/' . $page . '.php')) {
-            echo base_url() . 'views/app/templates/' . $page . '.php';
-            show_404();
-        }
-
-        $this->load->view('app/scripts/header_scripts_side_navigation', $data);
-        $this->load->view('app/templates/' . $page, $data);
-        $this->load->view('app/scripts/footer');
+        //show page
+        $this->showPage($data, $page, 0);
     }
 
     public function saveSite() {
         //save site data
-        $this->chkLoggedIn();
-        $access = $this->session->configuration;
-        if ($access < 3) {//write access
-            $redirect = "app";
-            redirect($redirect);
-        }
+        $this->checkAccess($this->session->configuration, 3);
 
         $ID = $this->input->post('site_ID');
         $type = $this->input->post('site_type');
@@ -249,7 +240,6 @@ class App extends MY_Controller {
         } else {
             $this->form_validation->set_rules('site_title', 'Hotel name', 'trim|required|is_unique[siteitems.title]');
         }
-
         $this->form_validation->set_rules('site_country', "Country", 'greater_than[0]');
 
 
@@ -289,12 +279,7 @@ class App extends MY_Controller {
 
     public function processRole() {
         //save role data
-        $this->chkLoggedIn();
-        $access = $this->session->configuration;
-        if ($access < 3) {//write access
-            $redirect = "app";
-            redirect($redirect);
-        }
+        $this->checkAccess($this->session->configuration, 3);
         $ID = $this->input->post('role_ID');
         $type = $this->input->post('role_type');
         $page_number = $this->input->post('role_page_number');
@@ -334,12 +319,7 @@ class App extends MY_Controller {
 
     public function processRoom() {
         //save room data
-        $this->chkLoggedIn();
-        $access = $this->session->configuration;
-        if ($access < 3) {//write access
-            $redirect = "app";
-            redirect($redirect);
-        }
+        $this->checkAccess($this->session->configuration, 3);
         $ID = $this->input->post('room_ID');
         $type = $this->input->post('room_type');
         $page_number = $this->input->post('room_page_number');
@@ -370,14 +350,9 @@ class App extends MY_Controller {
     }
 
     public function processHousekeeping() {
-        //save room data        
-        $this->chkLoggedIn();
-
-        $access = $this->session->utilities;
-        if ($access < 3) {//write access
-            $redirect = "app";
-            redirect($redirect);
-        }
+        //save room data   
+        $this->checkAccess($this->session->utilities, 3);
+        
         $ID = $this->input->post('housekeeping_ID');
         $type = $this->input->post('housekeeping_type');
         $page_number = $this->input->post('housekeeping_page_number');
@@ -401,12 +376,8 @@ class App extends MY_Controller {
 
     public function processAccountPlu() {
         //save account_plu_number data
-        $this->chkLoggedIn();
-        $access = $this->session->configuration;
-        if ($access < 3) {//write access
-            $redirect = "app";
-            redirect($redirect);
-        }
+        $this->checkAccess($this->session->configuration, 3);
+        
         $ID = $this->input->post('account_plu_number_ID');
         $type = $this->input->post('account_plu_number_type');
         $page_number = $this->input->post('account_plu_number_page_number');
@@ -436,12 +407,8 @@ class App extends MY_Controller {
 
     public function processAccountPayment() {
         //save account_payment data
-        $this->chkLoggedIn();
-        $access = $this->session->configuration;
-        if ($access < 3) {//write access
-            $redirect = "app";
-            redirect($redirect);
-        }
+        $this->checkAccess($this->session->configuration, 3);
+        
         $ID = $this->input->post('account_payment_ID');
         $type = $this->input->post('account_payment_type');
         $page_number = $this->input->post('account_payment_page_number');
@@ -473,12 +440,7 @@ class App extends MY_Controller {
 
     public function processAccountSale() {
         //save account_sale data
-        $this->chkLoggedIn();
-        $access = $this->session->configuration;
-        if ($access < 3) {//write access
-            $redirect = "app";
-            redirect($redirect);
-        }
+        $this->checkAccess($this->session->configuration, 3);
         $ID = $this->input->post('account_sale_ID');
         $type = $this->input->post('account_sale_type');
         $page_number = $this->input->post('account_sale_page_number');
@@ -511,12 +473,7 @@ class App extends MY_Controller {
 
     public function processPrice() {
         //save price data
-        $this->chkLoggedIn();
-        $access = $this->session->prices;
-        if ($access < 3) {//write access
-            $redirect = "app";
-            redirect($redirect);
-        }
+        $this->checkAccess($this->session->prices, 3);
 
         $ID = $this->input->post('price_ID');
         $type = $this->input->post('price_type');
@@ -544,15 +501,9 @@ class App extends MY_Controller {
 
     public function processTypeclass($type) {
         //save data
-        $this->chkLoggedIn();
-        $access = $this->session->configuration;
-        if ($access < 3) {//write access
-            $redirect = "app";
-            redirect($redirect);
-        }
+        $this->checkAccess($this->session->configuration, 3);
 
         $typeid = $type . "_ID";
-        $typetype = $type . "_type";
         $typepage_number = $type . "_page_number";
         $typeaction = $type . "_action";
         $typetitle = $type . "_title";
@@ -616,12 +567,8 @@ class App extends MY_Controller {
 
     public function processRoomtype() {
         //save roomtype data
-        $this->chkLoggedIn();
-        $access = $this->session->configuration;
-        if ($access < 3) {//write access
-            $redirect = "app";
-            redirect($redirect);
-        }
+        $this->checkAccess($this->session->configuration, 3);
+        
         $ID = $this->input->post('roomtype_ID');
         $type = $this->input->post('roomtype_type');
         $page_number = $this->input->post('roomtype_page_number');
@@ -653,13 +600,8 @@ class App extends MY_Controller {
 
     public function processUser() {
         //save user data
-        $this->chkLoggedIn();
-        $access = $this->session->configuration;
-        if ($access < 3) {//write access
-            $redirect = "app";
-            redirect($redirect);
-        }
-
+        $this->checkAccess($this->session->configuration, 3);
+        
         $ID = $this->input->post('user_ID');
         $type = $this->input->post('user_type');
         $page_number = $this->input->post('user_page_number');
@@ -691,15 +633,18 @@ class App extends MY_Controller {
         }
     }
 
-    public function showRole($type, $ID = 0, $page_number = 0, $action = "", $errors = FALSE) {
-        /* displays paginised list of items */
-
-        $this->chkLoggedIn();
-        $access = $this->session->configuration;
-        if ($access < 2) {//read access
-            $redirect = "app";
+    public function getRoomReservation($room) {
+        //get reservation_id for this room & redirect to reservation details page
+        $resv_id = $this->app_model->getRoomReservation($room);
+        if ($resv_id) {
+            $redirect = "resv/guest/" . $resv_id . "/0/view/staying";
             redirect($redirect);
         }
+    }
+
+    public function showRole($type, $ID = 0, $page_number = 0, $action = "", $errors = FALSE) {
+        /* displays paginised list of items */
+        $this->checkAccess($this->session->configuration, 2);
 
         $data = $this->data;
         //defaults
@@ -758,26 +703,13 @@ class App extends MY_Controller {
             $data['received'][0]['delete_group'] = "";
             $data['received'][0]['count'] = $this->app_model->getDisplayedItems($type, FALSE, $ID)['count'];
         }
-
-        if (!file_exists(APPPATH . 'views/app/templates/' . $type . '.php')) {
-            echo base_url() . 'views/app/templates/' . $type . '.php';
-            show_404();
-        }
-
-        $this->load->view('app/scripts/header_scripts_side_navigation', $data);
-        $this->load->view('app/templates/' . $type, $data);
-        $this->load->view('app/scripts/footer', $data);
+        //show page
+        $this->showPage($data, $type, 0);
     }
 
     public function showTypeclass($type, $ID = 0, $page_number = 0, $action = "", $errors = FALSE) {
         /* displays paginised list of items */
-
-        $this->chkLoggedIn();
-        $access = $this->session->configuration;
-        if ($access < 2) {//read access
-            $redirect = "app";
-            redirect($redirect);
-        }
+        $this->checkAccess($this->session->configuration, 2);
 
         $data = $this->data;
         $data["header_title"] = ucwords("configuration");
@@ -809,26 +741,13 @@ class App extends MY_Controller {
             $data['received'][0]['description'] = "";
             $data['received'][0]['count'] = $this->app_model->getDisplayedItems($type, FALSE, $ID)['count'];
         }
-
-        if (!file_exists(APPPATH . 'views/app/templates/' . $type . '.php')) {
-            echo base_url() . 'views/app/templates/' . $type . '.php';
-            show_404();
-        }
-
-        $this->load->view('app/scripts/header_scripts_side_navigation', $data);
-        $this->load->view('app/templates/' . $type, $data);
-        $this->load->view('app/scripts/footer', $data);
+        //show page
+        $this->showPage($data, $type, 0);
     }
 
     public function showRoomtype($type, $ID = 0, $page_number = 0, $action = "", $errors = FALSE) {
         /* displays paginised list of items */
-
-        $this->chkLoggedIn();
-        $access = $this->session->configuration;
-        if ($access < 2) {//read access
-            $redirect = "app";
-            redirect($redirect);
-        }
+        $this->checkAccess($this->session->configuration, 2);
 
         $data = $this->data;
         $data["header_title"] = ucwords("configuration");
@@ -844,7 +763,6 @@ class App extends MY_Controller {
         $item_beds = $type . "_beds";
         $item_roomclass = $type . "_roomclass";
         $item_remark = $type . "_remark";
-
 
         if ($errors) {
             $data['received'][0]['form_error'] = $this->session->error_message;
@@ -869,26 +787,13 @@ class App extends MY_Controller {
             $data['received'][0]['remark'] = "";
             $data['received'][0]['count'] = $this->app_model->getDisplayedItems($type, FALSE, $ID)['count'];
         }
-
-        if (!file_exists(APPPATH . 'views/app/templates/' . $type . '.php')) {
-            echo base_url() . 'views/app/templates/' . $type . '.php';
-            show_404();
-        }
-
-        $this->load->view('app/scripts/header_scripts_side_navigation', $data);
-        $this->load->view('app/templates/' . $type, $data);
-        $this->load->view('app/scripts/footer', $data);
+        //show page
+        $this->showPage($data, $type, 0);
     }
 
     public function showRoom($type, $ID = 0, $page_number = 0, $action = "", $errors = FALSE) {
         /* displays paginised list of items */
-
-        $this->chkLoggedIn();
-        $access = $this->session->configuration;
-        if ($access < 2) {//read access
-            $redirect = "app";
-            redirect($redirect);
-        }
+        $this->checkAccess($this->session->configuration, 2);
 
         $data = $this->data;
         //defaults
@@ -954,26 +859,13 @@ class App extends MY_Controller {
             $data['received'][0]['thirdfloor'] = "";
             $data['received'][0]['count'] = $this->app_model->getDisplayedItems($type, FALSE, $ID)['count'];
         }
-
-        if (!file_exists(APPPATH . 'views/app/templates/' . $type . '.php')) {
-            echo base_url() . 'views/app/templates/' . $type . '.php';
-            show_404();
-        }
-
-        $this->load->view('app/scripts/header_scripts_side_navigation', $data);
-        $this->load->view('app/templates/' . $type, $data);
-        $this->load->view('app/scripts/footer', $data);
+        $this->showPage($data, $type, 0);
     }
 
     public function showHousekeeping($type, $ID = 0, $page_number = 0, $action = "", $errors = FALSE) {
         /* displays paginised list of items */
-
-        $this->chkLoggedIn();
-        $access = $this->session->utilities;
-        if ($access < 2) {//read access
-            $redirect = "app";
-            redirect($redirect);
-        }
+        $this->session->app_housekeeping = base_url() . uri_string();
+        $this->checkAccess($this->session->utilities, 2);
 
         $data = $this->data;
         $data["header_title"] = ucwords("Utilities");
@@ -1001,26 +893,12 @@ class App extends MY_Controller {
             $data['received'][0]['remark'] = "";
             $data['received'][0]['count'] = $this->app_model->getDisplayedItems("room", FALSE, $ID)['count'];
         }
-
-        if (!file_exists(APPPATH . 'views/app/templates/' . $type . '.php')) {
-            echo base_url() . 'views/app/templates/' . $type . '.php';
-            show_404();
-        }
-
-        $this->load->view('app/scripts/header_scripts_side_navigation', $data);
-        $this->load->view('app/templates/' . $type, $data);
-        $this->load->view('app/scripts/footer', $data);
+        $this->showPage($data, $type, 0);
     }
 
     public function showTerminals($type, $ID = 0, $page_number = 0, $action = "", $errors = FALSE) {
         /* displays paginised list of items */
-
-        $this->chkLoggedIn();
-        $access = $this->session->monitors;
-        if ($access < 2) {//read access
-            $redirect = "app";
-            redirect($redirect);
-        }
+        $this->checkAccess($this->session->monitors, 2);
 
         $data = $this->data;
         $data["header_title"] = ucwords("Terminals");
@@ -1028,27 +906,26 @@ class App extends MY_Controller {
         $data["page_number"] = $page_number;
         $data["action"] = $action;
         $data['received'][0]['count'] = 0;
+        
+        $this->showPage($data, $type, 0);
+    }
 
+    public function showPageNoGrid($type, $action = "") {
+        /* displays paginised list of items */
+        $this->checkAccess($this->session->maintenance, 2);
 
-        if (!file_exists(APPPATH . 'views/app/templates/' . $type . '.php')) {
-            echo base_url() . 'views/app/templates/' . $type . '.php';
-            show_404();
-        }
-
-        $this->load->view('app/scripts/header_scripts_side_navigation', $data);
-        $this->load->view('app/templates/' . $type, $data);
-        $this->load->view('app/scripts/footer', $data);
+        $data = $this->data;
+        $data["header_title"] = ucwords($type);
+        $data["type"] = $type;
+        $data["action"] = $action;
+        $data['received'][0]['count'] = 0;
+        //show page
+        $this->showPage($data, $type, 0);
     }
 
     public function showAccountplu($type, $ID = 0, $page_number = 0, $action = "", $errors = FALSE) {
         /* displays paginised list of items */
-
-        $this->chkLoggedIn();
-        $access = $this->session->configuration;
-        if ($access < 2) {//read access
-            $redirect = "app";
-            redirect($redirect);
-        }
+        $this->checkAccess($this->session->configuration, 2);
 
         $data = $this->data;
         $data['accountplugroups'] = $this->app_model->getDisplayedItems('account_plu_group')['data'];
@@ -1097,26 +974,13 @@ class App extends MY_Controller {
             $data['received'][0]['enable'] = "";
             $data['received'][0]['count'] = $this->app_model->getDisplayedItems($type, FALSE, $ID)['count'];
         }
-
-        if (!file_exists(APPPATH . 'views/app/templates/' . $type . '.php')) {
-            echo base_url() . 'views/app/templates/' . $type . '.php';
-            show_404();
-        }
-
-        $this->load->view('app/scripts/header_scripts_side_navigation', $data);
-        $this->load->view('app/templates/' . $type, $data);
-        $this->load->view('app/scripts/footer', $data);
+        //show page
+        $this->showPage($data, $type, 0);
     }
 
     public function showAccountpayment($type, $ID = 0, $page_number = 0, $action = "", $errors = FALSE) {
         /* displays paginised list of items */
-
-        $this->chkLoggedIn();
-        $access = $this->session->configuration;
-        if ($access < 2) {//read access
-            $redirect = "app";
-            redirect($redirect);
-        }
+        $this->checkAccess($this->session->configuration, 2);
 
         $data = $this->data;
         $data['accounttypes'] = $this->app_model->getDisplayedItems('account_type')['data'];
@@ -1172,26 +1036,13 @@ class App extends MY_Controller {
             $data['received'][0]['enable'] = "";
             $data['received'][0]['count'] = $this->app_model->getDisplayedItems($type, FALSE, $ID)['count'];
         }
-
-        if (!file_exists(APPPATH . 'views/app/templates/' . $type . '.php')) {
-            echo base_url() . 'views/app/templates/' . $type . '.php';
-            show_404();
-        }
-
-        $this->load->view('app/scripts/header_scripts_side_navigation', $data);
-        $this->load->view('app/templates/' . $type, $data);
-        $this->load->view('app/scripts/footer', $data);
+        //show page
+        $this->showPage($data, $type, 0);
     }
 
     public function showAccountsale($type, $ID = 0, $page_number = 0, $action = "", $errors = FALSE) {
         /* displays paginised list of items */
-
-        $this->chkLoggedIn();
-        $access = $this->session->configuration;
-        if ($access < 2) {//read access
-            $redirect = "app";
-            redirect($redirect);
-        }
+        $this->checkAccess($this->session->configuration, 2);
 
         $data = $this->data;
         $data['accounttypes'] = $this->app_model->getDisplayedItems('account_type')['data'];
@@ -1267,26 +1118,13 @@ class App extends MY_Controller {
             $data['received'][0]['enable'] = "";
             $data['received'][0]['count'] = $this->app_model->getDisplayedItems($type, FALSE, $ID)['count'];
         }
-
-        if (!file_exists(APPPATH . 'views/app/templates/' . $type . '.php')) {
-            echo base_url() . 'views/app/templates/' . $type . '.php';
-            show_404();
-        }
-
-        $this->load->view('app/scripts/header_scripts_side_navigation', $data);
-        $this->load->view('app/templates/' . $type, $data);
-        $this->load->view('app/scripts/footer', $data);
+        //show page
+        $this->showPage($data, $type, 0);
     }
 
     public function showPrice($type, $ID = 0, $page_number = 0, $action = "", $errors = FALSE) {
         /* displays paginised list of items */
-
-        $this->chkLoggedIn();
-        $access = $this->session->prices;
-        if ($access < 2) {//read access
-            $redirect = "app";
-            redirect($redirect);
-        }
+        $this->checkAccess($this->session->prices, 2);
 
         $data = $this->data;
         $data["header_title"] = ucwords("price");
@@ -1309,7 +1147,6 @@ class App extends MY_Controller {
         $item_weekday = $type . "_weekday";
         $item_weekend = $type . "_weekend";
         $item_holiday = $type . "_holiday";
-
 
         if ($errors) {
             $data['received'][0]['form_error'] = $this->session->error_message;
@@ -1348,26 +1185,13 @@ class App extends MY_Controller {
             $data['received'][0]['holiday'] = 0;
             $data['received'][0]['count'] = $this->app_model->getDisplayedItems($type, FALSE, $ID)['count'];
         }
-
-        if (!file_exists(APPPATH . 'views/app/templates/' . $type . '.php')) {
-            echo base_url() . 'views/app/templates/' . $type . '.php';
-            show_404();
-        }
-
-        $this->load->view('app/scripts/header_scripts_side_navigation', $data);
-        $this->load->view('app/templates/' . $type, $data);
-        $this->load->view('app/scripts/footer', $data);
+        //show page
+        $this->showPage($data, $type, 0);
     }
 
     public function showUser($type, $ID = 0, $page_number = 0, $action = "", $errors = FALSE) {
         /* displays paginised list of items */
-
-        $this->chkLoggedIn();
-        $access = $this->session->configuration;
-        if ($access < 2) {//read access
-            $redirect = "app";
-            redirect($redirect);
-        }
+        $this->checkAccess($this->session->configuration, 2);
 
         $data = $this->data;
         //defaults
@@ -1407,20 +1231,17 @@ class App extends MY_Controller {
             $data['received'][0]['role'] = "";
             $data['received'][0]['count'] = $this->app_model->getDisplayedItems($type, FALSE, $ID)['count'];
         }
-
-        if (!file_exists(APPPATH . 'views/app/templates/' . $type . '.php')) {
-            echo base_url() . 'views/app/templates/' . $type . '.php';
-            show_404();
-        }
-
-        $this->load->view('app/scripts/header_scripts_side_navigation', $data);
-        $this->load->view('app/templates/' . $type, $data);
-        $this->load->view('app/scripts/footer', $data);
+        //show page
+        $this->showPage($data, $type, 0);
     }
 
     public function processDelete() {
         //delete a particular item
-        $this->chkLoggedIn();
+        if(!isset($this->session->us_signature) ){//chk if logged in
+            $redirect = "app";
+            redirect($redirect);
+        }
+        
         $type = $this->input->post("delete_type");
         switch ($type) {
             case 'roomclass':
@@ -1449,8 +1270,11 @@ class App extends MY_Controller {
 
         if (isset($_SESSION["delete_group"]) && $_SESSION["delete_group"] === '1') {
             $action = "delete";
-
             $res_id = $this->app_model->deleteItem();
+            if ($res_id && ($type === "reservationfolio")) {
+                $redirect = $this->session->folio_back_uri;
+                redirect($redirect);
+            }
             if ($res_id) {
                 $redirect = "app/" . $show . "/" . $type . "/0/" . $page_number . "/" . $action;
                 redirect($redirect);

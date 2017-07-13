@@ -138,7 +138,6 @@ if (!empty($ID)) {
                                     $image_content.="<div class=\"fileupload fileupload-new\" data-provides=\"fileupload\">";
                                     $image_content.="<div class=\"fileupload-new thumbnail\" style=\"width: 200px; height: 150px;\">";
                                     $image_content.="<img src=\"$received_image\" alt=\"\" >";
-//                                    $delete_button = "<span id=\"$imageid\" class=\"delete_image_only btn btn-danger\"><i class=\"fa fa-trash\"></i> Delete</span>";
                                     $image_content.="</div></div><br/></div>";
                                     echo $image_content;
                                 }

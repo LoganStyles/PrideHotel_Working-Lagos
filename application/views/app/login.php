@@ -67,8 +67,7 @@ if (!empty($site[0]["logo"])) {
                 <input class="btn btn-lg btn-login btn-block" type="submit" name="submit" value="Login" />
 
             </div>
-
-
+            <div style="margin-left: 2%;color: #FF4545;"><?php echo $expiration;?></div>
 
         </form>
         <footer style="text-align: center">

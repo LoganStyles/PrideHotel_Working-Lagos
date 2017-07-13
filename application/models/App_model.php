@@ -1,41 +1,129 @@
 <?php
 
-include_once("passHash.php");
+include_once("passHash.php"); //password hashing
 
 class App_model extends CI_Model {
 
+    private $expired_license=FALSE;
+//handles most queries & db operations
     public function __construct() {
         $this->load->database();
     }
 
-    public function updateItems($type, $ID, $field,$value) {
+    public function getARow($type, $key) {
+        $row = array();
+        $tableitems = strtolower($type) . "items";
+        $this->db->select('*');
+        $this->db->where('reservation_id', $key);
+        $query = $this->db->get($tableitems);
+        if ($query->num_rows() > 0) {
+            $row = $query->row_array();
+        }
+        return $row;
+    }
+
+    public function getRoomReservation($room) {
+        $q = "SELECT reservation_id from reservationitems "
+                . "where room_number=(select ID from roomitems where title ='$room') "
+                . "and status='staying' order by ID desc";
+        $query = $this->db->query($q);
+        if ($query->num_rows() > 0) {
+            $row = $query->row_array();
+            $resv_id = $row['reservation_id'];
+            return $resv_id;
+        }
+        return false;
+    }
+
+    public function updateItems($type, $ID, $field, $value) {
+//        updates a single field in a row
         $tableitems = strtolower($type) . "items";
 
-//        $data = array(
-//            'status' => $value
-//        );
-//        $this->db->where('ID', $ID);
-//        $res = $this->db->update($tableitems, $data);
-        
-        $this->db->set($field,$value);
+        $this->db->set($field, $value);
         $this->db->where('ID', $ID);
         $res = $this->db->update($tableitems);
         return $res;
     }
 
     public function getAppInfo() {
+//        returns app date
         $app_date = "";
         $this->db->select('last_close_account');
         $this->db->from('maintenance');
         $query = $this->db->get();
         if ($query->num_rows() > 0) {
             $results = $query->row_array();
-            $app_date = date("Y-m-d",strtotime($results["last_close_account"]));
+            $app_date = $results["last_close_account"];
         }
         return $app_date;
     }
 
-    public function getDisplayedItems($type, $return_json = FALSE, $ID = 0,$offset = 0, $limit_val = FALSE) {
+    public function getRoomMonitor() {
+        //get metrics like no. of staying,arriving etc
+        $staying_total = $room_total = $arrival_total = $departure_total = $vacant_total = $occupancy = 0;
+        $occupied_total = 0;
+        $app_day = date('Y-m-d', strtotime($this->getAppInfo()));
+        $this->db->select('ID');
+        $this->db->where('status', 'staying');
+        $this->db->where('account_type', 'ROOM');
+        $query = $this->db->get('reservationitems');
+        if ($query->num_rows() > 0) {
+            $staying_total = $query->num_rows();
+        }
+
+        $this->db->select('ID');
+        $this->db->where('status', 'confirmed');
+        $this->db->where('arrival', $app_day);
+        $this->db->where('account_type', 'ROOM');
+        $query = $this->db->get('reservationitems');
+        if ($query->num_rows() > 0) {
+            $arrival_total = $query->num_rows();
+        }
+        $this->db->select('ID');
+        $this->db->where('status', 'staying');
+        $this->db->where('departure', $app_day);
+        $this->db->where('account_type', 'ROOM');
+        $query = $this->db->get('reservationitems');
+        if ($query->num_rows() > 0) {
+            $departure_total = $query->num_rows();
+        }
+
+        $this->db->select('ID');
+        $this->db->where('status', 1);
+        $this->db->or_where('status', 2);
+        $query = $this->db->get('roomitems');
+        if ($query->num_rows() > 0) {
+            $vacant_total = $query->num_rows();
+        }
+
+        $this->db->select('ID');
+        $this->db->where('status', 3);
+        $this->db->or_where('status', 4);
+        $query = $this->db->get('roomitems');
+        if ($query->num_rows() > 0) {
+            $occupied_total = $query->num_rows();
+        }
+
+        $this->db->select('ID');
+        $query = $this->db->get('roomitems');
+        if ($query->num_rows() > 0) {
+            $room_total = $query->num_rows();
+        }
+
+        $occupancy = ceil(($occupied_total / $room_total) * 100);
+
+        $room_stats = array(
+            'staying' => $staying_total,
+            'arrival' => $arrival_total,
+            'departure' => $departure_total,
+            'vacant' => $vacant_total,
+            'occupancy' => $occupancy
+        );
+
+        return $room_stats;
+    }
+
+    public function getDisplayedItems($type, $return_json = FALSE, $ID = 0, $offset = 0, $limit_val = FALSE) {
         /* gets all fields for a table with filters,limit & offsets
          * ::used for page navigations etc */
 
@@ -48,7 +136,7 @@ class App_model extends CI_Model {
         $sort = "order by ID";
         $results['data'] = array();
         $results['count'] = 0;
-        
+
         if ($limit_val) {
             $limit = "LIMIT $offset,$limit_val";
         }
@@ -74,6 +162,32 @@ class App_model extends CI_Model {
         $query = $this->db->query($q_total);
         if ($query->num_rows() > 0)
             $results['count'] = $query->num_rows();
+
+        //calc expiration
+        $expiration_time = "";
+        $this->db->select('*');
+        $query = $this->db->get('maintenance');
+        if ($query->num_rows() > 0) {
+            $result = $query->row_array();
+            $last_close_acct = date("Y-m-d", strtotime($result['last_close_account']));
+            $expire_date = date("Y-m-d", strtotime($result['expire_date']));
+
+            $date_expire = new DateTime(strval($expire_date));
+            $date_close = new DateTime(strval($last_close_acct));
+
+            $diff = $date_expire->diff($date_close)->format("%a");
+
+            if (intval($diff) <= 30 && intval($diff) >= 0) {
+                $expiration_time = ucwords("Your software license will expire in $diff days, Please contact the Administrator to renew");
+            }
+
+            if (strval($last_close_acct) > strval($expire_date)) {
+                $this->expired_license=TRUE;
+                $expiration_time = ucwords("Your software License Has expired, Please contact the Administrator to renew");
+            }
+        }
+
+        $results['expiration'] = $expiration_time;
 
         if ($return_json) {
             return json_encode($results['data']);
@@ -207,6 +321,13 @@ class App_model extends CI_Model {
                             . "WHERE users.ID='$ID' AND roles.title <> 'SUPER'";
                 }
                 break;
+            case 'folio_sale':
+                $q = "SELECT pln.title as plu,pln.description,pln.acctsale as account, acs.title as account_title "
+                        . "from account_plu_numberitems as pln "
+                        . "left join account_saleitems as acs "
+                        . "on(pln.acctsale = acs.ID) "
+                        . "where pln.plu_group='$ID'";
+                break;
         }
 //        echo $q;exit;
 
@@ -229,10 +350,13 @@ class App_model extends CI_Model {
         /* create sessions for authenticated users 
          * update user login data
          */
+        if($this->expired_license){//check license
+            $this->session->set_flashdata('error_message', 'Software License Has Expired');
+            return false;
+        }
         $tableitems = strtolower($type) . "items";
 
-        $q = "SELECT ID,title,signature,hashed_p,role "
-                . "FROM $tableitems "
+        $q = "SELECT ID,title,signature,hashed_p,role FROM $tableitems "
                 . "WHERE signature='$login_signature' LIMIT 1";
 //        echo $q;exit;
 
@@ -253,7 +377,7 @@ class App_model extends CI_Model {
 
                     //UPDATE USER'S IP AND LAST LOGIN
                     $curr_ip_add = $_SERVER['REMOTE_ADDR'];
-                    $curr_time = date("Y-m-d H:i:s");
+                    $curr_time = date('Y-m-d', strtotime($this->getAppInfo())) . " " . date('H:i:s');
                     $data = array(
                         'last_login_ip' => $curr_ip_add,
                         'last_login_time' => $curr_time
@@ -297,7 +421,7 @@ class App_model extends CI_Model {
     public function logout() {
         $res = false;
         $data = array(
-            'last_logout_time' => date("Y-m-d H:i:s")
+            'last_logout_time' => date('Y-m-d', strtotime($this->getAppInfo())) . " " . date('H:i:s')
         );
         $this->db->where('signature', $this->session->us_signature);
         $res = $this->db->update("useritems", $data);
@@ -307,6 +431,7 @@ class App_model extends CI_Model {
     public function updateSite($type, $image_present) {
         /* updates site details */
         $tableitems = strtolower($type) . "items";
+        $app_day = date('Y-m-d', strtotime($this->getAppInfo())) . " " . date('H:i:s');
 
         $ID = $this->input->post('site_ID');
         $title = $this->input->post('site_title');
@@ -346,7 +471,7 @@ class App_model extends CI_Model {
                 'url' => $url,
                 'logo' => $image_filename,
                 'bank_account' => $bank_account,
-                'date_modified' => date("Y-m-d H:i:s")
+                'date_modified' => $app_day
             );
             $this->db->where('ID', $ID);
             $this->db->update($tableitems, $data);
@@ -368,7 +493,7 @@ class App_model extends CI_Model {
                 'logo' => $image_filename,
                 'bank_account' => $bank_account,
                 'type' => $type,
-                'date_created' => date("Y-m-d H:i:s")
+                'date_created' => $app_day
             );
             $this->db->insert($tableitems, $data);
             $insert_id = $this->db->insert_id();
@@ -379,8 +504,9 @@ class App_model extends CI_Model {
     }
 
     public function saveRole($type) {
-        /* updates site details */
+        /* updates role details */
         $tableitems = strtolower($type) . "items";
+        $app_day = date('Y-m-d', strtotime($this->getAppInfo())) . " " . date('H:i:s');
 
         $ID = $this->input->post('role_ID');
         $title = strtoupper($this->input->post('role_title'));
@@ -409,7 +535,7 @@ class App_model extends CI_Model {
                 'prices' => $prices,
                 'overview' => $overview,
                 'delete_group' => $delete_group,
-                'date_modified' => date("Y-m-d H:i:s")
+                'date_modified' => $app_day
             );
             $this->db->where('ID', $ID);
             $this->db->update($tableitems, $data);
@@ -430,7 +556,7 @@ class App_model extends CI_Model {
                 'delete_group' => $delete_group,
                 'type' => $type,
                 'signature_created' => $this->session->us_signature,
-                'date_created' => date("Y-m-d H:i:s")
+                'date_created' => $app_day
             );
             $this->db->insert($tableitems, $data);
             $insert_id = $this->db->insert_id();
@@ -443,6 +569,7 @@ class App_model extends CI_Model {
     public function saveRoom($type) {
         /* updates room details */
         $tableitems = strtolower($type) . "items";
+        $app_day = date('Y-m-d', strtotime($this->getAppInfo())) . " " . date('H:i:s');
 
         $ID = $this->input->post('room_ID');
         $title = strtoupper($this->input->post('room_title'));
@@ -476,7 +603,7 @@ class App_model extends CI_Model {
                 'secondfloor' => $secondfloor,
                 'thirdfloor' => $thirdfloor,
                 'signature_created' => $this->session->us_signature,
-                'date_modified' => date("Y-m-d H:i:s")
+                'date_modified' => $app_day
             );
             $this->db->where('ID', $ID);
             $this->db->update($tableitems, $data);
@@ -499,7 +626,7 @@ class App_model extends CI_Model {
                 'thirdfloor' => $thirdfloor,
                 'type' => $type,
                 'signature_created' => $this->session->us_signature,
-                'date_created' => date("Y-m-d H:i:s")
+                'date_created' => $app_day
             );
             $this->db->insert($tableitems, $data);
             $insert_id = $this->db->insert_id();
@@ -510,15 +637,16 @@ class App_model extends CI_Model {
     }
 
     public function updateHousekeeping($type) {
-        /* updates room details */
+        /* updates housekeeping details */
         $tableitems = strtolower($type) . "items";
+        $app_day = date('Y-m-d', strtotime($this->getAppInfo())) . " " . date('H:i:s');
 
         $ID = $this->input->post('housekeeping_ID');
         $remark = $this->input->post('housekeeping_remark');
 
         $data = array(
             'remark' => $remark,
-            'date_modified' => date("Y-m-d H:i:s")
+            'date_modified' => $app_day
         );
         $this->db->where('ID', $ID);
         $this->db->update($tableitems, $data);
@@ -528,6 +656,7 @@ class App_model extends CI_Model {
     public function saveAccountPlu($type) {
         /* updates account_plu_number details */
         $tableitems = strtolower($type) . "items";
+        $app_day = date('Y-m-d', strtotime($this->getAppInfo())) . " " . date('H:i:s');
 
         $ID = $this->input->post('account_plu_number_ID');
         $title = strtoupper($this->input->post('account_plu_number_title'));
@@ -549,7 +678,7 @@ class App_model extends CI_Model {
                 'cost' => $cost,
                 'enable' => $enable,
                 'signature_created' => $this->session->us_signature,
-                'date_modified' => date("Y-m-d H:i:s")
+                'date_modified' => $app_day
             );
             $this->db->where('ID', $ID);
             $this->db->update($tableitems, $data);
@@ -566,7 +695,7 @@ class App_model extends CI_Model {
                 'enable' => $enable,
                 'type' => $type,
                 'signature_created' => $this->session->us_signature,
-                'date_created' => date("Y-m-d H:i:s")
+                'date_created' => $app_day
             );
             $this->db->insert($tableitems, $data);
             $insert_id = $this->db->insert_id();
@@ -577,8 +706,9 @@ class App_model extends CI_Model {
     }
 
     public function saveAccountPayment($type) {
-        /* updates room details */
+        /* updates account_payment details */
         $tableitems = strtolower($type) . "items";
+        $app_day = date('Y-m-d', strtotime($this->getAppInfo())) . " " . date('H:i:s');
 
         $ID = $this->input->post('account_payment_ID');
         $title = strtoupper($this->input->post('account_payment_title'));
@@ -604,7 +734,7 @@ class App_model extends CI_Model {
                 'cash_declaration' => $cash_declaration,
                 'enable' => $enable,
                 'signature_created' => $this->session->us_signature,
-                'date_modified' => date("Y-m-d H:i:s")
+                'date_modified' => $app_day
             );
             $this->db->where('ID', $ID);
             $this->db->update($tableitems, $data);
@@ -623,7 +753,7 @@ class App_model extends CI_Model {
                 'enable' => $enable,
                 'type' => $type,
                 'signature_created' => $this->session->us_signature,
-                'date_created' => date("Y-m-d H:i:s")
+                'date_created' => $app_day
             );
             $this->db->insert($tableitems, $data);
             $insert_id = $this->db->insert_id();
@@ -636,6 +766,7 @@ class App_model extends CI_Model {
     public function savePrice($type) {
         /* updates price details */
         $tableitems = strtolower($type) . "items";
+        $app_day = date('Y-m-d', strtotime($this->getAppInfo())) . " " . date('H:i:s');
 
         $ID = $this->input->post('price_ID');
         $title = strtoupper($this->input->post('price_title'));
@@ -667,7 +798,7 @@ class App_model extends CI_Model {
                 'weekend' => $weekend,
                 'holiday' => $holiday,
                 'signature_created' => $this->session->us_signature,
-                'date_modified' => date("Y-m-d H:i:s")
+                'date_modified' => $app_day
             );
             $this->db->where('ID', $ID);
             $this->db->update($tableitems, $data);
@@ -689,7 +820,7 @@ class App_model extends CI_Model {
                 'holiday' => $holiday,
                 'type' => $type,
                 'signature_created' => $this->session->us_signature,
-                'date_created' => date("Y-m-d H:i:s")
+                'date_created' => $app_day
             );
             $this->db->insert($tableitems, $data);
             $insert_id = $this->db->insert_id();
@@ -702,6 +833,7 @@ class App_model extends CI_Model {
     public function saveAccountSale($type) {
         /* updates account_sale details */
         $tableitems = strtolower($type) . "items";
+        $app_day = date('Y-m-d', strtotime($this->getAppInfo())) . " " . date('H:i:s');
 
         $ID = $this->input->post('account_sale_ID');
         $title = strtoupper($this->input->post('account_sale_title'));
@@ -737,7 +869,7 @@ class App_model extends CI_Model {
                 'service_charge' => $service_charge,
                 'enable' => $enable,
                 'signature_created' => $this->session->us_signature,
-                'date_modified' => date("Y-m-d H:i:s")
+                'date_modified' => $app_day
             );
             $this->db->where('ID', $ID);
             $this->db->update($tableitems, $data);
@@ -761,7 +893,7 @@ class App_model extends CI_Model {
                 'enable' => $enable,
                 'type' => $type,
                 'signature_created' => $this->session->us_signature,
-                'date_created' => date("Y-m-d H:i:s")
+                'date_created' => $app_day
             );
             $this->db->insert($tableitems, $data);
             $insert_id = $this->db->insert_id();
@@ -772,8 +904,9 @@ class App_model extends CI_Model {
     }
 
     public function saveTypeclass($type) {
-        /* updates site details */
+        /* updates generic details for some modules */
         $tableitems = strtolower($type) . "items";
+        $app_day = date('Y-m-d', strtotime($this->getAppInfo())) . " " . date('H:i:s');
 
         $typeid = $type . "_ID";
         $typetitle = $type . "_title";
@@ -789,7 +922,7 @@ class App_model extends CI_Model {
                 'title' => $title,
                 'description' => $description,
                 'signature_created' => $this->session->us_signature,
-                'date_modified' => date("Y-m-d H:i:s")
+                'date_modified' => $app_day
             );
             $this->db->where('ID', $ID);
             $this->db->update($tableitems, $data);
@@ -801,7 +934,7 @@ class App_model extends CI_Model {
                 'description' => $description,
                 'type' => $type,
                 'signature_created' => $this->session->us_signature,
-                'date_created' => date("Y-m-d H:i:s")
+                'date_created' => $app_day
             );
             $this->db->insert($tableitems, $data);
             $insert_id = $this->db->insert_id();
@@ -814,6 +947,7 @@ class App_model extends CI_Model {
     public function saveRoomtype($type) {
         /* updates roomtype details */
         $tableitems = strtolower($type) . "items";
+        $app_day = date('Y-m-d', strtotime($this->getAppInfo())) . " " . date('H:i:s');
 
         $ID = $this->input->post('roomtype_ID');
         $title = strtoupper($this->input->post('roomtype_title'));
@@ -831,7 +965,7 @@ class App_model extends CI_Model {
                 'remark' => $remark,
                 'roomclass' => $roomclass,
                 'signature_created' => $this->session->us_signature,
-                'date_modified' => date("Y-m-d H:i:s")
+                'date_modified' => $app_day
             );
             $this->db->where('ID', $ID);
             $this->db->update($tableitems, $data);
@@ -846,7 +980,7 @@ class App_model extends CI_Model {
                 'roomclass' => $roomclass,
                 'type' => $type,
                 'signature_created' => $this->session->us_signature,
-                'date_created' => date("Y-m-d H:i:s")
+                'date_created' => $app_day
             );
             $this->db->insert($tableitems, $data);
             $insert_id = $this->db->insert_id();
@@ -857,7 +991,8 @@ class App_model extends CI_Model {
     }
 
     public function saveUser($type) {
-        /* updates site details */
+        /* updates user details */
+        $app_day = date('Y-m-d', strtotime($this->getAppInfo())) . " " . date('H:i:s');
         $tableitems = strtolower($type) . "items";
 
         $ID = $this->input->post('user_ID');
@@ -874,7 +1009,7 @@ class App_model extends CI_Model {
                 'hashed_p' => $keyword,
                 'role' => $role,
                 'signature_created' => $this->session->us_signature,
-                'date_modified' => date("Y-m-d H:i:s")
+                'date_modified' => $app_day
             );
             $this->db->where('ID', $ID);
             $this->db->update($tableitems, $data);
@@ -887,7 +1022,7 @@ class App_model extends CI_Model {
                 'hashed_p' => $keyword,
                 'role' => $role,
                 'signature_created' => $this->session->us_signature,
-                'date_created' => date("Y-m-d H:i:s")
+                'date_created' => $app_day
             );
             $this->db->insert($tableitems, $data);
             $insert_id = $this->db->insert_id();
@@ -895,11 +1030,10 @@ class App_model extends CI_Model {
         } else {
             return false;
         }
-    }    
-    
+    }
 
     public function deleteItem() {
-
+//deletes an item
         $item_id = "delete_id";
         $item_type = "delete_type";
 

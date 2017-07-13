@@ -1,4 +1,25 @@
 /*reservation js operations*/
+function calcDateDiffWithSign(date1, date2) {
+    var comp, m1, d1, y1, m2, d2, y2;
+    var oneDay = 24 * 60 * 60 * 1000; // hours*minutes*seconds*milliseconds
+    comp = date1.split('/');
+    d1 = parseInt(comp[0], 10);
+    m1 = parseInt(comp[1], 10);
+    y1 = parseInt(comp[2], 10);
+
+    comp = date2.split('/');
+    d2 = parseInt(comp[0], 10);
+    m2 = parseInt(comp[1], 10);
+    y2 = parseInt(comp[2], 10);
+
+    var firstDate = new Date(y1, m1, d1);
+    var secondDate = new Date(y2, m2, d2);
+
+    var diffDays = Math.round((firstDate.getTime() - secondDate.getTime()) / (oneDay));
+    return diffDays;
+}
+
+
 function getModalSelection(prefix, type, modal, ID, value, weekday, weekend, holiday) {
     var output_field = "#" + prefix + "_" + type;
     var hidden_field = "#" + prefix + "_" + type + "_id";
@@ -29,9 +50,16 @@ function getModalSelection(prefix, type, modal, ID, value, weekday, weekend, hol
 
 }
 
-function closeResvModal(modal){
+function closeResvModal(modal) {
     $(modal).removeClass("in").css('display', 'none');
-    location.reload();}
+    location.reload();
+}
+
+function printReservation(type) {
+    var url = BASE_URL + "report/printReservations/" + type;
+    console.log('update url: ' + url);
+    window.location = url;
+}
 
 function deleteReservation() {
     /*chk if resv is not departed,..
@@ -51,6 +79,22 @@ function deleteReservation() {
         $("#delete_resv_newvalue").val("cancelled");
         $("#delete_resv_modal").modal({backdrop: false, keyboard: false});
     }
+}
+
+function deletePerson(type) {
+    /*
+     * show prompt for confirmation & remark..
+     * if yes & remark exists on prompt,
+     * log details of this action,
+     * display updated components*/
+
+    var delete_id = $('.booking_radio.active .booking_hidden_id').val();
+    var name = $('.booking_radio.active .booking_hidden_id').parent().text();
+    $("#delete_person_reason").val("");
+    $("#delete_person_id").val(delete_id);
+    $("#delete_person_title").val(name);
+    $("#delete_person_type").val(type);
+    $("#delete_person_modal").modal({backdrop: false, keyboard: false});
 }
 
 function fetchModalGridData(prefix, grid_type) {
@@ -197,9 +241,6 @@ var reservation = {
         price_total = (weekday_rate * week_days) + (weekend_rate * weekend_count);
 
         price_extra = parseFloat($('#guest_price_extra').val());
-//        console.log('price_extra before complimentary ' + price_extra);
-//        console.log('price_total before complimentary ' + price_total);
-//        console.log('week_days before complimentary ' + week_days);
 
         price_total_comp = price_total + price_extra;
         console.log('price total before complimentary ' + price_total_comp);
@@ -237,10 +278,6 @@ var reservation = {
             $('#guest_price_room').val(price_total);
             $('#guest_price_total').val(price_total_comp);
         }
-    },
-    storeNewClient: function () {
-        //search for client, if not existing prompt staff to add
-
     },
     grid: function (datafields_data, columndata, fetched_data, grid_type, width, prefix) {
         if (prefix == "guest") {

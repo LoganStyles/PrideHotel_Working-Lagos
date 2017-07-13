@@ -39,22 +39,22 @@ function fetchGridData(grid_type) {
                         {text: 'Description', datafield: 'description'}
                     ];
                     break;
-                case 'person':
-                    datafields_data = [
-                        {name: 'ID', type: 'number'},
-                        {name: 'title', type: 'string'},
-                        {name: 'phone', type: 'string'},
-                        {name: 'email', type: 'string'},
-                        {name: 'state', type: 'string'}
-                    ];
-
-                    columndata = [
-                        {text: 'Name', datafield: 'title', align: 'left', cellsalign: 'left'},
-                        {text: 'Phone', datafield: 'phone'},
-                        {text: 'Email', datafield: 'email'},
-                        {text: 'State', datafield: 'state'}
-                    ];
-                    break;
+//                case 'person':
+//                    datafields_data = [
+//                        {name: 'ID', type: 'number'},
+//                        {name: 'title', type: 'string'},
+//                        {name: 'phone', type: 'string'},
+//                        {name: 'email', type: 'string'},
+//                        {name: 'state', type: 'string'}
+//                    ];
+//
+//                    columndata = [
+//                        {text: 'Name', datafield: 'title', align: 'left', cellsalign: 'left'},
+//                        {text: 'Phone', datafield: 'phone'},
+//                        {text: 'Email', datafield: 'email'},
+//                        {text: 'State', datafield: 'state'}
+//                    ];
+//                    break;
                 case 'user':
                     datafields_data = [
                         {name: 'ID', type: 'number'},
@@ -373,8 +373,12 @@ var configuration = {
             console.log('dblclick: ' + id);
             modalLoader(grid_type, modal, "edit", id);
         });
+        
+        if(data_len >0){
+            $(grid_location).jqxGrid('selectrow', 0);
+        }
 
-        $(grid_location).jqxGrid('selectrow', 0);
+        
     }
 }
 

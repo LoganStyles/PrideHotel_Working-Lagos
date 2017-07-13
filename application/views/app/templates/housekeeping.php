@@ -6,9 +6,6 @@ if ($access < 2) {
     $redirect = "app";
     redirect($redirect);
 }
-//elseif ($access > 2) {
-//    $disabled = "";
-//}
 
 
 $current = $received[0];

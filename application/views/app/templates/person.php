@@ -1,39 +1,79 @@
 <?php
+$delete = (isset($this->session->delete_group) ? ($this->session->delete_group) : (0));
+$form_error = (isset($this->session->delete_error) ? ($this->session->delete_error) : (""));
+
 $current = $received[0];
 extract($current);
 $countries_list=displayOptions($countries,$country);
 
+$count = 1;
+
 if ($form_error) {
     $danger_style = "alert alert-danger error";
-    $display_modal="block";
-    $modal_mode="in";
+    $display_modal = "block";
+    $modal_mode = "in";
 } else {
-    $danger_style = $display_modal=$modal_mode="";
+    $danger_style = $display_modal = $modal_mode = "";
+}
+
+if ($person_form_error) {
+    $danger_person_style = "alert alert-danger error";
+    $display_person_modal = "block";
+    $delete_person_mode = "in";
+} else {
+    $danger_person_style = $display_person_modal = $delete_person_mode = "";
 }
 ?>
 
 <!--body wrapper start-->
 <div class="wrapper">
-
     <div class="row">
-        <div class="col-sm-10">
+        <div class="col-sm-12">
             <section class="panel">
                 <header class="panel-heading">
-                    <!--Person-->
+                   Clients
                     <div>
-                        <div id="person_loader"></div>
-                        <div>Clients</div>
                         <div class="pull-right">
+                            <?php if (count($collection) > 0) { ?>
+                                <?php
+                                $content = $status_span = $active_span = "";
+                                foreach ($collection as $row):
+                                    $personid = $row["ID"];
+                                    $person_title = $row["title"];
+                                    $person_email = $row["email"];
+                                    $person_phone = $row["phone"];
+                                    $person_state = $row["state"];
 
+                                    if ($count == 1) {
+                                        $active = "active";
+                                        $checked = "checked";
+                                    } else {
+                                        $active = "";
+                                        $checked = "";
+                                    }
+
+                                    $content.="<tr class=\"booking_radio $active\">";
+                                    $content.="<td><input class=\"booking_hidden_id\" type=\"hidden\" value=\"$personid\">"
+                                            . "$person_title</td>";
+                                    $content.="<td>$person_email</td>";
+                                    $content.="<td>$person_phone</td>";
+                                    $content.="<td>$person_state</td>";
+                                    $content.="</tr>";
+
+                                    $count++;
+                                endforeach;
+                                ?>
+                            <?php } ?>
                             <div class="form-group ">
                                 <div class="col-sm-12">
                                     <?php
-                                    $buttons = "<a onclick=\"modalLoader('person','#person_modal','new',0);\" class=\"btn btn-default  \" type=\"button\"><i class=\"fa fa-plus\"></i>&nbsp;New</a>&nbsp;"; //                    
-                                    if ($count >= 1) {                                        
-                                        $buttons.="<a id=\"person_edit\" onclick=\"\" type=\"button\" class=\"btn btn-primary \"><i class=\"fa fa-edit\"></i>&nbsp;Edit</a>&nbsp;";
-                                        if(isset($_SESSION["delete_group"]) && $_SESSION["delete_group"] === '1'){
-                                            $buttons.="<a id=\"person_delete\"onclick=\"\" type=\"button\" class=\"btn btn-primary \"><i class=\"fa fa-trash-o\"></i>&nbsp;Delete</a>&nbsp;";
-                                        }                                        
+                                    $buttons = "<a onclick=\"modalLoader('person','#person_modal','new',0);\" class=\"btn btn-default  \" type=\"button\"><i class=\"fa fa-plus\"></i>&nbsp;New</a>&nbsp;"; //                                        
+                                    if ($count > 1) {
+                                        $buttons.="<a onclick=\"processClient('view');\" type=\"button\" class=\"btn btn-default \"><i class=\"fa fa-eye\"></i>&nbsp;View</a>&nbsp;";
+                                        $buttons.="<a onclick=\"processClient('edit');\" type=\"button\" class=\"btn btn-default \"><i class=\"fa fa-plus-square\"></i>&nbsp;Edit</a>&nbsp;";
+                                        if ($delete == "1") {
+                                            $buttons.="<a onclick=\"deletePerson('person');\" type=\"button\" class=\"btn btn-default \"><i class=\"fa fa-trash-o\"></i>&nbsp;Delete</a>&nbsp;";
+                                        }
                                     }
                                     echo $buttons;
                                     ?>
@@ -49,17 +89,34 @@ if ($form_error) {
 
 
                 <div class="panel-body">
-                    <div class="" id="person_data">
+                    <table class="table  table-hover general-table table-bordered table-condensed">
+                        <thead>
+                            <tr>                    
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Phone</th>
+                                <th>State</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php if (count($collection) > 0) { ?>
+                                <?php echo $content; ?>
+                            <?php } ?>
+                        </tbody>
+                    </table>
 
-                    </div>
+                    <?php
+                    if (strlen($pagination)) {
+                        echo $pagination;
+                    }
+                    ?>
 
                 </div>
-            </section>
-        </div>
 
+        </div>
+        </section>
     </div>
 </div>
-
 <!--body wrapper end-->
 
 <!-- person_modal Modal -->
@@ -69,7 +126,7 @@ if ($form_error) {
         <!-- Modal content-->
         <div class="modal-content">
             <div class="modal-header panel-heading dark">
-                <h4 class="modal-title" style="text-align:center">Guest (NEW)</h4>
+                <h4 class="modal-title" style="text-align:center">Guest</h4>
             </div>
 
             <div class="modal-body" > 
@@ -271,7 +328,7 @@ if ($form_error) {
                     </div>   
                 </div>
                 <div class="pull-right">
-                    <input class="btn btn-success btn-sm" type="submit" name="submit" value="Save" />
+                    <input class="btn btn-success btn-sm" type="submit" name="submit" value="Save" />                    
                     <button type="button" class="btn btn-default" onclick="closeModal('#person_modal');">Close</button>
                 </div>
                 <div class="clearfix"></div>
@@ -281,3 +338,44 @@ if ($form_error) {
     </div>
 </div>
 <!--person_modal -->
+
+
+<div role="dialog" id="delete_person_modal" class="modal fade <?php echo $delete_person_mode; ?>" style="display:<?php echo $display_person_modal; ?>;">
+    <div class="modal-dialog" style="width: 600px;">
+        <div class="modal-content">
+            <div class="modal-header panel-heading dark" >                
+                <h4 class="modal-title" style="text-align:center">Delete Dialog</h4>
+            </div>
+            <div class="modal-body">
+
+                <?php
+                $attributes = array('class' => 'cmxform form-horizontal adminex-form', 'id' => 'delete_person_form');
+                echo '<div class="' . $danger_person_style . '">' . $person_form_error . '</div>';
+                echo form_open('resv/processPersonDelete', $attributes);
+                ?>
+                <div class="panel-body">
+                    <div class="row">
+                        <div class="form">
+                            <div class="col-md-12">
+                                <div class="form-group ">
+                                    <h4>Are You Sure You Want To Delete This Item? Provide a reason</h4>
+                                    <input type="text" class="form-control" name="delete_person_reason" id="delete_person_reason">
+                                    <input type="hidden" value="" name="delete_person_id" id="delete_person_id">
+                                    <input type="hidden" value="" name="delete_person_type" id="delete_person_type">
+                                    <input type="hidden" value="" name="delete_person_title" id="delete_person_title">
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            <div class="modal-footer">
+                <input class="btn btn-success btn-sm" type="submit" name="submit" value="YES" />
+                <button type="button" class="btn btn-default" onclick="closeResvModal('#delete_person_modal');">NO</button>
+                </form> 
+            </div>
+        </div>
+    </div>
+</div>

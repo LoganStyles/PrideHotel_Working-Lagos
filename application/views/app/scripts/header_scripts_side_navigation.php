@@ -1,8 +1,6 @@
 <?php
 $current = $received[0];
 extract($current);
-//echo '$header_title '.$header_title.' title '.$type;exit;
-
 //site info
 if (empty($site[0]["ID"])) {
     $site_id = 0;
@@ -36,7 +34,6 @@ if (!empty($site_logo)) {
 }
 
 $curr_name = ($this->session->us_name) ? ($this->session->us_name) : ("");
-//echo 'TYPE '.$type.' hea '.$header_title;exit;
 
 function displayOptions($list, $id) {
     $options = "<option value=\"0\">None</option>";
@@ -57,11 +54,15 @@ function displayOptions($list, $id) {
     return $options;
 }
 
-function getTitle($titles, $id) {
+function getTitle($titles, $id, $result_type = NULL) {
     if (count($titles) > 0) {
         foreach ($titles as $row) {
             $curr_ID = $row["ID"];
             $curr_title = ucwords($row["title"]);
+            if (!empty($result_type) && ($curr_ID == $id)) {
+                $curr_type = strtoupper($row[$result_type]);
+                return $curr_type;
+            }
             if ($curr_ID == $id) {
                 return $curr_title;
             }
@@ -111,10 +112,11 @@ function getTitle($titles, $id) {
 
                 <!--logo and iconic logo start-->
                 <div class="logo">
-                    <a href="<?php $url = base_url() ;
-                        echo $url;
-                        ?>">
-                           <?php echo $site_logo; ?>
+                    <a href="<?php
+                    $url = base_url();
+                    echo $url;
+                    ?>">
+<?php echo $site_logo . " " . date('d/m/Y', strtotime($app_date)); ?>
                     </a>                    
                 </div>
 
@@ -126,22 +128,13 @@ function getTitle($titles, $id) {
                             <!--<img alt="" src="images/photos/user-avatar.png" class="media-object">-->
                             <div class="media-body">
                                 <h4><a href="#"><?php echo $curr_name; ?></a></h4>
-                                <!--<span>"Hello There..."</span>-->
                             </div>
                         </div>
-
-                        <!--                        <h5 class="left-nav-title">Account Information</h5>
-                                                <ul class="nav nav-pills nav-stacked custom-nav">
-                                                    <li><a href="#"><i class="fa fa-user"></i> <span>Profile</span></a></li>
-                                                    <li><a href="#"><i class="fa fa-cog"></i> <span>Settings</span></a></li>
-                                                    <li><a href="#"><i class="fa fa-sign-out"></i> <span>Sign Out</span></a></li>
-                                                </ul>-->
                     </div>
 
                     <!--sidebar nav start-->
                     <ul class="nav nav-pills nav-stacked custom-nav">
                         <li class="menu-list <?php
-                        
                         if ($module == 'reservation') {
                             echo 'nav-active';
                         }
@@ -149,81 +142,95 @@ function getTitle($titles, $id) {
 
                             <ul class="sub-menu-list">                                
                                 <li class="<?php
-                                
-                                if ($header_title == "Guest" || 
-                                        $module == "reservation") {
+                                if ($header_title == "Guest") {
                                     echo "active";
                                 }
                                 ?>"><a href="<?php echo base_url() . 'app'; ?>"> Guest Rooms</a></li>
                                 <li class="<?php
-                                if ($type == "groups") {
+                                if ($bar_title == "Group") {
                                     echo "active";
                                 }
-                                ?>"><a href="#"> Groups</a></li>
-                                <li class="<?php
+                                ?>"><a href="<?php echo base_url() . 'group'; ?>"> Groups</a></li>
+                                <!--<li class="<?php
                                 if ($type == "house_accounts") {
                                     echo "active";
                                 }
-                                ?>"><a href="#"> House Accounts</a></li>
+                                ?>"><a href="#"> House Accounts</a></li>-->
                             </ul>
                         </li>
 
                         <li class="menu-list-altered <?php
-                        if ($type == 'night_audit') {
-                            echo 'nav-active';
-                        }
-                        ?>"><a href="<?php echo base_url() . 'app'; ?>"><i class="fa fa-moon-o"></i><span>Night Audit</span></a>                            
+                                if ($type == 'nightaudit') {
+                                    echo 'nav-active';
+                                }
+                                ?>"><a href="<?php echo base_url() . 'app/night'; ?>"><i class="fa fa-moon-o"></i><span>Night Audit</span></a>                            
                         </li>
-                        
+
                         <?php if (isset($_SESSION["utilities"]) && $_SESSION["utilities"] > 1) { ?>
 
-                        <li class="menu-list <?php
-                        if ($header_title == 'Utilities') {
+                            <li class="menu-list <?php
+                            if ($header_title == 'Utilities') {
+                                echo 'nav-active';
+                            }
+                            ?>"><a href="#"><i class="fa fa-home"></i><span>Utilities</span></a>
+
+                                <ul class="sub-menu-list">                                
+                                    <li class="<?php
+                        if ($type == "housekeeping") {
+                            echo "active";
+                        }
+                            ?>"><a href="<?php echo base_url() . 'app/housekeeping'; ?>"> Housekeeping</a></li>                                    
+
+                                </ul>
+                            </li>                        
+                        <?php } ?>
+
+                        <?php if (isset($_SESSION["monitors"]) && $_SESSION["monitors"] > 1) { ?>
+
+                            <li class="menu-list-altered <?php
+                            if ($header_title == 'Terminals') {
+                                echo 'nav-active';
+                            }
+                            ?>"><a href="<?php echo base_url() . 'app/terminals'; ?>"><i class="fa fa-desktop"></i><span>Terminals</span></a>                            
+                            </li>
+                        <?php } ?>
+                            
+                            <li class="menu-list <?php
+                        if ($module == 'ledger') {
                             echo 'nav-active';
                         }
-                        ?>"><a href="#"><i class="fa fa-home"></i><span>Utilities</span></a>
+                        ?>"><a href="#"><i class="fa fa-folder-open"></i><span>Ledger</span></a>
 
                             <ul class="sub-menu-list">                                
                                 <li class="<?php
-                                if ($type == "housekeeping") {
+                                if ($header_title == 'Ledger Guest') {
                                     echo "active";
                                 }
-                                ?>"><a href="<?php echo base_url() . 'app/housekeeping'; ?>"> Housekeeping</a></li>
+                                ?>"><a href="<?php echo base_url() . 'resv/ledger/guest'; ?>"> Guest Ledgers</a></li>
                                 <li class="<?php
-                                if ($type == "room_rack") {
+                                if ($header_title == 'Ledger Group') {
                                     echo "active";
                                 }
-                                ?>"><a href="<?php echo base_url() . ''; ?>"> Room Rack</a></li>
-
+                                ?>"><a href="<?php echo base_url() . 'resv/ledger/group'; ?>"> Group Ledgers</a></li>
+                                
                             </ul>
-                        </li>                        
-                        <?php } ?>
-                        
-                        <?php if (isset($_SESSION["monitors"]) && $_SESSION["monitors"] > 1) { ?>
+                        </li>
 
-                        <li class="menu-list-altered <?php
-                        if ($header_title == 'Terminals') {
+<!--                        <li class="menu-list-altered <?php
+                        if ($header_title == 'Ledger') {
                             echo 'nav-active';
                         }
-                        ?>"><a href="<?php echo base_url() . 'app/terminals'; ?>"><i class="fa fa-desktop"></i><span>Terminals</span></a>                            
-                        </li>
-                        <?php } ?>
+                        ?>"><a href="<?php echo base_url() . 'resv/ledger'; ?>"><i class="fa fa-folder-open"></i><span>Ledger</span></a>                            
+                        </li>-->
 
-                        <li class="menu-list-altered <?php
-                        if ($header_title == 'Overview') {
-                            echo 'nav-active';
-                        }
-                        ?>"><a href="<?php echo base_url() . 'app'; ?>"><i class="fa fa-folder-open"></i><span>Overview</span></a>                            
-                        </li>
-                        
                         <?php if (isset($_SESSION["prices"]) && $_SESSION["prices"] > 1) { ?>
 
-                        <li class="menu-list-altered <?php
-                        if ($header_title == 'Price') {
-                            echo 'nav-active';
-                        }
-                        ?>"><a href="<?php echo base_url() . 'app/prices'; ?>"><i class="fa fa-money"></i><span>Prices</span></a>                            
-                        </li>
+                            <li class="menu-list-altered <?php
+                            if ($header_title == 'Price') {
+                                echo 'nav-active';
+                            }
+                            ?>"><a href="<?php echo base_url() . 'app/prices'; ?>"><i class="fa fa-money"></i><span>Prices</span></a>                            
+                            </li>
                         <?php } ?>
 
                         <?php if (isset($_SESSION["configuration"]) && $_SESSION["configuration"] > 1) { ?>
@@ -235,82 +242,82 @@ function getTitle($titles, $id) {
 
                                 <ul class="sub-menu-list"> 
                                     <li class="<?php
-                                    if ($type == "account_class") {
-                                        echo "active";
-                                    }
-                                    ?>"><a href="<?php echo base_url() . 'app/account_class'; ?>"> Account Class</a></li>
+                        if ($type == "account_class") {
+                            echo "active";
+                        }
+                            ?>"><a href="<?php echo base_url() . 'app/account_class'; ?>"> Account Class</a></li>
                                     <li class="<?php
-                                    if ($type == "account_type") {
-                                        echo "active";
-                                    }
-                                    ?>"><a href="<?php echo base_url() . 'app/account_type'; ?>"> Account Types</a></li>
+                                if ($type == "account_type") {
+                                    echo "active";
+                                }
+                            ?>"><a href="<?php echo base_url() . 'app/account_type'; ?>"> Account Types</a></li>
                                     <li class="<?php
-                                    if ($type == "account_salescategory") {
-                                        echo "active";
-                                    }
-                                    ?>"><a href="<?php echo base_url() . 'app/account_salescategory'; ?>"> Account Sales Categories</a></li>
+                                if ($type == "account_salescategory") {
+                                    echo "active";
+                                }
+                            ?>"><a href="<?php echo base_url() . 'app/account_salescategory'; ?>"> Account Sales Categories</a></li>
                                     <li class="<?php
-                                    if ($type == "account_discount") {
-                                        echo "active";
-                                    }
-                                    ?>"><a href="<?php echo base_url() . 'app/account_discount'; ?>"> Discount Categories</a></li>
-                                    
-                                    <li class="<?php
-                                    if ($type == "account_sale") {
-                                        echo "active";
-                                    }
-                                    ?>"><a href="<?php echo base_url() . 'app/showAccountsale/account_sale'; ?>"> Sale Accounts</a></li>
-                                    
-                                    <li class="<?php
-                                    if ($type == "account_payment") {
-                                        echo "active";
-                                    }
-                                    ?>"><a href="<?php echo base_url() . 'app/showAccountpayment/account_payment'; ?>"> Payment Accounts</a></li> 
-                                    
-                                    <li class="<?php
-                                    if ($type == "account_plu_group") {
-                                        echo "active";
-                                    }
-                                    ?>"><a href="<?php echo base_url() . 'app/account_plu_group'; ?>"> PLU Groups</a></li>
-                                    
-                                    <li class="<?php
-                                    if ($type == "account_plu_number") {
-                                        echo "active";
-                                    }
-                                    ?>"><a href="<?php echo base_url() . 'app/showAccountplu/account_plu_number'; ?>"> PLU Numbers</a></li>
-                                    
-                                    <li class="<?php
-                                    if ($type == "site") {
-                                        echo "active";
-                                    }
-                                    ?>"><a href="<?php echo base_url() . 'app/showSite/1/site'; ?>"> Hotel Info</a></li>
-                                    <li class="<?php
-                                    if ($type == "role") {
-                                        echo "active";
-                                    }
-                                    ?>"><a href="<?php echo base_url() . 'app/showRole/role'; ?>"> User Groups</a></li>
-                                    <li class="<?php
-                                    if ($type == "user") {
-                                        echo "active";
-                                    }
-                                    ?>"><a href="<?php echo base_url() . 'app/showUser/user'; ?>"> Users</a></li>
-                                    
-                                    <li class="<?php
-                                    if ($type == "roomclass") {
-                                        echo "active";
-                                    }
-                                    ?>"><a href="<?php echo base_url() . 'app/roomclass'; ?>"> Room Class</a></li>
+                                if ($type == "account_discount") {
+                                    echo "active";
+                                }
+                            ?>"><a href="<?php echo base_url() . 'app/account_discount'; ?>"> Discount Categories</a></li>
 
                                     <li class="<?php
-                                    if ($type == "roomtype") {
-                                        echo "active";
-                                    }
-                                    ?>"><a href="<?php echo base_url() . 'app/showRoomtype/roomtype'; ?>"> Room Types</a></li>
+                                if ($type == "account_sale") {
+                                    echo "active";
+                                }
+                            ?>"><a href="<?php echo base_url() . 'app/showAccountsale/account_sale'; ?>"> Sale Accounts</a></li>
+
                                     <li class="<?php
-                                    if ($type == "room") {
-                                        echo "active";
-                                    }
-                                    ?>"><a href="<?php echo base_url() . 'app/showRoom/room'; ?>"> Rooms</a></li>  
+                                if ($type == "account_payment") {
+                                    echo "active";
+                                }
+                            ?>"><a href="<?php echo base_url() . 'app/showAccountpayment/account_payment'; ?>"> Payment Accounts</a></li> 
+
+                                    <li class="<?php
+                                if ($type == "account_plu_group") {
+                                    echo "active";
+                                }
+                            ?>"><a href="<?php echo base_url() . 'app/account_plu_group'; ?>"> PLU Groups</a></li>
+
+                                    <li class="<?php
+                                if ($type == "account_plu_number") {
+                                    echo "active";
+                                }
+                            ?>"><a href="<?php echo base_url() . 'app/showAccountplu/account_plu_number'; ?>"> PLU Numbers</a></li>
+
+                                    <li class="<?php
+                                if ($type == "site") {
+                                    echo "active";
+                                }
+                            ?>"><a href="<?php echo base_url() . 'app/showSite/1/site'; ?>"> Hotel Info</a></li>
+                                    <li class="<?php
+                                if ($type == "role") {
+                                    echo "active";
+                                }
+                            ?>"><a href="<?php echo base_url() . 'app/showRole/role'; ?>"> User Groups</a></li>
+                                    <li class="<?php
+                                if ($type == "user") {
+                                    echo "active";
+                                }
+                            ?>"><a href="<?php echo base_url() . 'app/showUser/user'; ?>"> Users</a></li>
+
+                                    <li class="<?php
+                                if ($type == "roomclass") {
+                                    echo "active";
+                                }
+                            ?>"><a href="<?php echo base_url() . 'app/roomclass'; ?>"> Room Class</a></li>
+
+                                    <li class="<?php
+                                if ($type == "roomtype") {
+                                    echo "active";
+                                }
+                            ?>"><a href="<?php echo base_url() . 'app/showRoomtype/roomtype'; ?>"> Room Types</a></li>
+                                    <li class="<?php
+                                if ($type == "room") {
+                                    echo "active";
+                                }
+                            ?>"><a href="<?php echo base_url() . 'app/showRoom/room'; ?>"> Rooms</a></li>  
 
                                 </ul>
                             </li>
@@ -321,10 +328,8 @@ function getTitle($titles, $id) {
                         if ($header_title == 'Reports') {
                             echo 'nav-active';
                         }
-                        ?>"><a href="<?php echo base_url() . 'app'; ?>"><i class="fa fa-files-o"></i><span>Reports</span></a>                            
+                        ?>"><a href="<?php echo base_url() . 'resv/reports'; ?>"><i class="fa fa-files-o"></i><span>Reports</span></a>                            
                         </li>
-
-
                     </ul>
                     <!--sidebar nav end-->
 
@@ -342,6 +347,7 @@ function getTitle($titles, $id) {
                     <a class="toggle-btn"><i class="fa fa-bars"></i></a>
                     <!--toggle button end-->
                     <!--notification menu start allow this line for forward compatibility-->
+
                     <div class="menu-right">
                         <ul class="notification-menu">
 
@@ -359,6 +365,7 @@ function getTitle($titles, $id) {
 
                         </ul>
                     </div>
+                    <div class="clearfix"></div>
 
                     <!--notification menu end -->
 

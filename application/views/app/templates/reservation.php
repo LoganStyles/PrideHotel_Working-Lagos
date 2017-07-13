@@ -24,16 +24,18 @@ if ($form_error) {
                 <header class="panel-heading">
                     RESERVATIONS/FOLIO &nbsp;&nbsp;[Guest Rooms: <?php echo $header_title; ?>]&nbsp;&nbsp;
                     [<?php echo $total;?>&nbsp;Guests]
-                    <div>
-                        <div class="pull-right">
-                            <?php if (count($collection) > 0) { ?>
+                    <?php if (count($collection) > 0) { ?>
                                 <?php
                                 $content = $status_span = $active_span = "";
                                 foreach ($collection as $row):
+                                    $active = $checked ="";
                                     $userid = $row["ID"];
                                     $reservation_id = $row["reservation_id"];
+                                    $master_id = $row["master_id"];
                                     $nights = $row["nights"];
+                                    $folio_room = $row["folio_room"];
                                     $departure = date('d/m/Y', strtotime($row["departure"]));
+                                    $arrival = date('d/m/Y', strtotime($row["actual_arrival"]));
 
                                     switch ($type) {
                                         case "confirmed":
@@ -60,27 +62,32 @@ if ($form_error) {
                                     $status = $row["status"];
                                     $remarks = $row["remarks"];
                                     $signature_created = $row["signature_created"];
+                                    $room_number_only = $row["room_number"];
                                     $room_number = getTitle($rooms, $row["room_number"]);
                                     $roomtype = getTitle($roomtypes, $row["roomtype"]);
-
-                                    if ($count == 1) {
+                                    
+                                    //check for a row has been clicked before
+                                    if (isset($_SESSION['resv_active_row'])) {
+                                        if (($_SESSION['resv_active_row'] == $reservation_id)) {
+                                            $active = "active";
+                                            $checked = "checked";
+                                        }
+                                    } elseif ($count === 1) {
                                         $active = "active";
                                         $checked = "checked";
-                                    } else {
-                                        $active = "";
-                                        $checked = "";
                                     }
 
                                     $content.="<tr class=\"booking_radio $active\">";
-                                    $content.="<td><input class=\"booking_hidden_id\" type=\"hidden\" value=\"$reservation_id\">"
-                                            . "$arrival</td>"; //   
-//                                    $content.="<td></td>";
+                                    $content.="<td class=\"booking_hidden_arrival\"><input class=\"booking_hidden_id\" type=\"hidden\" value=\"$reservation_id\">"
+                                            . "<input class=\"folio_hidden_folio_room\" type=\"hidden\" value=\"$folio_room\">"
+                                            . "<input class=\"folio_hidden_master_id\" type=\"hidden\" value=\"$master_id\">"
+                                            . "$arrival</td>";
                                     $content.="<td>$nights</td>";
-                                    $content.="<td>$departure</td>";
-                                    $content.="<td>$room_number</td>";
+                                    $content.="<td class=\"booking_hidden_departure\">$departure</td>";
+                                    $content.="<td class=\"booking_hidden_room\">$room_number</td>";
                                     $content.="<td>$roomtype</td>";
                                     $content.="<td>$reservation_id</td>";
-                                    $content.="<td>$client_name</td>";
+                                    $content.="<td class=\"booking_hidden_client\">$client_name</td>";
                                     $content.="<td class=\"booking_hidden_status\">$status</td>";
                                     $content.="<td>$remarks</td>";
                                     $content.="<td>$signature_created</td>";
@@ -90,23 +97,29 @@ if ($form_error) {
                                 endforeach;
                                 ?>
                             <?php } ?>
+                    <div>
+                        <div class="pull-right">
+                            
                             <div class="form-group ">
                                 <div class="col-sm-12">
                                     <?php
                                     $buttons = ""; //                    
                                     if ($count > 1) {
-                                        $buttons.="<a onclick=\"processResv('view','$offset','$type');\" type=\"button\" class=\"btn btn-default \"><i class=\"fa fa-eye\"></i>&nbsp;View</a>&nbsp;";
                                         $buttons.="<a href=\" " . base_url() . 'resv/guest/new' . " \" type=\"button\" class=\"btn btn-default \"><i class=\"fa fa-plus-square\"></i>&nbsp;New</a>&nbsp;";
+                                        $buttons.="<a onclick=\"processResv('view','$offset','$type');\" type=\"button\" class=\"btn btn-default \"><i class=\"fa fa-eye\"></i>&nbsp;View</a>&nbsp;";                                        
                                         if($type !=="cancelled"){
                                            $buttons.="<a onclick=\"processResv('edit','$offset','$type');\" type=\"button\" class=\"btn btn-default \"><i class=\"fa fa-edit\"></i>&nbsp;Edit</a>&nbsp;"; 
-                                        }
-                                        
+                                        }                                        
                                         if ($delete == "1") {
                                             $buttons.="<a onclick=\"deleteReservation();\" type=\"button\" class=\"btn btn-default \"><i class=\"fa fa-trash-o\"></i>&nbsp;Delete</a>&nbsp;";
                                         }
-
-                                        $buttons.="<a onclick=\"deleteModal('collection');\" type=\"button\" class=\"btn btn-default \"><i class=\"fa fa-trash-o\"></i>&nbsp;Folio</a>&nbsp;";
-                                        $buttons.="<a onclick=\"deleteModal('collection');\" type=\"button\" class=\"btn btn-default \"><i class=\"fa fa-trash-o\"></i>&nbsp;Print</a>&nbsp;";
+                                        
+                                        $buttons.="<a onclick=\"getFolio('$offset','$type','ALL','$room_number_only','$departure');\" type=\"button\" class=\"btn btn-default \"><i class=\"fa fa-folder-open-o\"></i>&nbsp;Folio</a>&nbsp;";
+                                        $buttons.="<a onclick=\"printReservation('$type','guest');\" type=\"button\" class=\"btn btn-default \"><i class=\"fa fa-print\"></i>&nbsp;Print</a>&nbsp;";
+                                        if($type=="all"){
+                                         $buttons.="<a onclick=\"showSingleDialog('confirm','reactivate');\" type=\"button\" class=\"btn btn-default \"><i class=\"fa fa-repeat\"></i>&nbsp;Reactivate</a>&nbsp;";   
+                                        }                                        
+                                        $buttons.="<a onclick=\"checkInOut();\" type=\"button\" class=\"btn btn-default \"><i class=\"fa fa-exchange\"></i>&nbsp;Check-In/Out</a>&nbsp;";
                                     }
                                     echo $buttons;
                                     ?>
@@ -124,8 +137,7 @@ if ($form_error) {
                 <div class="panel-body">
                     <table class="table  table-hover general-table table-bordered table-condensed">
                         <thead>
-                            <tr>                                
-                                <!--<th>S/N</th>-->
+                            <tr>
                                 <th>Arrival</th>
                                 <th>Nights</th>
                                 <th>Departure</th>
@@ -199,6 +211,3 @@ if ($form_error) {
         </div>
     </div>
 </div>
-
-
-

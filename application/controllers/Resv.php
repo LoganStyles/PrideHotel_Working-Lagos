@@ -3,7 +3,6 @@
 class Resv extends App {
     /* controller for reservations
      */
-
     public function __construct() {
         parent::__construct();
         $this->data['rooms'] = $this->app_model->getDisplayedItems('room')['data'];
@@ -11,26 +10,106 @@ class Resv extends App {
     }
 
     public function searchClient($type, $search_phrase) {
+//        search client name
         $table = $type . "items";
-        $search_phrase = $this->security->xss_clean($search_phrase);
-        $results = $this->resv_model->search($search_phrase, $table);
+        $cleaned_search_phrase = $this->security->xss_clean($search_phrase);
+        $results = $this->resv_model->search($cleaned_search_phrase, $table);
         echo $results;
     }
 
-    public function checkIn($mode, $resv_ID, $errors = FALSE) {
-        /* get reservation details, set mode */
-
-        $this->chkLoggedIn();
-        $access = $this->session->reservation;
-        if ($access < 2) {//read access
-            $redirect = "app";
-            redirect($redirect);
+    public function getFieldValue($type, $id, $field) {
+        $result = $this->resv_model->getFieldValue($type, $id, $field);
+        echo $result;
+    }
+    
+    private function showPage($data, $page,$top_nav=FALSE) {
+        //displays resv pages        
+        if (!file_exists(APPPATH . 'views/app/templates/' .$page. '.php')) {
+            echo base_url() . 'views/app/templates/' .$page. '.php';
+            show_404();
         }
+
+        $this->load->view('app/scripts/header_scripts_side_navigation', $data);
+        if($top_nav){
+          $this->load->view('app/templates/top_reservation', $data);  
+        }        
+        $this->load->view('app/templates/'. $page, $data);
+        $this->load->view('app/scripts/footer', $data);
+    }
+
+    public function checkIn($mode, $resv_ID, $errors = FALSE) {
+        /* checkin guest & gets reservation details, set mode 
+         * displays checkin form
+         */        
+        $this->session->back_uri = base_url() . uri_string();
+        $this->checkAccess($this->session->reservation, 2);
+        
         $data = $this->data;
+        $data['room_stats'] = $this->app_model->getRoomMonitor();
         $data["header_title"] = ucwords("checkin");
         $data["type"] = "reservation";
         $data["module"] = "reservation";
         $data["mode"] = $mode;
+        $data["new_client"] = (isset($this->session->new_client)) ? ($this->session->new_client) : ("");
+
+        if ($errors) {
+            $data['received'][0]['form_error'] = $this->session->form_error;
+            $data['received'][0]['ID'] = $this->input->post('checkin_ID');
+            $data['received'][0]['reservation_id'] = $this->input->post('checkin_reservation_id');
+            $data['received'][0]['price_title'] = $this->input->post('checkin_price_title');
+            $data['received'][0]['room_number_id'] = $this->input->post('checkin_room_number_id');
+            $data['received'][0]['mode'] = $this->input->post('checkin_mode');
+            $data['received'][0]['nights'] = $this->input->post('checkin_nights');
+            $data['received'][0]['client_name'] = $this->input->post('checkin_client_name');
+            $data['received'][0]['guest2'] = $this->input->post('checkin_guest2');
+            $data['received'][0]['roomtype'] = $this->input->post('checkin_roomtype');
+            $data['received'][0]['room_number'] = $this->input->post('checkin_room_number');
+            $data['received'][0]['price_rate'] = $this->input->post('checkin_price_rate');
+            $data['received'][0]['status'] = $this->input->post('checkin_status');
+            $data['received'][0]['weekday'] = $this->input->post('checkin_weekday');
+            $data['received'][0]['weekend'] = $this->input->post('checkin_weekend');
+            $data['received'][0]['holiday'] = $this->input->post('checkin_holiday');
+            $data['arrivaldate'] = $this->input->post('checkin_arrival');
+            $data['departuredate'] = $this->input->post('checkin_departure');
+        } else {
+            $data['received'] = $this->resv_model->getClientResvInfo($resv_ID,"ROOM");
+            $data['received'][0]['form_error'] = "";
+            $data['arrival'] = $data['received'][0]['arrival'];
+            $data['departure'] = $data['received'][0]['departure'];
+        }
+        $this->showPage($data, "checkin", 1);        
+    }
+
+    public function processCheckin() {
+        //checks a guest in
+        $this->checkAccess($this->session->reservation, 3);
+        
+        $room_number_id = $this->input->post('checkin_room_number_id');
+        $mode = $this->input->post('checkin_mode');
+        $reservation_id = $this->input->post('checkin_reservation_id');
+        if ($this->resv_model->checkin($reservation_id, $room_number_id)) {
+            //GO TO STAYING 
+            $redirect = "resv/staying";
+            redirect($redirect);
+        } else {
+            $this->session->set_flashdata('form_error', "This Room is not vacant, select another room");
+            $errors = TRUE;
+            $this->checkIn($mode, $reservation_id, $errors);
+        }
+    }
+
+    public function folios($resv_ID, $page_number, $mode, $errors = FALSE) {
+        /* get folio details, set mode */
+        $this->session->back_uri = base_url() . uri_string();
+        $this->checkAccess($this->session->reservation, 2);
+
+        $data = $this->data;
+        $data['room_stats'] = $this->app_model->getRoomMonitor();
+        $data["header_title"] = ucwords("checkin");
+        $data["type"] = "reservation";
+        $data["module"] = "reservation";
+        $data["mode"] = $mode;
+        $data["new_client"] = (isset($this->session->new_client)) ? ($this->session->new_client) : ("");
 
         if ($errors) {
             $data['received'][0]['form_error'] = $this->session->form_error;
@@ -53,58 +132,23 @@ class Resv extends App {
             $data['arrivaldate'] = $this->input->post('checkin_arrival');
             $data['departuredate'] = $this->input->post('checkin_departure');
         } else {
-            $data['received'] = $this->resv_model->getClientResvInfo($resv_ID);
+            $data['received'] = $this->resv_model->getClientResvInfo($resv_ID,"ROOM");
             $data['received'][0]['form_error'] = "";
             $data['arrival'] = $data['received'][0]['arrival'];
             $data['departure'] = $data['received'][0]['departure'];
         }
-
-        if (!file_exists(APPPATH . 'views/app/templates/checkin' . '.php')) {
-            echo base_url() . 'views/app/templates/checkin' . '.php';
-            show_404();
-        }
-
-        $this->load->view('app/scripts/header_scripts_side_navigation', $data);
-        $this->load->view('app/templates/top_reservation', $data);
-        $this->load->view('app/templates/checkin', $data);
-        $this->load->view('app/scripts/footer', $data);
-    }
-
-    public function processCheckin() {
-        $this->chkLoggedIn();
-        $access = $this->session->reservation;
-        if ($access < 3) {//write access
-            $redirect = "app";
-            redirect($redirect);
-        }
-        $room_number_id = $this->input->post('checkin_room_number_id');
-        $mode = $this->input->post('checkin_mode');
-        $ID = $this->input->post('checkin_ID');
-        $reservation_id = $this->input->post('checkin_reservation_id');
-        if ($this->resv_model->checkin($ID, $room_number_id)) {
-            //GO TO STAYING 
-            $redirect = "resv/staying";
-            redirect($redirect);
-        } else {
-            $this->session->set_flashdata('form_error', "Room is not vacant, select another");
-            $errors = TRUE;
-            $this->checkIn($mode, $reservation_id, $errors);
-        }
+        $this->showPage($data, "checkin", 1); 
     }
 
     public function processResvDelete() {
-        $this->chkLoggedIn();
-        $access = $this->session->delete_group;
-        if ($access < 1) {//delete access
-            $redirect = "app";
-            redirect($redirect);
-        }
+        //cancells a reservation
+        $this->checkAccess($this->session->delete_group, 1);
 
         $this->form_validation->set_rules('delete_resv_reason', 'Reason', 'required');
         $redirect = $this->session->back_uri;
 
         if ($this->form_validation->run() == FALSE) {
-            $this->session->set_flashdata('delete_error', validation_errors());            
+            $this->session->set_flashdata('delete_error', validation_errors());
             redirect($redirect);
         } else {
             $res_id = $this->resv_model->deleteResv();
@@ -118,16 +162,37 @@ class Resv extends App {
         }
     }
 
-    public function showReservation($type, $resv_ID = 0, $page_number = 0, $action = "", $mode = "", $errors = FALSE) {
-        /* displays paginised list of items */
+    public function processPersonDelete() {
+//        delete a guest
+        $this->checkAccess($this->session->delete_group, 1);
 
-        $this->chkLoggedIn();
-        $access = $this->session->reservation;
-        if ($access < 2) {//read access
-            $redirect = "app";
+        $this->form_validation->set_rules('delete_person_reason', 'Reason', 'required');
+        $redirect = $this->session->back_uri;
+
+        if ($this->form_validation->run() == FALSE) {
+            $this->session->set_flashdata('delete_person_error', validation_errors());
             redirect($redirect);
+        } else {
+            $res_id = $this->resv_model->deletePerson();
+            if ($res_id) {
+                $redirect = "resv/person";
+                redirect($redirect);
+            } else {
+                $this->session->set_flashdata('delete_person_error', "Delete Operation Failed");
+                redirect($redirect);
+            }
         }
+    }
+
+    public function showReservation($type, $resv_ID = 0,$master_id = 0, $page_number = 0, $action = "", $mode = "", $errors = FALSE) {
+        /* displays paginised list of items
+         * shows reservation form 
+         */
+        $this->checkAccess($this->session->reservation, 2);
+        $this->session->back_uri = base_url() . uri_string();
+
         $data = $this->data;
+        $data['room_stats'] = $this->app_model->getRoomMonitor();
         $data["header_title"] = ucwords($type);
         $data["type"] = "reservation";
         $data["module"] = "reservation";
@@ -140,6 +205,7 @@ class Resv extends App {
         $data['received'][0]['form_error'] = "";
 
         $item_id = $type . "_ID";
+        $item_master_id = $type . "_master_id";
         $item_action = $type . "_action";
         $item_page_number = $type . "_page_number";
         $item_client_type = $type . "_client_type";
@@ -184,6 +250,7 @@ class Resv extends App {
             $data['received'][0]['action'] = $this->input->post($item_action);
             $data['received'][0]['page_number'] = $this->input->post($item_page_number);
             $data['received'][0]['ID'] = $this->input->post($item_id);
+            $data['received'][0]['master_id'] = $this->input->post($item_master_id);
             $data['received'][0]['client_type'] = $this->input->post($item_client_type);
             $data['received'][0]['status'] = $this->input->post($item_status);
             $data['received'][0]['folio_room'] = $this->input->post($item_folio_room);
@@ -216,17 +283,33 @@ class Resv extends App {
             $data['arrivaldate'] = $this->input->post($item_arrival);
             $data['departuredate'] = $this->input->post($item_departure);
         } elseif (!empty($resv_ID)) {
-            $data['received'] = $this->resv_model->getClientResvInfo($resv_ID);
+            $data['received'] = $this->resv_model->getClientResvInfo($resv_ID,"ROOM");
             $data['received'][0]['ID'] = $resv_ID;
             $data['arrival'] = $data['received'][0]['arrival'];
             $data['departure'] = $data['received'][0]['departure'];
+            $data['resv_status'] = $data['received'][0]['status'];
             $data['received'][0]['arrival_error'] = "";
             $data['received'][0]['client_name_error'] = "";
             $data['received'][0]['roomtype_error'] = "";
             $data['received'][0]['price_rate_error'] = "";
             $data['received'][0]['form_error'] = "";
-        } else {
-            $data['received'][0]['ID'] = 0;
+        } elseif (!empty($master_id)) {//this executes only once, when adding new guest to group
+            $data['received'] = $this->resv_model->getClientResvInfo($master_id,"GROUP");
+            $data['received'][0]['ID'] = $resv_ID;
+            $data['arrival'] = $data['received'][0]['arrival'];
+            $data['departure'] = $data['received'][0]['departure'];
+            $data['received'][0]['master_id'] = $master_id;
+            $data['received'][0]['client_name'] = "";
+            $data['resv_status'] = $mode;
+            $data['received'][0]['status']=$mode;
+            $data['received'][0]['arrival_error'] = "";
+            $data['received'][0]['client_name_error'] = "";
+            $data['received'][0]['roomtype_error'] = "";
+            $data['received'][0]['price_rate_error'] = "";
+            $data['received'][0]['form_error'] = "";
+        }else {
+            $data['received'][0]['ID'] = $resv_ID;
+            $data['received'][0]['master_id'] = "";
             $data['received'][0]['nights'] = "1";
             $data['received'][0]['client_type'] = "";
             $data['received'][0]['client_name'] = "";
@@ -263,6 +346,10 @@ class Resv extends App {
         $data['received'][0]['action'] = $action;
         $data['received'][0]['page_number'] = $page_number;
         $data['received'][0]['mode'] = $mode;
+        $curr_status=$data['received'][0]['status'];
+        if($curr_status==="departed" || $curr_status==="ledger"){
+            $data['received'][0]['action'] = "view";
+        }
 
         if (!file_exists(APPPATH . 'views/app/templates/' . $type . '.php')) {
             echo base_url() . 'views/app/templates/' . $type . '.php';
@@ -276,19 +363,14 @@ class Resv extends App {
         }
         $this->load->view('app/scripts/footer', $data);
     }
-
+    
     public function processGuest() {
         //check status..could be useful later
         //chk if key fields are empty,if arrival date,nights is valid
         //??invalid status
         //save data
         //if status=confirmed & arrival is app_date, attempt check in
-        $this->chkLoggedIn();
-        $access = $this->session->reservation;
-        if ($access < 3) {//write access
-            $redirect = "app";
-            redirect($redirect);
-        }
+        $this->checkAccess($this->session->reservation, 3);
         $data = $this->data;
         $app_date = strtotime($data['app_date']);
 
@@ -304,27 +386,22 @@ class Resv extends App {
         $errors = FALSE;
 
         if (empty($client_name)) {
-            $this->session->set_flashdata('client_name_error', "Error");
+            $this->session->set_flashdata('client_name_error', "Invalid Client Name value");
             $errors = TRUE;
         }
         if (empty($roomtype)) {
-            $this->session->set_flashdata('roomtype_error', "Error");
+            $this->session->set_flashdata('roomtype_error', "Invalid Room type value");
             $errors = TRUE;
         }
         if (empty($price_rate)) {
-            $this->session->set_flashdata('price_rate_error', "Error");
+            $this->session->set_flashdata('price_rate_error', "Invalid Price rate value");
             $errors = TRUE;
         }
 
         $arrival_temp = $this->input->post('guest_arrival');
         $temp_date = str_replace('/', '-', $arrival_temp);
         $arrival = strtotime($temp_date);
-
-        if ($arrival < $app_date) {
-            //ensure arrival is not in the past
-            $this->session->set_flashdata('arrival_error', "Invalid Arrival Date");
-            $errors = TRUE;
-        }
+//        echo 'arrival '.$arrival_temp;exit;
 
         $this->form_validation->set_rules('guest_roomtype_id', 'Room Type', 'is_natural_no_zero|required');
         $this->form_validation->set_rules('guest_adults', 'Adults', 'is_natural|required');
@@ -337,7 +414,14 @@ class Resv extends App {
             $this->session->set_flashdata('error_message', validation_errors());
             $this->showReservation("guest", $ID, $page_number, $action, $mode, $errors);
         } else {
-            $res_id = $this->resv_model->saveGuest($type);
+            $res_result = $this->resv_model->saveGuest($type);
+            $res_id = $res_result['reservation_id'];
+            $this->session->set_flashdata('resv_active_row', $res_id);
+            $client_exists = $res_result['client_exists'];
+            if (!empty($client_exists)) {
+                $this->session->set_flashdata('new_client', $client_exists);
+            }
+
             if ($res_id) {
                 $this->session->set_flashdata('form_success', 'Operation Successful');
                 if (($status === "confirmed") && ($arrival === $app_date)) {
@@ -346,144 +430,165 @@ class Resv extends App {
                     $redirect = "resv/" . $mode;
                 }
                 redirect($redirect);
+            } else {
+                $errors = TRUE;
+                $this->showReservation("guest", $ID, $page_number, $action, $mode, $errors);
+            }
+        }
+    }  
+    
+
+    public function processFolioPayment() {
+        //validates folio payment
+        $this->checkAccess($this->session->reservation, 3);
+        
+        $resv_ID = $this->input->post('folio_payment_resv');
+        $page_number = $this->input->post('folio_payment_page_number');
+        $mode = $this->input->post('folio_payment_type');
+        $client_name = $this->input->post('folio_payment_client_name');
+        $folio_room = $this->input->post('folio_payment_new_folio');
+        $bills_type = $this->input->post('folio_payment_bills_type');
+        $room_number = $this->input->post('folio_payment_room_number');
+        $master_id = $this->input->post('folio_payment_master_id');
+
+        $this->form_validation->set_rules('folio_payment_amount', 'Amount', 'greater_than[0]|required');
+
+        if ($this->form_validation->run() == FALSE) {
+            $this->session->set_flashdata('folio_payment_error_message', validation_errors());
+            $this->viewFolios($resv_ID, $master_id,$page_number, $mode, $client_name,$bills_type,$folio_room,$room_number);
+        } else {
+            $res_id = $this->resv_model->saveFolio('folio_payment');
+            $this->session->set_flashdata('folio_active_row', $res_id);
+
+            if ($res_id) {
+                $redirect = $this->session->folio_back_uri;
+                redirect($redirect);
+            } else {
+                $this->viewFolios($resv_ID, $master_id,$page_number, $mode, $client_name,$bills_type,$folio_room,$room_number);
             }
         }
     }
 
-    public function showClients($type, $ID = 0, $page_number = 0, $action = "", $errors = FALSE) {
-        /* displays paginised list of items */
+    public function processFolioSale() {
+        //validates folio sale
+        $this->checkAccess($this->session->reservation, 3);
+        
+        $resv_ID = $this->input->post('folio_sale_resv');
+        $page_number = $this->input->post('folio_sale_page_number');
+        $mode = $this->input->post('folio_sale_type');
+        $client_name = $this->input->post('folio_sale_client_name');
+        $bills_type = $this->input->post('folio_sale_bills_type');
+        $folio_room = $this->input->post('folio_sale_new_folio');
+        $room_number = $this->input->post('folio_sale_room_number');
+        $master_id = $this->input->post('folio_sale_master_id');
 
-        $this->chkLoggedIn();
-        $access = $this->session->reservation;
-        if ($access < 2) {//read access
-            $redirect = "app";
-            redirect($redirect);
-        }
+        $this->form_validation->set_rules('folio_sale_plu', 'PLU No', 'required');
+        $this->form_validation->set_rules('folio_sale_account', 'Account', 'greater_than[0]|required');
+        $this->form_validation->set_rules('folio_sale_price', 'Price', 'greater_than[0]|required');
+        $this->form_validation->set_rules('folio_sale_qty', 'Quantity', 'greater_than[0]|required');
+        $this->form_validation->set_rules('folio_sale_amount', 'Amount', 'greater_than[0]|required');
+        $this->form_validation->set_rules('folio_sale_description', 'Description', 'trim|alpha_numeric_spaces');
 
-        $data = $this->data;
-        $data["header_title"] = ucwords("clients");
-        $data["module"] = "reservation";
-        $data["type"] = $type;
-        $data["page_number"] = $page_number;
-        $data["action"] = $action;
-        $data['countries'] = $this->app_model->getDisplayedItems('ref_country')['data'];
-
-        $item_id = $type . "_ID";
-        $item_action = $type . "_action";
-        $item_type = $type . "_type";
-        $item_title = $type . "_title";
-        $item_title_ref = $type . "_title_ref";
-        $item_email = $type . "_email";
-        $item_phone = $type . "_phone";
-        $item_city = $type . "_city";
-        $item_state = $type . "_state";
-        $item_country = $type . "_country";
-        $item_street = $type . "_street";
-        $item_sex = $type . "_sex";
-        $item_occupation = $type . "_occupation";
-        $item_birth_location = $type . "_birth_location";
-        $item_passport_no = $type . "_passport_no";
-        $item_pp_issued_at = $type . "_pp_issued_at";
-        $item_spg_no = $type . "_spg_no";
-        $item_visa = $type . "_visa";
-        $item_resident_permit_no = $type . "_resident_permit_no";
-        $item_destination = $type . "_destination";
-        $item_group_name = $type . "_group_name";
-        $item_plate_number = $type . "_plate_number";
-        $item_remarks = $type . "_remarks";
-        $item_payment_method = $type . "_payment_method";
-
-
-        if ($errors) {
-            $data['received'][0]['form_error'] = $this->session->error_message;
-            $data['received'][0]['title'] = $this->input->post($item_title);
-            $data['received'][0]['type'] = $this->input->post($item_type);
-            $data['received'][0]['action'] = $this->input->post($item_action);
-            $data['received'][0]['ID'] = $this->input->post($item_id);
-            $data['received'][0]['title_ref'] = $this->input->post($item_title_ref);
-            $data['received'][0]['email'] = $this->input->post($item_email);
-            $data['received'][0]['phone'] = $this->input->post($item_phone);
-            $data['received'][0]['city'] = $this->input->post($item_city);
-            $data['received'][0]['state'] = $this->input->post($item_state);
-            $data['received'][0]['country'] = $this->input->post($item_country);
-            $data['received'][0]['street'] = $this->input->post($item_street);
-            $data['received'][0]['sex'] = $this->input->post($item_sex);
-            $data['received'][0]['occupation'] = $this->input->post($item_occupation);
-            $data['received'][0]['birth_location'] = $this->input->post($item_birth_location);
-            $data['received'][0]['passport_no'] = $this->input->post($item_passport_no);
-            $data['received'][0]['pp_issued_at'] = $this->input->post($item_pp_issued_at);
-            $data['received'][0]['spg_no'] = $this->input->post($item_spg_no);
-            $data['received'][0]['visa'] = $this->input->post($item_visa);
-            $data['received'][0]['resident_permit_no'] = $this->input->post($item_resident_permit_no);
-            $data['received'][0]['destination'] = $this->input->post($item_destination);
-            $data['received'][0]['group_name'] = $this->input->post($item_group_name);
-            $data['received'][0]['plate_number'] = $this->input->post($item_plate_number);
-            $data['received'][0]['remarks'] = $this->input->post($item_remarks);
-            $data['received'][0]['payment_method'] = $this->input->post($item_payment_method);
-            $data['received'][0]['count'] = $this->app_model->getDisplayedItems($type, FALSE, $ID)['count'];
+        if ($this->form_validation->run() == FALSE) {
+            $this->session->set_flashdata('folio_sale_error_message', validation_errors());
+            $this->viewFolios($resv_ID, $master_id,$page_number, $mode, $client_name,$bills_type,$folio_room,$room_number);
         } else {
-            $data['received'][0]['form_error'] = "";
-            $data['received'][0]['title'] = "";
-            $data['received'][0]['type'] = $type;
-            $data['received'][0]['action'] = $action;
-            $data['received'][0]['ID'] = 0;
-            $data['received'][0]['title_ref'] = "";
-            $data['received'][0]['email'] = "";
-            $data['received'][0]['phone'] = "";
-            $data['received'][0]['city'] = "";
-            $data['received'][0]['state'] = "";
-            $data['received'][0]['country'] = 172;
-            $data['received'][0]['street'] = "";
-            $data['received'][0]['sex'] = "";
-            $data['received'][0]['occupation'] = "";
-            $data['received'][0]['birth_location'] = "";
-            $data['received'][0]['passport_no'] = "";
-            $data['received'][0]['pp_issued_at'] = "";
-            $data['received'][0]['spg_no'] = "";
-            $data['received'][0]['visa'] = "";
-            $data['received'][0]['resident_permit_no'] = "";
-            $data['received'][0]['destination'] = "";
-            $data['received'][0]['group_name'] = "";
-            $data['received'][0]['plate_number'] = "";
-            $data['received'][0]['remarks'] = "";
-            $data['received'][0]['payment_method'] = "";
-            $data['received'][0]['count'] = $this->app_model->getDisplayedItems($type, FALSE, $ID)['count'];
-        }
+            $res_id = $this->resv_model->saveFolio('folio_sale');
+            $this->session->set_flashdata('folio_active_row', $res_id);
 
-        if (!file_exists(APPPATH . 'views/app/templates/' . $type . '.php')) {
-            echo base_url() . 'views/app/templates/' . $type . '.php';
-            show_404();
+            if ($res_id) {
+                $redirect = $this->session->folio_back_uri;
+                redirect($redirect);
+            } else {
+                $this->viewFolios($resv_ID, $master_id,$page_number, $mode, $client_name,$bills_type,$folio_room,$room_number);
+            }
         }
-
-        $this->load->view('app/scripts/header_scripts_side_navigation', $data);
-        $this->load->view('app/templates/top_reservation', $data);
-        $this->load->view('app/templates/' . $type, $data);
-        $this->load->view('app/scripts/footer', $data);
     }
 
     public function viewLists($type, $offset = 0) {
-        /* displays paginised list of reservation items */
-        $this->session->back_uri = base_url() . uri_string();
-        
-        $this->chkLoggedIn();
-        $access = $this->session->reservation;
-        if ($access < 2) {//read access
-            $redirect = "app";
-            redirect($redirect);
-        }
+        /* displays paginised list of reservation items 
+         * also displays client personal info
+         */
+        $this->session->resv_back_uri = base_url() . uri_string();
+        $this->checkAccess($this->session->reservation, 2);
 
         $data = $this->data;
+        $data['room_stats'] = $this->app_model->getRoomMonitor();
         $data["header_title"] = ucwords($type);
         $data["module"] = "reservation";
         $data["type"] = $type;
+        $data["new_client"] = (isset($this->session->new_client)) ? ($this->session->new_client) : ("");
+        $data['countries'] = $this->app_model->getDisplayedItems('ref_country')['data'];
 
-//        if (!$filter) {
-//            $filter = "0";
-//        }
-
-        $config = array();
-        $limit = 20;
-        $page = "reservation";
+        $limit = 10;
+        if ($type == "person") {
+            $this->session->back_uri = base_url() . uri_string();
+            $page = $type;
+            $page_number = "0";
+            if (isset($this->session->client_error_message)) {
+                $data['received'][0]['form_error'] = $this->session->client_error_message;
+                $data['received'][0]['title'] = $this->input->post('person_title');
+                $data['received'][0]['type'] = $this->input->post('person_type');
+                $data['received'][0]['action'] = $this->input->post('person_action');
+                $data['received'][0]['page_number'] = $this->input->post('person_page_number');
+                $data['received'][0]['ID'] = $this->input->post('person_ID');
+                $data['received'][0]['title_ref'] = $this->input->post('person_title_ref');
+                $data['received'][0]['email'] = $this->input->post('person_email');
+                $data['received'][0]['phone'] = $this->input->post('person_phone');
+                $data['received'][0]['city'] = $this->input->post('person_city');
+                $data['received'][0]['state'] = $this->input->post('person_state');
+                $data['received'][0]['country'] = $this->input->post('person_country');
+                $data['received'][0]['street'] = $this->input->post('person_street');
+                $data['received'][0]['sex'] = $this->input->post('person_sex');
+                $data['received'][0]['occupation'] = $this->input->post('person_occupation');
+                $data['received'][0]['birth_location'] = $this->input->post('person_birth_location');
+                $data['received'][0]['passport_no'] = $this->input->post('person_passport_no');
+                $data['received'][0]['pp_issued_at'] = $this->input->post('person_pp_issued_at');
+                $data['received'][0]['spg_no'] = $this->input->post('person_spg_no');
+                $data['received'][0]['visa'] = $this->input->post('person_visa');
+                $data['received'][0]['resident_permit_no'] = $this->input->post('person_resident_permit_no');
+                $data['received'][0]['destination'] = $this->input->post('person_destination');
+                $data['received'][0]['group_name'] = $this->input->post('person_group_name');
+                $data['received'][0]['plate_number'] = $this->input->post('person_plate_number');
+                $data['received'][0]['remarks'] = $this->input->post('person_remarks');
+                $data['received'][0]['payment_method'] = $this->input->post('person_payment_method');
+            } else {
+                $data['received'][0]['form_error'] = "";
+                $data['received'][0]['title'] = "";
+                $data['received'][0]['type'] = $type;
+                $data['received'][0]['action'] = "insert";
+                $data['received'][0]['page_number'] = $page_number;
+                $data['received'][0]['ID'] = 0;
+                $data['received'][0]['title_ref'] = "";
+                $data['received'][0]['email'] = "";
+                $data['received'][0]['phone'] = "";
+                $data['received'][0]['city'] = "";
+                $data['received'][0]['state'] = "";
+                $data['received'][0]['country'] = 172;
+                $data['received'][0]['street'] = "";
+                $data['received'][0]['sex'] = "";
+                $data['received'][0]['occupation'] = "";
+                $data['received'][0]['birth_location'] = "";
+                $data['received'][0]['passport_no'] = "";
+                $data['received'][0]['pp_issued_at'] = "";
+                $data['received'][0]['spg_no'] = "";
+                $data['received'][0]['visa'] = "";
+                $data['received'][0]['resident_permit_no'] = "";
+                $data['received'][0]['destination'] = "";
+                $data['received'][0]['group_name'] = "";
+                $data['received'][0]['plate_number'] = "";
+                $data['received'][0]['remarks'] = "";
+                $data['received'][0]['payment_method'] = "";
+            }
+            //check for deletes
+            if (isset($this->session->delete_person_error)) {
+                $data['received'][0]['person_form_error'] = $this->session->delete_person_error();
+            } else {
+                $data['received'][0]['person_form_error'] = "";
+            }
+        } else {
+            $page = "reservation";
+        }
         $data["received"][0]["type"] = $type;
         $data["received"][0]["offset"] = $offset;
 
@@ -491,58 +596,269 @@ class Resv extends App {
         $data["collection"] = $results['data'];
         $data["total"] = $results['count'];
 
-        $config["base_url"] = base_url() . 'resv/viewLists/' . $type;
-        $config["total_rows"] = $results['count'];
-        $config["per_page"] = $limit;
-
-        //various pagination configuration
-        $config['full_tag_open'] = '<ul class="pagination">';
-        $config['full_tag_close'] = '</ul>';
-        $config['prev_link'] = '«Previous';
-        $config['prev_tag_open'] = '<li>';
-        $config['prev_tag_close'] = '</li>';
-        $config['next_link'] = 'Next»';
-        $config['next_tag_open'] = '<li>';
-        $config['next_tag_close'] = '</li>';
-        $config['cur_tag_open'] = '<li class="active"><a href="#">';
-        $config['cur_tag_close'] = '</a></li>';
-        $config['num_tag_open'] = '<li>';
-        $config['num_tag_close'] = '</li>';
-
-        $config['first_tag_open'] = '<li>';
-        $config['first_tag_close'] = '</li>';
-        $config['last_tag_open'] = '<li>';
-        $config['last_tag_close'] = '</li>';
-
-        $config['first_link'] = '&lt;&lt;';
-        $config['last_link'] = '&gt;&gt;';
-        $this->pagination->initialize($config);
+        $page_nav = $this->page_nav;
+        $page_nav["base_url"] = base_url() . 'resv/viewLists/' . $type;
+        $page_nav["total_rows"] = $results['count'];
+        $page_nav["per_page"] = $limit;
+        $this->pagination->initialize($page_nav);
         $data['pagination'] = $this->pagination->create_links();
-
-        if (!file_exists(APPPATH . 'views/app/templates/' . $page . '.php')) {
-            echo base_url() . 'views/app/templates/' . $page . '.php';
-            show_404();
-        }
-
-        $this->load->view('app/scripts/header_scripts_side_navigation', $data);
-        $this->load->view('app/templates/top_reservation', $data);
-        $this->load->view('app/templates/' . $page, $data);
-        $this->load->view('app/scripts/footer', $data);
+        //show page
+        $this->showPage($data, $page, 1); 
+    }
+    
+    public function confirmMoveFolioRoom() {    
+        $res = $this->resv_model->confirmMoveFolioRoom($_POST['room_id']);
+        echo $res;
     }
 
+    public function moveFolios() {
+        $folio_IDs = json_decode($_POST['selected_rows']);
+        $resv=$_POST['reservation_id'];
+        $folio_type=$_POST['folio'];
+        $move_reason=$_POST['move_reason'];
+        
+        $res = $this->resv_model->moveFolios($resv, $folio_IDs,$folio_type,$move_reason);
+        echo $res;
+    }
+       
+    public function updateOverdueDepartures() {
+        $resv_IDs = json_decode($_POST['selected_rows']);        
+        $res = $this->resv_model->updateOverdueDepartures($resv_IDs);
+        echo $res;
+    }
+    
+    public function manualRoomCharge() {
+        $reason=$_POST['manual_charge_reason'];
+        $reservation=$_POST['manual_charge_reservation'];        
+        $res = $this->resv_model->manualRoomCharge($reservation,$reason);
+        echo $res;
+    }
+    
+    public function confirmOperations() {
+        $reason=$_POST['reason'];
+        $type=$_POST['type'];
+        
+        switch ($type) {
+            case 'backup':
+                $res = $this->resv_model->backup();
+                break;
+            case 'charge':
+                $res = $this->resv_model->autoRoomCharge();                
+                break;
+            case 'close':
+                $res = $this->resv_model->closeAccount();
+                break;
+            case 'reactivate':
+                $resv_id=$_POST['resv_id'];
+                $res = $this->resv_model->reactivateAccount($resv_id,$reason);
+                break;
+            case 'master':
+                $resv_id=$_POST['resv_id'];
+                $master_id=$_POST['master_id'];
+                $res = $this->resv_model->masterFolios($resv_id,$master_id,$reason);
+                break;
+            case 'return':
+                $folio_IDs = json_decode($_POST['selected_rows']);
+                $res = $this->resv_model->returnFolios($folio_IDs,$reason);
+                break;
+            default:
+                break;
+        }    
+        if($res['response']==="success"){
+           $this->session->set_flashdata('form_success', $res['message']); 
+        }        
+        echo json_encode($res);
+    }
+    
+    public function showLedger($type) {
+        /* displays paginised list of items */
+        $this->checkAccess($this->session->overview, 2);
+        
+        $data = $this->data;
+        $data["header_title"] = ucwords("ledger ".$type);
+        $data["module"] = "ledger";
+        $data["type"] = "ledger ".$type;
+        $data["page_number"] = 0;
+        $data["action"] = "";
+        $data['received'][0]['count'] = 0;
+        $page="ledger";
+        
+        $data["collection"] = $this->resv_model->getLedger($type);
+        //show page
+        $this->showPage($data, $page, 0); 
+    }
+    
+    public function showReports() {
+        /* displays paginised list of items */
+        $this->checkAccess($this->session->reports, 2);
+
+        $data = $this->data;
+        $data["header_title"] = ucwords("Reports");
+        $data["type"] = "reports";
+        $data["received"][0]["type"] = "report";       
+        $page="report";
+        //show page
+        $this->showPage($data, $page, 0); 
+    }
+
+    public function viewFolios($resv_ID,$master_id, $page_number, $mode, $client_name, $bills_type, $folio_room,$room_number, $offset = 0) {
+        /* displays paginised list of folios items,
+         * stores mode & resv ID,client name,folio_room bill
+         * gets folios from all bills or specific ones */
+        if (!isset($this->session->folio_payment_error_message) && (!isset($this->session->folio_sale_error_message))) {
+            $this->session->folio_back_uri = base_url() . uri_string();
+        }
+        $this->checkAccess($this->session->reservation, 2);
+
+        $data = $this->data;
+        $data["header_title"] = preg_replace('/[^A-Za-z\-]/', ' ', $client_name) . ": " . $resv_ID;
+        $data["module"] = "reservation";
+        $data["type"] = "folio";
+        $data["mode"] = $mode;
+        $data["received"][0]["type"] = $mode;
+        $data["received"][0]["offset"] = $offset;
+        $data["received"][0]["client_name"] = preg_replace('/[^A-Za-z\-]/', ' ', $client_name);
+        $data["received"][0]["client_reservation_id"] = $resv_ID;
+        $data["received"][0]["bills"] = $bills_type;
+        $data["received"][0]["folio_room"] = $folio_room;
+        $data["received"][0]["move_rooms"] = 0;
+        $data["received"][0]["room_number"] = $room_number;
+        $data["received"][0]["master_id"] = $master_id;
+        $data['payment_accounts'] = $this->app_model->getDisplayedItems('account_payment')['data'];
+        $data['sale_accounts'] = $this->app_model->getDisplayedItems('account_sale')['data'];
+        $data['plu_numbers'] = $this->app_model->getDisplayedItems('account_plu_number')['data'];
+        $data['plu_groups'] = $this->app_model->getDisplayedItems('account_plu_group')['data'];
+        $row_data = $this->app_model->getARow('reservation',$resv_ID);
+        $data["received"][0]["departure"] = $row_data['departure'];
+
+        if (isset($this->session->folio_payment_error_message)) {
+            $data['received'][0]['payment_form_error'] = $this->session->folio_payment_error_message;
+            $data['received'][0]['amount'] = $this->input->post('folio_payment_amount');
+            $data['received'][0]['account'] = $this->input->post('folio_payment_account');
+        } else {
+            $data['received'][0]['payment_form_error'] = "";
+            $data['received'][0]['amount'] = 0;
+            $data['received'][0]['account'] = 1;
+        }
+
+        if (isset($this->session->folio_sale_error_message)) {
+            $data['received'][0]['sale_form_error'] = $this->session->folio_sale_error_message;
+            $data['received'][0]['ID'] = $this->input->post('folio_sale_ID');
+            $data['received'][0]['plu'] = $this->input->post('folio_sale_plu');
+            $data['received'][0]['sale_account'] = $this->input->post('folio_sale_account');
+            $data['received'][0]['sale_account_title'] = $this->input->post('folio_sale_account_title');
+            $data['received'][0]['plu_group'] = $this->input->post('folio_sale_plu_group');
+            $data['received'][0]['sale_price'] = $this->input->post('folio_sale_price');
+            $data['received'][0]['sale_qty'] = $this->input->post('folio_sale_qty');
+            $data['received'][0]['sale_amount'] = $this->input->post('folio_sale_amount');
+            $data['received'][0]['plu_description'] = $this->input->post('folio_sale_description');
+        } else {
+            $data['received'][0]['sale_form_error'] = "";
+            $data['received'][0]['ID'] = 0;
+            $data['received'][0]['plu'] = "";
+            $data['received'][0]['sale_account'] = 0;
+            $data['received'][0]['sale_account_title'] = "";
+            $data['received'][0]['plu_group'] = 1;
+            $data['received'][0]['sale_price'] = 0;
+            $data['received'][0]['sale_qty'] = 1;
+            $data['received'][0]['sale_amount'] = 0;
+            $data['received'][0]['plu_description'] = "";
+        }
+
+        $limit = 10;
+        $page = "folio";
+        if ($bills_type !== "ALL") {
+            $results = $this->resv_model->getFoliosForBILL($resv_ID, $offset, $limit, $bills_type);
+        } else {
+            $results = $this->resv_model->getFolios($resv_ID, $offset, $limit);
+        }
+
+        $data["collection"] = $results['data'];
+        $data["total"] = $results['count'];
+        //totals
+        $totals = $results['totals'];
+        $data["sale_total"] = $totals['SALE_TOTAL'];
+        $data["payment_total"] = $totals['PAYMENT_TOTAL'];
+        $data["folio_diff"] = $totals['FOLIO_DIFF'];
+        $data["red_bal"] = $totals['RED_BAL'];
+        //bill totals deductions
+        $deductions = $results['deductions'];
+        $data["bill1"] = (isset($deductions['BILL1'])) ? ($deductions['BILL1']) : (0);
+        $data["bill2"] = (isset($deductions['BILL2'])) ? ($deductions['BILL2']) : (0);
+        $data["bill3"] = (isset($deductions['BILL3'])) ? ($deductions['BILL3']) : (0);
+        $data["bill4"] = (isset($deductions['BILL4'])) ? ($deductions['BILL4']) : (0);
+        $data["inv"] = (isset($deductions['INV'])) ? ($deductions['INV']) : (0);
+
+        $page_nav = $this->page_nav;
+        $page_nav["base_url"] = base_url() . 'resv/viewFolios/' . $resv_ID . '/'. $master_id . '/' . $page_number . '/' . $mode . '/' . $client_name . '/' . $bills_type.'/'.$folio_room. '/' . $room_number;
+        $page_nav["per_page"] = $limit;
+        $page_nav["total_rows"] = $results['count'];
+        $this->pagination->initialize($page_nav);
+        $data['pagination'] = $this->pagination->create_links();
+        //show page
+        $this->showPage($data, $page, 0);
+    }
+
+    public function viewFoliosCheckout($resv_ID, $client_name,$room_number) {
+        /* displays folio bills for checkout*/    
+        $this->checkAccess($this->session->reservation, 2);
+
+        $data = $this->data;
+        $data["header_title"] = "Checkout";
+        $data["module"] = "reservation";
+        $data["type"] = "folio";
+        $data["received"][0]["client_name"] = preg_replace('/[^A-Za-z\-]/', ' ', $client_name);
+        $data["received"][0]["client_reservation_id"] = $resv_ID;
+        $data["received"][0]["room_number"] = $room_number;
+
+        $page = "checkout";
+        $deductions = $this->resv_model->getFolioDeductions($resv_ID);
+
+        //bill totals deductions
+        $data["bill1"] = (isset($deductions['BILL1'])) ? ($deductions['BILL1']) : (0);
+        $data["bill2"] = (isset($deductions['BILL2'])) ? ($deductions['BILL2']) : (0);
+        $data["bill3"] = (isset($deductions['BILL3'])) ? ($deductions['BILL3']) : (0);
+        $data["bill4"] = (isset($deductions['BILL4'])) ? ($deductions['BILL4']) : (0);
+        $data["inv"] = (isset($deductions['INV'])) ? ($deductions['INV']) : (0);
+        //show page
+        $this->showPage($data, $page, 0);
+    }
+
+    
+    public function viewOverdueDepartures($offset = 0) {
+        /* displays paginised list of overdue reservations*/
+        $this->checkAccess($this->session->maintenance, 2);
+
+        $data = $this->data;
+        $data["header_title"] = "Overdue Departures";
+        $data["module"] = "maintenance";
+        $data["type"] = "overdue";
+        $data["received"][0]["type"] = "overdue";
+        
+        $limit = 20;
+        $page = "overdue_departures";
+        $results = $this->resv_model->getOverdueDepartures($offset, $limit);
+        $data["collection"] = $results['data'];
+        $data["total"] = $results['count'];
+        
+        $page_nav = $this->page_nav;
+        $page_nav["base_url"] = base_url() . 'resv/viewOverdueDepartures';
+        $page_nav["per_page"] = $limit;
+        $page_nav["total_rows"] = $results['count'];
+        $this->pagination->initialize($page_nav);
+        $data['pagination'] = $this->pagination->create_links();
+        //show page
+        $this->showPage($data, $page, 0);
+    }
+
+    
     public function processPerson() {
         //save data
-        $this->chkLoggedIn();
-        $access = $this->session->reservation;
-        if ($access < 3) {//write access
-            $redirect = "app";
-            redirect($redirect);
-        }
+        $this->checkAccess($this->session->reservation, 3);
+        $redirect = $this->session->back_uri;
 
         $ID = $this->input->post('person_ID');
         $type = $this->input->post('person_type');
-        $action = $this->input->post('person_action');
-        $page_number = $this->input->post('person_page_number');
 
         if ($ID > 0) {
             $this->form_validation->set_rules('person_title', 'Name', 'trim|required');
@@ -551,27 +867,23 @@ class Resv extends App {
         }
 
         if ($this->form_validation->run() == FALSE) {
-            $errors = TRUE;
-            $this->session->set_flashdata('error_message', validation_errors());
-            $this->showClients($type, $ID, $page_number, $action, $errors);
+            $this->session->set_flashdata('client_error_message', validation_errors());
+            $redirect = $this->session->back_uri;
+            redirect($redirect);
         } else {
             $res_id = $this->resv_model->savePerson($type);
             if ($res_id) {
                 $this->session->set_flashdata('form_success', 'Operation Successful');
-                $redirect = "resv/showClients/" . $type . "/" . $res_id . "/" . $page_number . "/" . $action;
+                redirect($redirect);
+            } else {
+                $redirect = $this->session->back_uri;
                 redirect($redirect);
             }
         }
     }
 
     public function fetchModalData($type, $ID, $filter = FALSE) {
-        $this->chkLoggedIn();
-        $access = $this->session->reservation;
-        if ($access < 2) {//read access
-            $redirect = "app";
-            redirect($redirect);
-        }
-
+        $this->checkAccess($this->session->reservation, 2);
         switch ($type) {
             case 'roomtype':
                 $result = $this->resv_model->getModalItems($type, TRUE, $ID, $filter);
@@ -581,7 +893,6 @@ class Resv extends App {
                 $result = $this->resv_model->getModalItems($type, TRUE, $ID, $filter);
                 break;
             default:
-//                $result = $this->app_model->getDisplayedItems($type, TRUE, $ID);
                 break;
         }
         echo $result;
