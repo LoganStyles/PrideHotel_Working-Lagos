@@ -1,6 +1,6 @@
 
 function fetchGridData(grid_type) {
-    console.log('grid_type'+grid_type);
+    console.log('grid_type' + grid_type);
 
     var form_page_number = "#" + grid_type + "_page_number";
     var form_action = "#" + grid_type + "_action";
@@ -39,22 +39,6 @@ function fetchGridData(grid_type) {
                         {text: 'Description', datafield: 'description'}
                     ];
                     break;
-//                case 'person':
-//                    datafields_data = [
-//                        {name: 'ID', type: 'number'},
-//                        {name: 'title', type: 'string'},
-//                        {name: 'phone', type: 'string'},
-//                        {name: 'email', type: 'string'},
-//                        {name: 'state', type: 'string'}
-//                    ];
-//
-//                    columndata = [
-//                        {text: 'Name', datafield: 'title', align: 'left', cellsalign: 'left'},
-//                        {text: 'Phone', datafield: 'phone'},
-//                        {text: 'Email', datafield: 'email'},
-//                        {text: 'State', datafield: 'state'}
-//                    ];
-//                    break;
                 case 'user':
                     datafields_data = [
                         {name: 'ID', type: 'number'},
@@ -345,12 +329,21 @@ var configuration = {
 
             if (grid_type === "housekeeping") {
                 //create button for operations
+                var room_status = row_data.room_status;
+                var room_title = row_data.title;
                 var house_button = "#" + grid_type + "_status";
                 var house_blocked_button = "#" + grid_type + "_block";
                 var house_details_button = "#" + grid_type + "_details";
+                var house_resv_button = "#" + grid_type + "_resv";
+
                 $(house_button).attr("onclick", "updateItem('room','" + id + "','1')");
                 $(house_blocked_button).attr("onclick", "updateItem('room','" + id + "','7')");
                 $(house_details_button).attr("onclick", "fetchRowDataWithIdentifier('room','" + id + "','housekeeping_room')");
+                if (room_status === "occupied" || room_status === "occupied_dirty") {
+                    $(house_resv_button).attr('onclick', "getRoomReservation('" + room_title + "')");
+                } else {
+                    $(house_resv_button).attr('onclick', "");
+                }
 
             } else {
                 $(delete_button).attr("onclick", "modalLoader('" + grid_type + "','" + modal + "','delete'," + id + ")");
@@ -373,12 +366,12 @@ var configuration = {
             console.log('dblclick: ' + id);
             modalLoader(grid_type, modal, "edit", id);
         });
-        
-        if(data_len >0){
+
+        if (data_len > 0) {
             $(grid_location).jqxGrid('selectrow', 0);
         }
 
-        
+
     }
 }
 

@@ -28,25 +28,29 @@ function getModalSelection(prefix, type, modal, ID, value, weekday, weekend, hol
     $(hidden_field).val(ID);
     $(output_field).val(value);
 
-    if (prefix == "guest") {
-        $('#guest_weekday').val(weekday);
-        $('#guest_weekend').val(weekend);
-        $('#guest_holiday').val(holiday);
-        if (type == "roomtype") {
-            $('#guest_room_number').val("");
-            $('#guest_room_number_id').val("");
-            $('#guest_price_rate').val("");
-            $('#guest_price_rate_id').val("");
-            console.log('weekday ' + weekday);
-            console.log('weekend ' + weekend);
-            console.log('holiday ' + holiday);
-        }
+    var weekday_field = "#" + prefix + "_weekday";
+    var weekend_field = "#" + prefix + "_weekend";
+    var holiday_field = "#" + prefix + "_holiday";
+    var room_number_field = "#" + prefix + "_room_number";
+    var room_number_id_field = "#" + prefix + "_room_number_id";
+    var price_rate_field = "#" + prefix + "_price_rate";
+    var price_rate_id_field = "#" + prefix + "_price_rate_id";
+
+    $(weekday_field).val(weekday);
+    $(weekend_field).val(weekend);
+    $(holiday_field).val(holiday);
+    if (type === "roomtype") {
+        $(room_number_field).val("");
+        $(room_number_id_field).val("");
+        $(price_rate_field).val("");
+        $(price_rate_id_field).val("");
+        console.log('weekday ' + weekday);
+        console.log('weekend ' + weekend);
+        console.log('holiday ' + holiday);
     }
 
     $(modal).modal('hide');
-    if (prefix == "guest") {
-        reservation.calcRoomPrice();
-    }
+    reservation.calcRoomPrice(prefix);
 
 }
 
@@ -55,8 +59,8 @@ function closeResvModal(modal) {
     location.reload();
 }
 
-function printReservation(type) {
-    var url = BASE_URL + "report/printReservations/" + type;
+function printReservation(type, guest_type) {
+    var url = BASE_URL + "report/printReservations/" + type + "/" + guest_type;
     console.log('update url: ' + url);
     window.location = url;
 }
@@ -191,11 +195,23 @@ function fetchModalGridData(prefix, grid_type) {
     });
 }
 var reservation = {
-    calcRoomPrice: function () {
+    calcRoomPrice: function (resv_type) {
         /*calcs room price*/
         var count = 0, weekend_count = 0, week_days = 0, price_total = 0, comp_nights = 0, price_extra = 0, price_total_comp = 0;
+        var arrival_field = "#" + resv_type + "_arrival";
+        var departure_field = "#" + resv_type + "_departure";
+        var night_field = "#" + resv_type + "_nights";
+        var weekday_field = "#" + resv_type + "_weekday";
+        var weekend_field = "#" + resv_type + "_weekend";
+        var holiday_field = "#" + resv_type + "_holiday";
+        var price_rate_field = "#" + resv_type + "_price_rate";
+        var price_room_field = "#" + resv_type + "_price_room";
+        var price_total_field = "#" + resv_type + "_price_total";
+        var price_extra_field = "#" + resv_type + "_price_extra";
+        var comp_nights_field = "#" + resv_type + "_comp_nights";
+        var comp_visits_field = "#" + resv_type + "_comp_visits";
 
-        var arrival_date = $('#guest_arrival').jqxDateTimeInput('getDate');
+        var arrival_date = $(arrival_field).jqxDateTimeInput('getDate');
         console.log('arrival_date is ' + arrival_date);
         var curr_night = arrival_date;
         var firstday = arrival_date;
@@ -203,18 +219,18 @@ var reservation = {
         console.log('curr_night is ' + curr_night);
         console.log('firstday is ' + firstday);
 
-        var nights = $('#guest_nights').val();
+        var nights = $(night_field).val();
         nights = (nights > 0) ? (parseInt(nights)) : (0);
-        var weekday_rate = $('#guest_weekday').val();
+        var weekday_rate = $(weekday_field).val();
         weekday_rate = (weekday_rate > 0) ? (parseFloat(weekday_rate)) : (0);
-        var weekend_rate = $('#guest_weekend').val();
+        var weekend_rate = $(weekend_field).val();
         weekend_rate = (weekend_rate > 0) ? (parseFloat(weekend_rate)) : (0);
-        var holiday_rate = $('#guest_holiday').val();
+        var holiday_rate = $(holiday_field).val();
         holiday_rate = (holiday_rate > 0) ? (parseFloat(holiday_rate)) : (0);
 
         departure_date.setDate(departure_date.getDate() + nights);
         console.log('departure_date is ' + departure_date);
-        $('#guest_departure').jqxDateTimeInput('setDate', departure_date);
+        $(departure_field).jqxDateTimeInput('setDate', departure_date);
 
         //fnd weekends
         while (count < nights) {
@@ -240,13 +256,13 @@ var reservation = {
         console.log('final weekends count is ' + weekend_count);
         price_total = (weekday_rate * week_days) + (weekend_rate * weekend_count);
 
-        price_extra = parseFloat($('#guest_price_extra').val());
+        price_extra = parseFloat($(price_extra_field).val());
 
         price_total_comp = price_total + price_extra;
         console.log('price total before complimentary ' + price_total_comp);
 
         //subtract complimentary nights if any
-        comp_nights = $('#guest_comp_nights').val();
+        comp_nights = $(comp_nights_field).val();
         comp_nights = (comp_nights > 0) ? (parseInt(comp_nights)) : (0);
         count = 0;
         if (comp_nights > 0 && comp_nights <= nights) {            /*chk if comp_nights is valid*/
@@ -264,25 +280,27 @@ var reservation = {
                 }
                 count++;
             }
-            $('#guest_comp_visits').val('yes');
+            $(comp_visits_field).val('yes');
         } else {
-            $('#guest_comp_visits').val('no');
+            $(comp_visits_field).val('no');
         }
         console.log('price total after complimentary ' + price_total_comp);
-        var chkpr = $('#guest_price_rate').val();
+        var chkpr = $(price_rate_field).val();
         if (chkpr !== "") {
-            $('#guest_weekday').val(weekday_rate);
-            $('#guest_weekend').val(weekend_rate);
-            $('#guest_holiday').val(holiday_rate);
+            $(weekday_field).val(weekday_rate);
+            $(weekend_field).val(weekend_rate);
+            $(holiday_field).val(holiday_rate);
 
-            $('#guest_price_room').val(price_total);
-            $('#guest_price_total').val(price_total_comp);
+            $(price_room_field).val(price_total);
+            $(price_total_field).val(price_total_comp);
         }
     },
     grid: function (datafields_data, columndata, fetched_data, grid_type, width, prefix) {
-        if (prefix == "guest") {
-            var weekday = $('#guest_weekday').val(), weekend = $('#guest_weekend').val(), holiday = $('#guest_holiday').val();
-        }
+        var weekday, weekend, holiday;
+        var weekday_field = "#" + prefix + "_weekday";
+        var weekend_field = "#" + prefix + "_weekend";
+        var holiday_field = "#" + prefix + "_holiday";
+        weekday = $(weekday_field).val(), weekend = $(weekend_field).val(), holiday = $(holiday_field).val();
 
         var select_button = "#" + grid_type + "_popup_select";
         var grid_location = "#" + grid_type + "_popup_data";
@@ -316,7 +334,7 @@ var reservation = {
             var row_data = args.row;
             var ID = row_data.ID;
             var title = row_data.title;
-            if (grid_type == "price_rate" && (prefix == "guest")) {
+            if (grid_type === "price_rate") {
                 weekday = row_data.weekday;
                 weekend = row_data.weekend;
                 holiday = row_data.holiday;
@@ -333,7 +351,7 @@ var reservation = {
             var data = $(grid_location).jqxGrid('getrowdata', rowid);
             var ID = data.ID;
             var title = data.title;
-            if (grid_type == "price_rate" && (prefix == "guest")) {
+            if (grid_type === "price_rate") {
                 weekday = data.weekday;
                 weekend = data.weekend;
                 holiday = data.holiday;
@@ -345,6 +363,7 @@ var reservation = {
         $(grid_location).jqxGrid('selectrow', 0);
         $(modal).modal({backdrop: false, keyboard: false});
     }
+
 
 }
 
