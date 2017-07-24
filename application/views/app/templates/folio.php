@@ -316,11 +316,11 @@ if (!empty($red_bal)) {
                                         echo 'selected';
                                     }
                                     ?>>BILL4</option>
-                                    <option value="INV" <?php
+<!--                                    <option value="INV" <?php
                                     if ($folio_room === "INV") {
                                         echo 'selected';
                                     }
-                                    ?>>INVOICE</option>
+                                    ?>>INVOICE</option>-->
                                 </select>                                                                 
                             </div>
                             <div>

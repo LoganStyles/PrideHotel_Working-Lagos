@@ -142,7 +142,7 @@ function getTitle($titles, $id, $result_type = NULL) {
 
                             <ul class="sub-menu-list">                                
                                 <li class="<?php
-                                if ($header_title == "Guest") {
+                                if ($bar_title == "Guest") {
                                     echo "active";
                                 }
                                 ?>"><a href="<?php echo base_url() . 'app'; ?>"> Guest Rooms</a></li>
@@ -151,11 +151,11 @@ function getTitle($titles, $id, $result_type = NULL) {
                                     echo "active";
                                 }
                                 ?>"><a href="<?php echo base_url() . 'group'; ?>"> Groups</a></li>
-                                <!--<li class="<?php
-                                if ($type == "house_accounts") {
+                               <li class="<?php
+                                if ($bar_title == "House") {
                                     echo "active";
                                 }
-                                ?>"><a href="#"> House Accounts</a></li>-->
+                                ?>"><a href="<?php echo base_url() . 'house'; ?>"> House Accounts</a></li>
                             </ul>
                         </li>
 

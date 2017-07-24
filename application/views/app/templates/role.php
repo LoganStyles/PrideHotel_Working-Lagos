@@ -56,7 +56,6 @@ if ($form_error) {
                     </div>
                 </header>
 
-
                 <div class="panel-body">
                     <div class="" id="role_data">
 

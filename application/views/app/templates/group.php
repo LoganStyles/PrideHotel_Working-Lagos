@@ -340,7 +340,7 @@ if (!empty($group_price_rate_error)) {
                         <input class="btn btn-success btn-sm" type="submit" name="submit" value="Save" />
                     <?php } ?>
                     
-                    <button type="button" class="btn btn-default" onclick='groupCloseWindow("<?php echo $mode."\",\"".$page_number;?>");'>Cancel</button>
+                    <button type="button" class="btn btn-default" onclick='closeWindow("<?php echo $mode."\",\"group\",\"".$page_number;?>");'>Cancel</button>
                 </div>
                 <div class="clearfix"></div>
                 </form>

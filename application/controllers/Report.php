@@ -40,6 +40,8 @@ class Report extends App {
         $data["rooms_r"] = $data['rooms']['data'];
         if($guest_type==="guest"){
           $results = $this->resv_model->getReservations($type, $offset, $limit);  
+        }elseif($guest_type==="house"){
+          $results = $this->resv_model->getHouseReservations($type, $offset, $limit);  
         }else{
           $results = $this->resv_model->getGroupReservations($type, $offset, $limit);
         } 
@@ -146,7 +148,8 @@ class Report extends App {
             case 'audit trail':
                 $page = "report_audit";
                 break;
-            case 'ledger':
+            case 'ledger_guest':
+            case 'ledger_group':
                 $page = "report_ledger";
                 break;
             case 'police':
@@ -162,8 +165,9 @@ class Report extends App {
         $data = $this->data;
         $data["header_title"] = strtoupper($type . " (" . $from . " - " . $to . ")");
         $data["type"] = $type;
-        if ($type == "ledger") {
-            $data["collection"] = $this->resv_model->getLedger();
+        if ($type == "ledger_guest" || $type == "ledger_group") {
+            $ledger_type=  str_replace('ledger_', '', $type);
+            $data["collection"] = $this->resv_model->getLedger($ledger_type);
         } else {
             $results = $this->resv_model->getReports($type);
             $data["collection"] = $results['data'];

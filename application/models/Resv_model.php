@@ -26,14 +26,21 @@ class Resv_model extends App_model {
     public function deleteResv() {
         $reason = $this->input->post('delete_resv_reason');
         $resv_id = $this->input->post('delete_resv_id');
+        //echo 'del resv_id :'.$resv_id;exit;
         $type = $this->input->post('delete_resv_type');
         $oldvalue = $this->input->post('delete_resv_oldvalue');
         $newvalue = $this->input->post('delete_resv_newvalue');
         $description = "Reservation " . $resv_id . " was deleted by " . $this->session->us_signature;
+        
         //update reservation status
-        $this->updateItems("reservation", $resv_id, "status", "cancelled");
+        $this->db->set('status','cancelled');
+        $this->db->set('remarks',$reason);
+        $this->db->where('reservation_id',$resv_id);
+        $this->db->update('reservationitems');
+        //$this->updateItems("reservation", $resv_id, "status", "cancelled");
         //update reservation remarks
-        $this->updateItems("reservation", $resv_id, "remarks", $reason);
+        //$this->updateItems("reservation", $resv_id, "remarks", $reason);
+        
         //log this action
         $log_id = $this->createLog($type, "delete", $description, $oldvalue, $newvalue, $reason);
         return $log_id;
@@ -545,9 +552,7 @@ class Resv_model extends App_model {
                 $sort = " AND ri.account_type='ROOM' order by ri.ID DESC";
                 break;
             case "staying":
-//                $sort = " and ri.status='$type' and ri.departure >='$app_date' and ri.arrival <='$app_date' "
-//                        . "AND ri.account_type='ROOM' order by ri.ID DESC";
-                $sort = " and ri.status='$type' and ri.arrival <='$app_date' "
+                $sort = " and ri.status='$type' and DATE(ri.actual_arrival) <='$app_date' "
                         . "AND ri.account_type='ROOM' order by ri.ID DESC";
                 break;
             case "person":
@@ -569,7 +574,7 @@ class Resv_model extends App_model {
             $q_total = "SELECT rp.folio_room,ri.* from reservationpriceitems as rp "
                     . "left join reservationitems as ri "
                     . "on (rp.reservation_id = ri.reservation_id) "
-                    . "where 1=1 $sort $limit";
+                    . "where 1=1 $sort ";
 
             $q_sum_resv_nights = "SELECT COUNT(ri.reservation_id) as sum_resv,sum(ri.nights) as sum_nights "
                     . "from reservationitems as ri where ri.account_type='ROOM' $sort";
@@ -627,9 +632,7 @@ class Resv_model extends App_model {
                 $sort = " AND ri.account_type='GROUP' order by ri.ID DESC";
                 break;
             case "staying":
-//                $sort = " and ri.status='$type' and ri.departure >='$app_date' and ri.arrival <='$app_date' "
-//                        . "AND ri.account_type='GROUP' order by ri.ID DESC";
-                $sort = " and ri.status='$type' and ri.arrival <='$app_date' "
+                $sort = " and ri.status='$type' and DATE(ri.actual_arrival) <='$app_date' "
                         . "AND ri.account_type='GROUP' order by ri.ID DESC";
                 break;
             default:
@@ -644,7 +647,7 @@ class Resv_model extends App_model {
         $q_total = "SELECT rp.folio_room,ri.* from reservationpriceitems as rp "
                 . "left join reservationitems as ri "
                 . "on (rp.reservation_id = ri.reservation_id) "
-                . "where 1=1 $sort $limit";
+                . "where 1=1 $sort ";
 
         $q_sum_resv_nights = "SELECT COUNT(ri.reservation_id) as sum_resv,sum(ri.nights) as sum_nights "
                 . "from reservationitems as ri where ri.account_type='GROUP' $sort";
@@ -781,14 +784,136 @@ class Resv_model extends App_model {
             );
             $this->db->insert("reservationpriceitems", $data);
             $res_result['reservation_id'] = $padded_reservation_id;
-            //chk for existing client name
-//            $this->db->select('*');
-//            $this->db->where('LOWER(title)', strtolower($client_name));
-//            $query = $this->db->get('personitems');
-//            if ($query->num_rows() > 0) {
-//                $res_result['reservation_id'] = $padded_reservation_id;
-//                $res_result['client_exists'] = "";
-//            } 
+            return $res_result;
+        } else {
+            return false;
+        }
+    }
+    
+    public function getHouseReservations($type, $offset = 0, $limit_val = FALSE) {
+        /* gets all fields for a reservation with filters,limit & offsets
+         * ::used for page navigations etc */
+        $app_date = date('Y-m-d', strtotime($this->getAppInfo()));
+
+        //$tableitems = "reservationitems";
+        $limit = $filter = "";
+        $sort = " order by ID DESC";
+        $results['data'] = array();
+        $results['count'] = 0;
+
+        if ($limit_val) {
+            $limit = "LIMIT $offset,$limit_val";
+        }
+
+        switch ($type) {
+            case "confirmed":
+            case "cancelled":
+                $sort = "and ri.status='$type' AND ri.account_type='HOUSE' order by ri.ID DESC";
+                break;
+            case "departed":
+                $sort = "and ri.status='departed' and DATE(ri.actual_departure)<='$app_date' AND ri.account_type='HOUSE' "
+                        . "order by ri.ID DESC";
+                break;
+            case "all":
+                $sort = " AND ri.account_type='HOUSE' order by ri.ID DESC";
+                break;
+            case "staying":
+                $sort = " and ri.status='$type' and DATE(ri.actual_arrival) <='$app_date' "
+                        . "AND ri.account_type='HOUSE' order by ri.ID DESC";
+                break;
+            default:
+                break;
+        }
+
+        $q = "SELECT ri.* from reservationitems as ri where 1=1 $sort $limit";
+
+        $q_total = "SELECT ri.* from reservationitems as ri where 1=1 $sort ";
+
+        $q_sum_resv_nights = "SELECT COUNT(ri.reservation_id) as sum_resv,sum(ri.nights) as sum_nights "
+                . "from reservationitems as ri where ri.account_type='HOUSE' $sort";
+
+//                    echo $q;echo '<br>';
+//                    echo $q_total;
+//                    exit;
+        $query = $this->db->query($q);
+        if ($query->num_rows() > 0)
+            $results['data'] = $query->result_array();
+
+        $query = $this->db->query($q_total);
+        if ($query->num_rows() > 0)
+            $results['count'] = $query->num_rows();
+
+        $query = $this->db->query($q_sum_resv_nights);
+        if ($query->num_rows() > 0)
+            $results['sum'] = $query->row_array();
+
+        return $results;
+    }
+    
+    public function saveHouse($type) {
+        /* updates house details */
+        $res_result = array();
+        $curr_date = date('Y-m-d', strtotime($this->getAppInfo())) . " " . date('H:i:s');
+
+        $reservation_ID = $this->input->post('house_ID');
+        $house_arrival = $this->input->post('house_arrival');
+        $temp_date = str_replace('/', '-', $house_arrival);
+        $arrival = date('Y-m-d', strtotime($temp_date));
+        $nights = $this->input->post('house_nights');
+        $departure = date('Y-m-d', strtotime($arrival . ' + ' . $nights . ' days'));
+        $client_type = $this->input->post('house_client_type');
+        $client_name = $this->input->post('house_client_name');
+        $status = $this->input->post('house_status');
+        //price
+        $folio_room = $this->input->post('house_folio_room');
+
+        if ($reservation_ID > 0) {
+            //update reservation
+            $data = array(
+                'arrival' => $arrival,
+                'nights' => $nights,
+                'departure' => $departure,
+                'client_type' => $client_type,
+                'client_name' => $client_name,
+                'status' => $status,
+                'signature_modified' => $this->session->us_signature,
+                'date_modified' => $curr_date
+            );
+            $this->db->where('reservation_id', $reservation_ID);
+            $this->db->update("reservationitems", $data);
+
+            $res_result['reservation_id'] = $reservation_ID;
+            $res_result['client_exists'] = "";
+            return $res_result;
+        } elseif ($reservation_ID == 0) {
+            //insert reservation
+            //get last reservation id
+            $reservation_id = 1;
+            $this->db->select('reservation_id');
+            $this->db->from('reservationitems');
+            $this->db->order_by('ID', 'DESC');
+            $query = $this->db->get();
+            if ($query->num_rows() > 0) {
+                $results = $query->row_array();
+                $reservation_id = intval($results["reservation_id"]) + 1;
+            }
+            $padded_reservation_id = str_pad($reservation_id, 12, "0", STR_PAD_LEFT);
+
+            $data = array(
+                'reservation_id' => $padded_reservation_id,
+                'arrival' => $arrival,
+                'account_type' => 'HOUSE',
+                'nights' => $nights,
+                'departure' => $departure,
+                'client_type' => $client_type,
+                'client_name' => $client_name,
+                'status' => $status,
+                'signature_created' => $this->session->us_signature,
+                'date_created' => $curr_date,
+                'actual_arrival' => $curr_date
+            );
+            $this->db->insert("reservationitems", $data);
+            $res_result['reservation_id'] = $padded_reservation_id;
             return $res_result;
         } else {
             return false;
@@ -1199,6 +1324,9 @@ class Resv_model extends App_model {
 
             //update folios to closed/ledger
             $this->db->set('status', $folio_status);
+                if($folio_status==='ledger'){
+                    $this->db->set('sub_folio', 'INV');
+                }            
             $this->db->where('reservation_id', $reservation_id);
             $this->db->update('reservationfolioitems');
         }
@@ -1825,9 +1953,9 @@ class Resv_model extends App_model {
         //backup locally
         $app_day = date("Y-m-d", strtotime($this->getAppInfo()));
         $host = "localhost";
-        $user = "hotel2";
-        $pass = 'hotel2';
-        $dbname = 'hotel2';
+        $user = "pride_bjclassic";
+        $pass = 'pride_bjclassic';
+        $dbname = 'pride_bjclassic';
         $file_name = str_replace("-", "_", $app_day);
         $local_backup_dir = 'backups/';
         $backup_name = $local_backup_dir . $file_name . ".sql";
@@ -2048,6 +2176,15 @@ class Resv_model extends App_model {
                 . "left join priceitems as pi "
                 . "on (rp.price_rate = pi.ID)"
                 . "where ri.reservation_id='$resv_id' AND account_type='GROUP'";
+
+        $query = $this->db->query($q);
+        if ($query->num_rows() > 0)
+            return $query->result_array();
+    }
+    
+    public function getHouseResvInfo($resv_id) {
+        /* get info for house account etc for a client */
+        $q = "SELECT * from reservationitems where reservation_id='$resv_id' AND account_type='HOUSE'";
 
         $query = $this->db->query($q);
         if ($query->num_rows() > 0)

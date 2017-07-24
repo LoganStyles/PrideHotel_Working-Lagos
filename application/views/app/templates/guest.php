@@ -256,11 +256,11 @@ if (!empty($price_rate_error)) {
                                         echo 'selected';
                                     }
                                     ?>>BILL4</option>
-                                    <option value="INV" <?php
+<!--                                    <option value="INV" <?php
                                     if ($folio_room === "INV") {
                                         echo 'selected';
                                     }
-                                    ?>>INV</option>
+                                    ?>>INV</option>-->
                                 </select>                                
                             </div>
 
@@ -287,11 +287,11 @@ if (!empty($price_rate_error)) {
                                         echo 'selected';
                                     }
                                     ?>>BILL4</option>
-                                    <option value="INV" <?php
+<!--                                    <option value="INV" <?php
                                     if ($folio_extra === "INV") {
                                         echo 'selected';
                                     }
-                                    ?>>INV</option>
+                                    ?>>INV</option>-->
                                 </select>                                
                             </div>    
 
@@ -318,11 +318,11 @@ if (!empty($price_rate_error)) {
                                         echo 'selected';
                                     }
                                     ?>>BILL4</option>
-                                    <option value="INV" <?php
+<!--                                    <option value="INV" <?php
                                     if ($folio_other === "INV") {
                                         echo 'selected';
                                     }
-                                    ?>>INV</option>
+                                    ?>>INV</option>-->
                                 </select>                                
                             </div>
 
@@ -439,7 +439,7 @@ if (!empty($price_rate_error)) {
                         <input class="btn btn-success btn-sm" type="submit" name="submit" value="Save" />
                     <?php } ?>
                     
-                    <button type="button" class="btn btn-default" onclick='closeWindow("<?php echo $mode."\",\"".$page_number;?>");'>Cancel</button>
+                    <button type="button" class="btn btn-default" onclick='closeWindow("<?php echo $mode."\",\"guest\",\"".$page_number;?>");'>Cancel</button>
                 </div>
                 <div class="clearfix"></div>
                 </form>

@@ -68,6 +68,7 @@ $route['app/processDelete'] = 'app/processDelete';
 $route['app/processPrice'] = 'app/processPrice';
 $route['app/processHousekeeping'] = 'app/processHousekeeping';
 $route['app/getRoomReservation/(:any)'] = 'app/getRoomReservation/$1';
+$route['app/login/(:any)'] = 'app/login/$1';
 $route['app/logout'] = 'app/logout';
 $route['app/process/(:any)'] = 'app/processTypeclass/$1';
 $route['app/(:any)'] = 'app/showTypeclass/$1';
@@ -99,7 +100,15 @@ $route['group'] = 'group';
 $route['group/processCheckIn'] = 'group/processCheckIn';
 $route['group/processGroup'] = 'group/processGroup';
 $route['group/checkIn/(:any)/(:any)'] = 'group/checkIn/$1/$2';
-$route['group/(:any)'] = 'group/viewLists/$1';
 $route['group/group/new'] = 'group/showReservation/group/0/0/insert/confirmed';
 $route['group/group/(:any)/(:any)/(:any)/(:any)'] = 'group/showReservation/group/$1/$2/$3/$4';
+$route['group/(:any)'] = 'group/viewLists/$1';
+
+$route['house'] = 'house';
+$route['house/processHouse'] = 'house/processHouse';
+$route['house/processResvDelete'] = 'house/processResvDelete';
+$route['house/house/new'] = 'house/showReservation/house/0/0/insert/staying';
+$route['house/house/(:any)/(:any)/(:any)/(:any)'] = 'house/showReservation/house/$1/$2/$3/$4';
+$route['house/(:any)'] = 'house/viewLists/$1';
+
 

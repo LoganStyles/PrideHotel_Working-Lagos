@@ -294,7 +294,29 @@ var reservation = {
             $(price_room_field).val(price_total);
             $(price_total_field).val(price_total_comp);
         }
-    },
+    }, 
+    calcDuration: function (resv_type) {
+        /*calcs room price*/
+        var count = 0;
+        var arrival_field = "#" + resv_type + "_arrival";
+        var departure_field = "#" + resv_type + "_departure";
+        var night_field = "#" + resv_type + "_nights";
+        
+        var arrival_date = $(arrival_field).jqxDateTimeInput('getDate');
+        console.log('arrival_date is ' + arrival_date);
+        var curr_night = arrival_date;
+        var firstday = arrival_date;
+        var departure_date = arrival_date;
+        console.log('curr_night is ' + curr_night);
+        console.log('firstday is ' + firstday);
+
+        var nights = $(night_field).val();
+        nights = (nights > 0) ? (parseInt(nights)) : (0);
+
+        departure_date.setDate(departure_date.getDate() + nights);
+        console.log('departure_date is ' + departure_date);
+        $(departure_field).jqxDateTimeInput('setDate', departure_date);
+    }, 
     grid: function (datafields_data, columndata, fetched_data, grid_type, width, prefix) {
         var weekday, weekend, holiday;
         var weekday_field = "#" + prefix + "_weekday";

@@ -262,7 +262,7 @@
 
     <footer>
         &copy; <?php echo date('Y'); ?>  Powered by <a href="http://webmobiles.com.ng/" target="_blank" >Webmobiles IT Services Ltd</a>
-        <span style="margin-left: 2%;color: #FF4545;"><?php echo $expiration;?></span>
+        <span style="margin-left: 2%;color: #FF4545;"><?php echo $expiration; ?></span>
     </footer>
     <!--footer section end-->
 <?php } ?>
@@ -292,19 +292,23 @@
         window.location = url;
     }
 
-    function closeWindow(type, page_number) {
-        if (!type) {
-            window.location = BASE_URL + "app";
-        } else {
-            window.location = BASE_URL + "resv/viewLists/" + type + "/" + page_number;
+    function closeWindow(mode, guest_type, page_number) {
+        var controller = "";
+        switch (guest_type) {
+            case'guest':
+                controller = 'resv';
+                break;
+            case'group':
+                controller = 'group';
+                break;
+            case'house':
+                controller = 'house';
+                break;
         }
-    }
-    
-    function groupCloseWindow(type, page_number) {
-        if (!type) {
+        if (!mode) {
             window.location = BASE_URL + "app";
         } else {
-            window.location = BASE_URL + "group/viewLists/" + type + "/" + page_number;
+            window.location = BASE_URL + controller+"/viewLists/" + mode + "/" + page_number;
         }
     }
 
@@ -512,13 +516,13 @@
         var redirect = BASE_URL + "resv/guest/" + resv_id + "/0/" + page_number + "/" + type + "/" + mode;
         window.location = redirect;
     }
-    
-    function newGroupResv(page_number, mode){
+
+    function newGroupResv(page_number, mode) {
         var master_id = $('.booking_radio.active .booking_hidden_id').val();
         var redirect = BASE_URL + "resv/guest/0/" + master_id + "/" + page_number + "/insert/" + mode;
         window.location = redirect;
     }
-    
+
     function processGroupResv(type, page_number, mode) {/*handler for reservation actions
      * gets the resv id & type of operation, then calls controller*/
         var resv_id = $('.booking_radio.active .booking_hidden_id').val();
@@ -528,6 +532,16 @@
         var redirect = BASE_URL + "group/group/" + resv_id + "/" + page_number + "/" + type + "/" + mode;
         window.location = redirect;
     }
+    
+    function processHotelResv(type, page_number, mode) {/*handler for reservation actions
+     * gets the resv id & type of operation, then calls controller*/
+        var resv_id = $('.booking_radio.active .booking_hidden_id').val();
+
+        console.log('resv_id is ' + resv_id);
+        console.log('type is ' + type);
+        var redirect = BASE_URL + "house/house/" + resv_id + "/" + page_number + "/" + type + "/" + mode;
+        window.location = redirect;
+    }
 
     function getFolio(page_number, mode, bill_type, room_number, departure) {
         /*handler to get folio actions
@@ -535,11 +549,11 @@
         var resv_id = $('.booking_radio.active .booking_hidden_id').val();
         var folio_room = $('.booking_radio.active .folio_hidden_folio_room').val();
         var master_id = $('.booking_radio.active .folio_hidden_master_id').val();
-        master_id=(master_id)?(master_id):("0");
+        master_id = (master_id) ? (master_id) : ("0");
         var client_name = $('.booking_radio.active .booking_hidden_client').text();
         console.log('master_id is ' + master_id);
 
-        var redirect = BASE_URL + "resv/viewFolios/" + resv_id + "/"+ master_id + "/" + page_number + "/" + mode + "/" + client_name + "/" + bill_type + "/" + folio_room + "/" + room_number;
+        var redirect = BASE_URL + "resv/viewFolios/" + resv_id + "/" + master_id + "/" + page_number + "/" + mode + "/" + client_name + "/" + bill_type + "/" + folio_room + "/" + room_number;
         window.location = redirect;
     }
 
@@ -695,7 +709,7 @@
         console.log(redirect);
         window.location = redirect;
     }
-    
+
     function groupCheckInOut() {
         //from resv::determine if a checkin/checkout is possible
         var mode = $('.booking_radio.active .booking_hidden_status').text();
@@ -712,11 +726,11 @@
             groupCheckin(mode, resv_id);
         } else if (mode === "staying") {
             //initiate checkout
-            var room_number=0;
-            checkout(resv_id, client_name,room_number, departure);
+            var room_number = 0;
+            checkout(resv_id, client_name, room_number, departure);
         }
     }
-    
+
     function groupCheckin(mode, resv_id) {
         var redirect = BASE_URL + "group/checkIn/" + mode + "/" + resv_id;
         console.log(redirect);
@@ -736,7 +750,7 @@
          * */
         //display days to departure(diff bw app_date & departure)
         var app_date = "<?php echo date('d/m/Y', strtotime($app_date)); ?>";
-        var days_to_dep = calcDateDiffWithSign(departure,app_date);        
+        var days_to_dep = calcDateDiffWithSign(departure, app_date);
         if (days_to_dep > 0) {
             alert("WARNING::Days to Departure: " + days_to_dep);
         }
@@ -829,11 +843,11 @@
             var client_name = $('#folio_payment_client_name').val();
             var folio_room = $('#folio_payment_new_folio').val();
             var room_number = $('#folio_payment_room_number').val();
-            var master_id = $('#folio_payment_master_ID').val();
-            master_id=(master_id !=="")?(master_id):("0");
+            var master_id = $('#folio_payment_master_id').val();
+            master_id = (master_id !== "") ? (master_id) : ("0");
             console.log('resv_id is ' + resv_id);
 
-            var redirect = BASE_URL + "resv/viewFolios/" + resv_id + "/"+ master_id + "/" + page_number + "/" + mode + "/" + client_name + "/" + bill_type + "/" + folio_room + "/" + room_number;
+            var redirect = BASE_URL + "resv/viewFolios/" + resv_id + "/" + master_id + "/" + page_number + "/" + mode + "/" + client_name + "/" + bill_type + "/" + folio_room + "/" + room_number;
             window.location = redirect;
         });
 
@@ -951,10 +965,10 @@
             if (arrival) {//data from db
                 var arrival_date = "<?php echo date('d/m/Y', strtotime($arrival)); ?>";
                 var resv_status = "<?php echo $resv_status; ?>";
-                console.log('resv_status '+resv_status);
+                console.log('resv_status ' + resv_status);
                 if ((resv_status == "departed") || (resv_status == "ledger") || (resv_status == "staying") || (resv_status == "provisional")) {
                     $('#guest_arrival').jqxDateTimeInput({disabled: true});
-                }else{
+                } else {
                     $('#guest_arrival').jqxDateTimeInput({disabled: false});
                 }
                 $('#guest_arrival').jqxDateTimeInput('setDate', arrival_date);
@@ -969,7 +983,7 @@
             }
 //            reservation.calcRoomPrice();//calc room price
         }
-        
+
         if (header_title === "Group") {
             var app_date = "<?php echo $app_date; ?>";
             var t = app_date.split(/[- :]/);
@@ -1002,6 +1016,41 @@
             if (arrivaldate) {//errors exist
                 $('#group_arrival').jqxDateTimeInput('setDate', arrivaldate);
                 $('#group_departure').jqxDateTimeInput('setDate', departuredate);
+            }
+        }
+        
+        if (header_title === "House") {
+            var app_date = "<?php echo $app_date; ?>";
+            var t = app_date.split(/[- :]/);
+            var APP_DATE = new Date(Date.UTC(t[0], t[1] - 1, t[2]));
+            var NEXT_DATE = new Date(Date.UTC(t[0], t[1] - 1, t[2]));
+//            var NEXT_DATE = new Date(Date.UTC(t[0], t[1] - 1, t[2], t[3], t[4], t[5]));
+            NEXT_DATE = new Date(NEXT_DATE.setTime(NEXT_DATE.getTime() + 1 * 86400000));
+
+            $('#house_arrival').jqxDateTimeInput({width: 100, height: 25});
+            $('#house_arrival').jqxDateTimeInput('setDate', APP_DATE);
+
+            $('#house_departure').jqxDateTimeInput({width: 100, height: 25, disabled: true});
+            $('#house_departure').jqxDateTimeInput('setDate', NEXT_DATE);
+
+            var arrival = "<?php echo $arrival; ?>";
+            var departuredate = "<?php echo $departuredate; ?>";
+            var arrivaldate = "<?php echo $arrivaldate; ?>";
+            if (arrival) {//data from db
+                var arrival_date = "<?php echo date('d/m/Y', strtotime($arrival)); ?>";
+                var resv_status = "<?php echo $resv_status; ?>";
+                if ((resv_status == "departed") || (resv_status == "ledger") || (resv_status == "staying") || (resv_status == "provisional")) {
+                    $('#house_arrival').jqxDateTimeInput({disabled: true});
+                }
+                $('#house_arrival').jqxDateTimeInput('setDate', arrival_date);
+
+                var departure_date = "<?php echo date('d/m/Y', strtotime($departure)); ?>";
+                $('#house_departure').jqxDateTimeInput('setDate', departure_date);
+
+            }
+            if (arrivaldate) {//errors exist
+                $('#house_arrival').jqxDateTimeInput('setDate', arrivaldate);
+                $('#house_departure').jqxDateTimeInput('setDate', departuredate);
             }
         }
 
@@ -1058,17 +1107,24 @@
             if (trimedsearch)
                 search('client', 'person', trimedsearch);
         });
-        
-        //group functs
-        $('#group_arrival').on('valueChanged',function(){
-            reservation.calcRoomPrice('group');
-        });
-        $('body').on('blur','#group_nights,#group_weekday,#group_weekend,#group_holiday,\n\
-        #group_price_extra,#group_comp_nights',function(){
-            reservation.calcRoomPrice('group');
-        });
-               
 
+        //group functs
+        $('#group_arrival').on('valueChanged', function () {
+            reservation.calcRoomPrice('group');
+        });
+        $('body').on('blur', '#group_nights,#group_weekday,#group_weekend,#group_holiday,\n\
+        #group_price_extra,#group_comp_nights', function () {
+            reservation.calcRoomPrice('group');
+        });
+        
+        //house functs
+        $('#house_arrival').on('valueChanged', function () {
+            reservation.calcDuration('house');
+        });
+        $('body').on('blur', '#house_nights', function () {
+            reservation.calcDuration('house');
+        });
+        
         $('body').on('click', '.reservations_live_results', function () {
             var $this_id = $(this).attr('id');
             var $this_val = $(this).text();
@@ -1107,11 +1163,16 @@
             $('#guest_status').prop('disabled', false);
             $('#guest_comp_visits').prop('disabled', false);
         });
-        
+
         //group submission
         $('#group_form').submit(function () {
             $('#group_status').prop('disabled', false);
             $('#group_comp_visits').prop('disabled', false);
+        });
+        
+        //house submission
+        $('#house_form').submit(function () {
+            $('#house_status').prop('disabled', false);
         });
 
         $('#checkin_form').submit(function () {
@@ -1260,6 +1321,7 @@
                 delay: 3000
             });
             var curr_url = "<?php echo site_url('resv/confirmOperations'); ?>";
+            console.log(curr_url);
             var values = {"reason": reason, "type": curr_type};
 
             switch (curr_type) {
@@ -1271,7 +1333,7 @@
                     });
                     var checked_json = JSON.stringify(selected_rows);
                     values = {"selected_rows": checked_json, "reason": reason, "type": curr_type};
-                    
+
                     break;
                 case 'reactivate':
                     var resv_id = $('.booking_radio.active .booking_hidden_id').val();
@@ -1283,7 +1345,7 @@
                     var master_id = $('#folio_payment_master_id').val();
                     console.log('resv_id ' + resv_id);
                     console.log('master_id ' + master_id);
-                    values = {"reason": reason, "type": curr_type, "resv_id": resv_id,"master_id":master_id};
+                    values = {"reason": reason, "type": curr_type, "resv_id": resv_id, "master_id": master_id};
                     break;
             }
 

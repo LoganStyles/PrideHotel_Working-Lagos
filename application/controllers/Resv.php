@@ -194,6 +194,7 @@ class Resv extends App {
         $data = $this->data;
         $data['room_stats'] = $this->app_model->getRoomMonitor();
         $data["header_title"] = ucwords($type);
+        $data["bar_title"] = ucwords($type);
         $data["type"] = "reservation";
         $data["module"] = "reservation";
         $data["action"] = $action;
@@ -515,6 +516,7 @@ class Resv extends App {
         $data = $this->data;
         $data['room_stats'] = $this->app_model->getRoomMonitor();
         $data["header_title"] = ucwords($type);
+        $data["bar_title"] = ucwords('guest');
         $data["module"] = "reservation";
         $data["type"] = $type;
         $data["new_client"] = (isset($this->session->new_client)) ? ($this->session->new_client) : ("");

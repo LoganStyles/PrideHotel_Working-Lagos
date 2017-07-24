@@ -139,7 +139,7 @@ $price_rate = getTitle($roomtypes, $price_title); //price title
                 </div>
                 <div class="pull-right">
                     <input class="btn btn-success btn-sm" type="submit" name="submit" value="Check In" />
-                    <button type="button" class="btn btn-default" onclick="closeWindow('<?php echo $mode; ?>','0');">Cancel</button>
+                    <button type="button" class="btn btn-default" onclick="closeWindow('<?php echo $mode; ?>','guest','0');">Cancel</button>
                 </div>
                 <div class="clearfix"></div>
                 </form>

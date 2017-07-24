@@ -35,6 +35,7 @@ class App extends MY_Controller {
             $data = $this->data;
             $data['room_stats'] = $this->app_model->getRoomMonitor();
             $data["header_title"] = ucwords("reservation");
+            $data["bar_title"] = ucwords("guest");
             $data["type"] = "reservation";
             $data["module"] = "reservation";
             $data['received'][0]['type'] = "reservation";
@@ -637,7 +638,7 @@ class App extends MY_Controller {
         //get reservation_id for this room & redirect to reservation details page
         $resv_id = $this->app_model->getRoomReservation($room);
         if ($resv_id) {
-            $redirect = "resv/guest/" . $resv_id . "/0/view/staying";
+            $redirect = "resv/guest/" . $resv_id . "/0/0/view/staying";
             redirect($redirect);
         }
     }

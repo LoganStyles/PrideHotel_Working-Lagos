@@ -31,7 +31,8 @@ extract($current);
                                     <option value="sales summary">SALES SUMMARY</option>
                                     <option value="cashier summary">CASHIER SUMMARY</option>
                                     <option value="audit trail">AUDIT TRAIL</option>
-                                    <option value="ledger">LEDGER GUEST</option>
+                                    <option value="ledger_guest">LEDGER GUEST</option>
+                                    <option value="ledger_group">LEDGER GROUP</option>
                                     <option value="police">POLICE REPORT</option>
                                     <option value="client history">CLIENT HISTORY</option>
                                     

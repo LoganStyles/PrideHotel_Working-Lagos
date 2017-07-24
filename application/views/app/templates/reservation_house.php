@@ -22,25 +22,23 @@ if ($form_error) {
         <div class="col-sm-12">
             <section class="panel">
                 <header class="panel-heading">
-                    RESERVATIONS/FOLIO &nbsp;&nbsp;[Guest Rooms: <?php echo $header_title; ?>]&nbsp;&nbsp;
-                    [<?php echo $total;?>&nbsp;Guests]
+                    RESERVATION/FOLIO &nbsp;&nbsp;House Account&nbsp;
+                    [<?php echo $total;?>&nbsp;]
                     <?php if (count($collection) > 0) { ?>
                                 <?php
-                                $content = $status_span = $active_span = "";
+                                $content = $status_span = $active_span = $display_status="";
                                 foreach ($collection as $row):
                                     $active = $checked ="";
                                     $userid = $row["ID"];
                                     $reservation_id = $row["reservation_id"];
-                                    $master_id = $row["master_id"];
                                     $nights = $row["nights"];
-                                    $folio_room = $row["folio_room"];
+                                    $folio_room = "BILL1";
                                     $departure = date('d/m/Y', strtotime($row["departure"]));
                                     $arrival = date('d/m/Y', strtotime($row["actual_arrival"]));
 
                                     switch ($type) {
                                         case "confirmed":
                                         case "arriving":
-                                        case "provisional":
                                             $arrival = date('d/m/Y', strtotime($row["arrival"]));
                                             break;
                                         case "staying":
@@ -58,17 +56,15 @@ if ($form_error) {
                                             break;
                                     }
 
-                                    $client_name = $row["client_name"];
+                                    $client_name = $row["client_name"];                                    
                                     $status = $row["status"];
                                     $remarks = $row["remarks"];
                                     $signature_created = $row["signature_created"];
                                     $room_number_only = $row["room_number"];
-                                    $room_number = getTitle($rooms, $row["room_number"]);
-                                    $roomtype = getTitle($roomtypes, $row["roomtype"]);
                                     
                                     //check for a row has been clicked before
-                                    if (isset($_SESSION['resv_active_row'])) {
-                                        if (($_SESSION['resv_active_row'] == $reservation_id)) {
+                                    if (isset($_SESSION['house_resv_active_row'])) {
+                                        if (($_SESSION['house_resv_active_row'] == $reservation_id)) {
                                             $active = "active";
                                             $checked = "checked";
                                         }
@@ -80,19 +76,15 @@ if ($form_error) {
                                     $content.="<tr class=\"booking_radio $active\">";
                                     $content.="<td class=\"booking_hidden_arrival\"><input class=\"booking_hidden_id\" type=\"hidden\" value=\"$reservation_id\">"
                                             . "<input class=\"folio_hidden_folio_room\" type=\"hidden\" value=\"$folio_room\">"
-                                            . "<input class=\"folio_hidden_master_id\" type=\"hidden\" value=\"$master_id\">"
                                             . "$arrival</td>";
                                     $content.="<td>$nights</td>";
                                     $content.="<td class=\"booking_hidden_departure\">$departure</td>";
-                                    $content.="<td class=\"booking_hidden_room\">$room_number</td>";
-                                    $content.="<td>$roomtype</td>";
                                     $content.="<td>$reservation_id</td>";
                                     $content.="<td class=\"booking_hidden_client\">$client_name</td>";
                                     $content.="<td class=\"booking_hidden_status\">$status</td>";
                                     $content.="<td>$remarks</td>";
                                     $content.="<td>$signature_created</td>";
                                     $content.="</tr>";
-
                                     $count++;
                                 endforeach;
                                 ?>
@@ -105,21 +97,18 @@ if ($form_error) {
                                     <?php
                                     $buttons = ""; //                    
                                     if ($count > 1) {
-                                        $buttons.="<a href=\" " . base_url() . 'resv/guest/new' . " \" type=\"button\" class=\"btn btn-default \"><i class=\"fa fa-plus-square\"></i>&nbsp;New</a>&nbsp;";
-                                        $buttons.="<a onclick=\"processResv('view','$offset','$type');\" type=\"button\" class=\"btn btn-default \"><i class=\"fa fa-eye\"></i>&nbsp;View</a>&nbsp;";                                        
+                                        
+                                        $buttons.="<a onclick=\"processHotelResv('view','$offset','$type');\" type=\"button\" class=\"btn btn-default \"><i class=\"fa fa-eye\"></i>&nbsp;View</a>&nbsp;";                                        
                                         if($type !=="cancelled"){
-                                           $buttons.="<a onclick=\"processResv('edit','$offset','$type');\" type=\"button\" class=\"btn btn-default \"><i class=\"fa fa-edit\"></i>&nbsp;Edit</a>&nbsp;"; 
+                                           $buttons.="<a onclick=\"processHotelResv('edit','$offset','$type');\" type=\"button\" class=\"btn btn-default \"><i class=\"fa fa-edit\"></i>&nbsp;Edit</a>&nbsp;"; 
                                         }                                        
                                         if ($delete == "1") {
                                             $buttons.="<a onclick=\"deleteReservation();\" type=\"button\" class=\"btn btn-default \"><i class=\"fa fa-trash-o\"></i>&nbsp;Delete</a>&nbsp;";
-                                        }
-                                        
+                                        }                                   
                                         $buttons.="<a onclick=\"getFolio('$offset','$type','ALL','$room_number_only','$departure');\" type=\"button\" class=\"btn btn-default \"><i class=\"fa fa-folder-open-o\"></i>&nbsp;Folio</a>&nbsp;";
-                                        $buttons.="<a onclick=\"printReservation('$type','guest');\" type=\"button\" class=\"btn btn-default \"><i class=\"fa fa-print\"></i>&nbsp;Print</a>&nbsp;";
-                                        if($type=="all"){
-                                         $buttons.="<a onclick=\"showSingleDialog('confirm','reactivate');\" type=\"button\" class=\"btn btn-default \"><i class=\"fa fa-repeat\"></i>&nbsp;Reactivate</a>&nbsp;";   
-                                        }                                        
-                                        $buttons.="<a onclick=\"checkInOut();\" type=\"button\" class=\"btn btn-default \"><i class=\"fa fa-exchange\"></i>&nbsp;Check-In/Out</a>&nbsp;";
+                                        $buttons.="<a onclick=\"printReservation('$type','house');\" type=\"button\" class=\"btn btn-default \"><i class=\"fa fa-print\"></i>&nbsp;Print</a>&nbsp;";
+                                                                               
+                                        $buttons.="<a onclick=\"groupCheckInOut();\" type=\"button\" class=\"btn btn-default \"><i class=\"fa fa-exchange\"></i>&nbsp;Check-Out</a>&nbsp;";
                                     }
                                     echo $buttons;
                                     ?>
@@ -141,10 +130,9 @@ if ($form_error) {
                                 <th>Arrival</th>
                                 <th>Nights</th>
                                 <th>Departure</th>
-                                <th>Room No.</th>
-                                <th>Room Type</th>
+                                <!--<th>Room Type</th>-->
                                 <th>Resv.#</th>
-                                <th>Guest Name</th>
+                                <th>Client Name</th>
                                 <th>Status</th>
                                 <th>Remarks</th>
                                 <th>Signature</th>
@@ -162,7 +150,9 @@ if ($form_error) {
                         echo $pagination;
                     }
                     ?>
+
                 </div>
+
         </div>
         </section>
     </div>
@@ -180,7 +170,7 @@ if ($form_error) {
                 <?php
                 $attributes = array('class' => 'cmxform form-horizontal adminex-form', 'id' => 'delete_resv_form');
                 echo '<div class="' . $danger_style . '">' . $form_error . '</div>';
-                echo form_open('resv/processResvDelete', $attributes);
+                echo form_open('house/processResvDelete', $attributes);
                 ?>
                 <div class="panel-body">
                     <div class="row">
