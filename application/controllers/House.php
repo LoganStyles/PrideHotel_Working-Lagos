@@ -156,11 +156,6 @@ class House extends App {
 
             if ($res_id) {
                 $this->session->set_flashdata('form_success', 'Operation Successful');
-//                if (($status === "confirmed") && ($arrival === $app_date)) {
-//                    $redirect = "resv/checkin/" . $mode . "/" . $res_id;
-//                } else {
-//                    $redirect = "group/" . $mode;
-//                }
                 $redirect = "house/" . $mode;
                 redirect($redirect);
             } else {
@@ -217,13 +212,11 @@ class House extends App {
         $data["type"] = "reservation";
         $data["module"] = "reservation";
         $data["mode"] = $mode;
-//        $data["new_client"] = (isset($this->session->new_client)) ? ($this->session->new_client) : ("");
 
         if ($errors) {
             $data['received'][0]['form_error'] = $this->session->form_error;
             $data['received'][0]['ID'] = $this->input->post('checkin_ID');
             $data['received'][0]['reservation_id'] = $this->input->post('checkin_reservation_id');
-//            $data['received'][0]['price_title'] = $this->input->post('checkin_price_title');
             $data['received'][0]['mode'] = $this->input->post('checkin_mode');
             $data['received'][0]['nights'] = $this->input->post('checkin_nights');
             $data['received'][0]['client_name'] = $this->input->post('checkin_client_name');
@@ -271,11 +264,9 @@ class House extends App {
         } else {
             $res_id = $this->resv_model->deleteResv();
             if ($res_id) {
-                //echo 'hosue can';exit;
                 $redirect = "house/cancelled";
                 redirect($redirect);
             } else {
-                //echo 'hosue del';exit;
                 $this->session->set_flashdata('delete_error', "Delete Operation Failed");
                 redirect($redirect);
             }

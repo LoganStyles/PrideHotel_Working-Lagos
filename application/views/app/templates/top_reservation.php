@@ -78,7 +78,6 @@ if ($header_title == "Guest" && $action == "insert") {
                             <div class="form-group " style="margin-top: 5px;">
                                 <div class="col-sm-12">
                                     <?php
-//                                    $topbuttons = "<a href=\" " . base_url() . 'resv/client' . " \" type=\"button\" class=\"btn " . $button_type_client . " \"><i class=\"fa fa-sign-out\"></i>&nbspGroups</a>&nbsp;";
                                     $topbuttons = "<a href=\" " . base_url() . 'resv/person' . " \" type=\"button\" class=\"btn " . $button_type_client . " \"><i class=\"fa fa-sign-out\"></i>&nbspClients</a>&nbsp;";
                                     echo $topbuttons;
                                     ?>

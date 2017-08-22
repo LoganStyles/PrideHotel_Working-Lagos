@@ -402,7 +402,6 @@ class Resv extends App {
         $arrival_temp = $this->input->post('guest_arrival');
         $temp_date = str_replace('/', '-', $arrival_temp);
         $arrival = strtotime($temp_date);
-//        echo 'arrival '.$arrival_temp;exit;
 
         $this->form_validation->set_rules('guest_roomtype_id', 'Room Type', 'is_natural_no_zero|required');
         $this->form_validation->set_rules('guest_adults', 'Adults', 'is_natural|required');
@@ -711,15 +710,16 @@ class Resv extends App {
             $this->session->folio_back_uri = base_url() . uri_string();
         }
         $this->checkAccess($this->session->reservation, 2);
+        $client_name=urldecode ($client_name);
 
         $data = $this->data;
-        $data["header_title"] = preg_replace('/[^A-Za-z\-]/', ' ', $client_name) . ": " . $resv_ID;
+        $data["header_title"] = preg_replace('/[^A-Za-z.\s?]/', '', $client_name) . ": " . $resv_ID;
         $data["module"] = "reservation";
         $data["type"] = "folio";
         $data["mode"] = $mode;
         $data["received"][0]["type"] = $mode;
         $data["received"][0]["offset"] = $offset;
-        $data["received"][0]["client_name"] = preg_replace('/[^A-Za-z\-]/', ' ', $client_name);
+        $data["received"][0]["client_name"] = preg_replace('/[^A-Za-z.\s?]/', '', $client_name);
         $data["received"][0]["client_reservation_id"] = $resv_ID;
         $data["received"][0]["bills"] = $bills_type;
         $data["received"][0]["folio_room"] = $folio_room;
@@ -809,7 +809,8 @@ class Resv extends App {
         $data["header_title"] = "Checkout";
         $data["module"] = "reservation";
         $data["type"] = "folio";
-        $data["received"][0]["client_name"] = preg_replace('/[^A-Za-z\-]/', ' ', $client_name);
+        $client_name=urldecode ($client_name);
+        $data["received"][0]["client_name"] = preg_replace('/[^A-Za-z.\s?]/', '', $client_name);
         $data["received"][0]["client_reservation_id"] = $resv_ID;
         $data["received"][0]["room_number"] = $room_number;
 

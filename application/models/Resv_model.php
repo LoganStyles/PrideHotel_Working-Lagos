@@ -10,6 +10,10 @@ class Resv_model extends App_model {
     public function __construct() {
         $this->load->database();
     }
+    
+    private function filterTextValues($param) {//just for extra filtering
+        return preg_replace('/[^A-Za-z0-9.,-_\s?]/', '', $param);
+    }
 
     public function search($search_phrase, $table) {
         $results = array();
@@ -26,7 +30,6 @@ class Resv_model extends App_model {
     public function deleteResv() {
         $reason = $this->input->post('delete_resv_reason');
         $resv_id = $this->input->post('delete_resv_id');
-        //echo 'del resv_id :'.$resv_id;exit;
         $type = $this->input->post('delete_resv_type');
         $oldvalue = $this->input->post('delete_resv_oldvalue');
         $newvalue = $this->input->post('delete_resv_newvalue');
@@ -37,9 +40,6 @@ class Resv_model extends App_model {
         $this->db->set('remarks',$reason);
         $this->db->where('reservation_id',$resv_id);
         $this->db->update('reservationitems');
-        //$this->updateItems("reservation", $resv_id, "status", "cancelled");
-        //update reservation remarks
-        //$this->updateItems("reservation", $resv_id, "remarks", $reason);
         
         //log this action
         $log_id = $this->createLog($type, "delete", $description, $oldvalue, $newvalue, $reason);
@@ -217,7 +217,6 @@ class Resv_model extends App_model {
                 'debit' => $debit,
                 'credit' => $credit,
                 'pak' => $pak,
-//                'sub_folio' => $sub_folio,
                 'account_number' => $account_id,
                 'links' => $links,
                 'qty' => $qty,
@@ -252,13 +251,13 @@ class Resv_model extends App_model {
         $curr_date = date('Y-m-d', strtotime($this->getAppInfo())) . " " . date('H:i:s');
 
         $ID = $this->input->post('person_ID');
-        $title = $this->input->post('person_title');
+        $title = $this->filterTextValues($this->input->post('person_title'));
         $sex = $this->input->post('person_sex');
         $title_ref = $this->input->post('person_title_ref');
         $email = $this->input->post('person_email');
         $phone = $this->input->post('person_phone');
-        $occupation = $this->input->post('person_occupation');
-        $passport_no = $this->input->post('person_passport_no');
+        $occupation = $this->filterTextValues($this->input->post('person_occupation'));
+        $passport_no = $this->filterTextValues($this->input->post('person_passport_no'));
         $pp_issued_at = $this->input->post('person_pp_issued_at');
         $visa = $this->input->post('person_visa');
         $resident_permit_no = $this->input->post('person_resident_permit_no');
@@ -269,9 +268,9 @@ class Resv_model extends App_model {
         $plate_number = $this->input->post('person_plate_number');
         $remarks = $this->input->post('person_remarks');
         $birth_location = $this->input->post('person_birth_location');
-        $street = $this->input->post('person_street');
-        $city = $this->input->post('person_city');
-        $state = $this->input->post('person_state');
+        $street = $this->filterTextValues($this->input->post('person_street'));
+        $city = $this->filterTextValues($this->input->post('person_city'));
+        $state = $this->filterTextValues($this->input->post('person_state'));        
         $country = $this->input->post('person_country');
 
         $birthday_temp = $this->input->post('person_birthday');
@@ -373,11 +372,11 @@ class Resv_model extends App_model {
         $room_number = $this->input->post('guest_room_number_id');
         $roomtype = $this->input->post('guest_roomtype_id');
         $client_type = $this->input->post('guest_client_type');
-        $client_name = $this->input->post('guest_client_name');
-        $agency_name = $this->input->post('guest_agency_name');
-        $agency_contact = $this->input->post('guest_agency_contact');
-        $guest1 = $this->input->post('guest_guest1');
-        $guest2 = $this->input->post('guest_guest2');
+        $client_name = $this->filterTextValues($this->input->post('guest_client_name'));
+        $agency_name = $this->filterTextValues($this->input->post('guest_agency_name'));
+        $agency_contact = $this->filterTextValues($this->input->post('guest_agency_contact'));
+        $guest1 = $this->filterTextValues($this->input->post('guest_guest1'));
+        $guest2 = $this->filterTextValues($this->input->post('guest_guest2'));        
         $adults = $this->input->post('guest_adults');
         $children = $this->input->post('guest_children');
         $guest_count = intval($adults + $children);
@@ -523,7 +522,6 @@ class Resv_model extends App_model {
          * ::used for page navigations etc */
         $app_date = date('Y-m-d', strtotime($this->getAppInfo()));
 
-//        $tableitems = "reservationitems";
         $limit = $filter = "";
         $sort = " order by ID DESC";
         $results['data'] = array();
@@ -537,7 +535,6 @@ class Resv_model extends App_model {
             case "confirmed":
             case "cancelled":
             case "provisional":
-//            case "ledger":
                 $sort = "and ri.status='$type' AND ri.account_type='ROOM' order by ri.ID DESC";
                 break;
             case "arriving":
@@ -605,7 +602,6 @@ class Resv_model extends App_model {
          * ::used for page navigations etc */
         $app_date = date('Y-m-d', strtotime($this->getAppInfo()));
 
-        //$tableitems = "reservationitems";
         $limit = $filter = "";
         $sort = " order by ID DESC";
         $results['data'] = array();
@@ -795,7 +791,6 @@ class Resv_model extends App_model {
          * ::used for page navigations etc */
         $app_date = date('Y-m-d', strtotime($this->getAppInfo()));
 
-        //$tableitems = "reservationitems";
         $limit = $filter = "";
         $sort = " order by ID DESC";
         $results['data'] = array();
@@ -1013,14 +1008,12 @@ class Resv_model extends App_model {
                 . "on (ri.reservation_id=rf.reservation_id) "
                 . " WHERE rf.reservation_id='$reservation_id' "
                 . " $sort $limit";
-//        . "AND rf.status<> 'closed' $sort $limit";
 
         $q_total = "SELECT ri.status as folio_status,rf.* FROM reservationitems as ri "
                 . "left join reservationfolioitems as rf "
                 . "on (ri.reservation_id=rf.reservation_id) "
                 . " WHERE rf.reservation_id='$reservation_id' "
                 . " $sort";
-//        . "AND rf.status<> 'closed' $sort";
 
         $query = $this->db->query($q);
         if ($query->num_rows() > 0) {
@@ -1037,7 +1030,6 @@ class Resv_model extends App_model {
 
         $q_sale_total = "SELECT SUM(credit) AS SUM FROM reservationfolioitems WHERE (action='sale') "
                 . "AND reservation_id='$reservation_id' ";
-//        . "AND reservation_id='$reservation_id' AND status<>'closed'";
 
         $query_sale_total = $this->db->query($q_sale_total);
         if ($query_sale_total->num_rows() > 0) {
@@ -1048,7 +1040,6 @@ class Resv_model extends App_model {
         $q_payment_total = "SELECT SUM(debit) AS SUM FROM reservationfolioitems "
                 . "WHERE action='payment' AND description<>'CASH REFUND' "
                 . "AND reservation_id='$reservation_id' ";
-//        . "AND reservation_id='$reservation_id' AND status<>'closed'";
 
         $query_payment_total = $this->db->query($q_payment_total);
         if ($query_payment_total->num_rows() > 0) {
@@ -1059,7 +1050,6 @@ class Resv_model extends App_model {
         $q_refund_total = "SELECT SUM(credit) AS SUM FROM reservationfolioitems "
                 . "WHERE (description='CASH REFUND') AND reservation_id='$reservation_id' "
                 . "";
-//        . "AND status<>'closed'";
 
         $query_refund_total = $this->db->query($q_refund_total);
         if ($query_refund_total->num_rows() > 0) {
@@ -1105,14 +1095,12 @@ class Resv_model extends App_model {
                 . "on (ri.reservation_id=rf.reservation_id) "
                 . " WHERE rf.reservation_id='$reservation_id' "
                 . " $sort $limit";
-//        . "AND rf.status<> 'closed' $sort $limit";
 
         $q_total = "SELECT ri.status as folio_status,rf.* FROM reservationitems as ri "
                 . "left join reservationfolioitems as rf "
                 . "on (ri.reservation_id=rf.reservation_id) "
                 . " WHERE rf.reservation_id='$reservation_id' "
                 . " 'closed' $sort";
-//        . "AND rf.status<> 'closed' $sort";
 
         $query = $this->db->query($q);
         if ($query->num_rows() > 0) {
@@ -1126,7 +1114,6 @@ class Resv_model extends App_model {
 
         $q_sale = "SELECT SUM(CASE WHEN sub_folio='$filter_val' THEN credit END)AS $filter_val"
                 . " FROM reservationfolioitems WHERE reservation_id='$reservation_id' "
-//                . "AND (action='sale' AND status<>'closed' AND description<>'CASH REFUND')";
                 . "AND (action='sale'  AND description<>'CASH REFUND')";
 
         $query_sale_bills = $this->db->query($q_sale);
@@ -1138,7 +1125,6 @@ class Resv_model extends App_model {
         $q_payment = "SELECT SUM(CASE WHEN sub_folio='$filter_val' THEN debit END)AS $filter_val"
                 . " FROM reservationfolioitems WHERE reservation_id='$reservation_id' "
                 . "AND action='payment' ";
-//        . "AND action='payment' AND status<>'closed'";
 
         $query_payment_bills = $this->db->query($q_payment);
         if ($query_payment_bills->num_rows() > 0) {
@@ -1149,7 +1135,6 @@ class Resv_model extends App_model {
         $q_refund = "SELECT SUM(CASE WHEN sub_folio='$filter_val' THEN credit END)AS $filter_val"
                 . " FROM reservationfolioitems WHERE reservation_id='$reservation_id' "
                 . "AND action='payment'  AND description = 'CASH REFUND'";
-//        . "AND action='payment' AND status<>'closed' AND description = 'CASH REFUND'";
 
         $query_refund_bills = $this->db->query($q_refund);
         if ($query_refund_bills->num_rows() > 0) {
@@ -1167,7 +1152,6 @@ class Resv_model extends App_model {
 
         $q_sale_total = "SELECT SUM(credit) AS SUM FROM reservationfolioitems WHERE (action='sale') "
                 . "AND reservation_id='$reservation_id'  $sort";
-//        . "AND reservation_id='$reservation_id' AND status<>'closed' $sort";
 
         $query_sale_total = $this->db->query($q_sale_total);
         if ($query_sale_total->num_rows() > 0) {
@@ -1178,7 +1162,6 @@ class Resv_model extends App_model {
         $q_payment_total = "SELECT SUM(debit) AS SUM FROM reservationfolioitems "
                 . "WHERE action='payment' AND description<>'CASH REFUND' "
                 . "AND reservation_id='$reservation_id'  $sort";
-//        . "AND reservation_id='$reservation_id' AND status<>'closed' $sort";
 
         $query_payment_total = $this->db->query($q_payment_total);
         if ($query_payment_total->num_rows() > 0) {
@@ -1189,7 +1172,6 @@ class Resv_model extends App_model {
         $q_refund_total = "SELECT SUM(credit) AS SUM FROM reservationfolioitems "
                 . "WHERE (description='CASH REFUND') AND reservation_id='$reservation_id' "
                 . " $sort";
-//        . "AND status<>'closed' $sort";
 
         $query_refund_total = $this->db->query($q_refund_total);
         if ($query_refund_total->num_rows() > 0) {
@@ -1855,7 +1837,6 @@ class Resv_model extends App_model {
             $today = date("Y-m-d", strtotime('now'));
             $thedayofcharge = date('Y-m-d', strtotime("+1 day", strtotime($last_rooms_charge)));
             $nextcloseday = date('Y-m-d', strtotime("+1 day", strtotime($lastcloseday))) . " " . date('H:i:s');
-//            echo 'last_rooms_charge '.$last_rooms_charge.' $lastcloseday '.$lastcloseday.' thedayofcharge '.$thedayofcharge.' nextcloseday '.$nextcloseday;exit;
 
             /* chk if any elligible rooms have not been charged:yes(return) */
             $q_room_charge_chk = "SELECT ri.reservation_id FROM reservationitems as ri "
@@ -1863,7 +1844,6 @@ class Resv_model extends App_model {
                     . " WHERE ri.status ='staying' AND ri.actual_arrival < '$thedayofcharge' "
                     . " AND rp.charge_from_date < '$thedayofcharge' AND ri.last_room_charge < '$last_rooms_charge' "
                     . "AND ri.account_type='ROOM'";
-//            echo $q_room_charge_chk;exit;
             $query = $this->db->query($q_room_charge_chk);
             if ($query->num_rows() > 0) {
                 //uncharged elligible rooms exist
@@ -1876,7 +1856,6 @@ class Resv_model extends App_model {
                 $q_select_close = "SELECT reservation_id FROM reservationitems 
                 WHERE status ='staying'	AND DATE(actual_arrival) <= '$lastcloseday' "
                         . "OR (status ='departed' AND DATE(actual_departure) = '$lastcloseday')";
-//                echo $q_select_close;exit;
 
                 $query = $this->db->query($q_select_close);
                 if ($query->num_rows() > 0) {
@@ -1911,7 +1890,6 @@ class Resv_model extends App_model {
                     $res['overdue_departures'] = "YES";
                 }
             }
-//            print_r($res);exit;
         }
         return $res;
     }
@@ -1973,16 +1951,7 @@ class Resv_model extends App_model {
             $res['response'] = "success";
             $message.="Backup1 Successful";
         }
-        //backup on server
-//        $server_backup_dir = 'server path/';
-//        $backup_name = $server_backup_dir . $file_name . ".sql";
-//        $backup = "C:\\wamp\\bin\\mysql\\mysql5.6.17\\bin\\mysqldump.exe --opt --host=" . $host . " --user=" . $user . " --password=" . $pass . " " . $dbname . " > " . $backup_name;
-//        exec($backup, $output2, $return2);
-//        if (!$return2) {
-//            $res['response'] = "success";
-//            $message.="...Backup2 Successful ";
-//        }
-
+        
         $res['message'] = $message;
         return $res;
     }
@@ -2206,6 +2175,7 @@ class Resv_model extends App_model {
 
         $results['data'] = array();
         $results['count'] = 0;
+        $results['totals'] = [];
 
         switch ($type) {
             case "arrivals":

@@ -287,11 +287,6 @@ if (!empty($price_rate_error)) {
                                         echo 'selected';
                                     }
                                     ?>>BILL4</option>
-<!--                                    <option value="INV" <?php
-                                    if ($folio_extra === "INV") {
-                                        echo 'selected';
-                                    }
-                                    ?>>INV</option>-->
                                 </select>                                
                             </div>    
 
@@ -318,11 +313,6 @@ if (!empty($price_rate_error)) {
                                         echo 'selected';
                                     }
                                     ?>>BILL4</option>
-<!--                                    <option value="INV" <?php
-                                    if ($folio_other === "INV") {
-                                        echo 'selected';
-                                    }
-                                    ?>>INV</option>-->
                                 </select>                                
                             </div>
 

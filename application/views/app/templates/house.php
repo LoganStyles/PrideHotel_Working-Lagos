@@ -64,8 +64,6 @@ if (!empty($house_client_name_error)) {
                         <input type="hidden" name="house_action" id="house_action" value="<?php echo $action; ?>">
                         <input type="hidden" name="house_mode" id="house_mode" value="<?php echo $mode; ?>">
                         <input type="hidden" name="house_page_number" id="house_page_number" value="<?php echo $page_number; ?>">
-<!--                        <input type="hidden" name="house_roomtype_id" id="house_roomtype_id" value="<?php echo $roomtype_id; ?>">
-                        <input type="hidden" name="house_price_rate_id" id="house_price_rate_id" value="<?php echo $price_rate_id; ?>">-->
 
                         <div class="form-group ">
                             <label  for="house_arrival" class="col-sm-1 col-lg-1 control-label">From</label>

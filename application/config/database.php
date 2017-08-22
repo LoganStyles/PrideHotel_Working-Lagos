@@ -74,10 +74,10 @@ $active_group = 'default';
 $query_builder = TRUE;
 
 $db['default'] = array(
-	'dsn'	=> 'mysql:host=localhost;dbname=hotel2',
-	'username' => 'hotel2',
-	'password' => 'hotel2',
-	'database' => 'hotel2',
+	'dsn'	=> 'mysql:host=localhost;dbname=pride_bjclassic',
+	'username' => 'pride_bjclassic',
+	'password' => 'pride_bjclassic',
+	'database' => 'pride_bjclassic',
 	'dbdriver' => 'pdo',
 	'dbprefix' => '',
 	'pconnect' => FALSE,

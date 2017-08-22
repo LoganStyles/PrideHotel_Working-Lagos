@@ -332,13 +332,9 @@ if (!empty($red_bal)) {
                                         $buttons.="<a onclick=\"showSingleDialog('confirm','master');\" type=\"button\" class=\"btn btn-default \"><i class=\"fa fa-sitemap\"></i>&nbsp;Master</a>&nbsp;";
                                     }                                
                                 $buttons.="<a onclick=\"showDialog('#folio_move_modal','#folio_move_error');\" type=\"button\" class=\"btn btn-default \"><i class=\"fa fa-external-link\"></i>&nbsp;Move</a>&nbsp;";
-//                                $buttons.="<a onclick=\"processResv('edit');\" type=\"button\" class=\"btn btn-default \"><i class=\"fa fa-chain\"></i>&nbsp;Links</a>&nbsp;";
-//                                $buttons.="<a type=\"button\" class=\"btn btn-default \"><i class=\"fa fa-chain-broken\"></i>&nbsp;Split</a>&nbsp;";
                                 $buttons.="<a onclick=\"showSingleDialog('confirm','return');\" type=\"button\" class=\"btn btn-default \"><i class=\"fa fa-undo\"></i>&nbsp;Return</a>&nbsp;";
                                 $buttons.="<a onclick=\"showDialog('#folio_manual_charge_modal','#folio_manual_charge_error');\" type=\"button\" class=\"btn btn-default \"><i class=\"fa fa-square-o\"></i>&nbsp;Room Charge</a>&nbsp;";
-//                            $buttons.="<a type=\"button\" class=\"btn btn-default \"><i class=\"fa fa-repeat\"></i>&nbsp;Adjust</a>&nbsp;";
-                                
-                                    $buttons.="<a onclick=\"checkout(".$checkout_params.");\" type=\"button\" class=\"btn btn-default \"><i class=\"fa fa-road\"></i>&nbsp;Check-out</a>&nbsp;";
+                                $buttons.="<a onclick=\"checkout(".$checkout_params.");\" type=\"button\" class=\"btn btn-default \"><i class=\"fa fa-road\"></i>&nbsp;Check-out</a>&nbsp;";
                                 }
                                 echo $buttons;
                                 ?>

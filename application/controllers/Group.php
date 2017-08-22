@@ -215,18 +215,9 @@ class Group extends App {
             $res_result = $this->resv_model->saveGroup($type);
             $res_id = $res_result['reservation_id'];
             $this->session->set_flashdata('group_resv_active_row', $res_id);
-//            $client_exists = $res_result['client_exists'];
-//            if (!empty($client_exists)) {
-//                $this->session->set_flashdata('group_new_client', $client_exists);
-//            }
 
             if ($res_id) {
                 $this->session->set_flashdata('form_success', 'Operation Successful');
-//                if (($status === "confirmed") && ($arrival === $app_date)) {
-//                    $redirect = "resv/checkin/" . $mode . "/" . $res_id;
-//                } else {
-//                    $redirect = "group/" . $mode;
-//                }
                 $redirect = "group/" . $mode;
                 redirect($redirect);
             } else {
@@ -283,13 +274,11 @@ class Group extends App {
         $data["type"] = "reservation";
         $data["module"] = "reservation";
         $data["mode"] = $mode;
-//        $data["new_client"] = (isset($this->session->new_client)) ? ($this->session->new_client) : ("");
 
         if ($errors) {
             $data['received'][0]['form_error'] = $this->session->form_error;
             $data['received'][0]['ID'] = $this->input->post('checkin_ID');
             $data['received'][0]['reservation_id'] = $this->input->post('checkin_reservation_id');
-//            $data['received'][0]['price_title'] = $this->input->post('checkin_price_title');
             $data['received'][0]['mode'] = $this->input->post('checkin_mode');
             $data['received'][0]['nights'] = $this->input->post('checkin_nights');
             $data['received'][0]['client_name'] = $this->input->post('checkin_client_name');

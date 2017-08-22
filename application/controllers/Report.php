@@ -165,6 +165,7 @@ class Report extends App {
         $data = $this->data;
         $data["header_title"] = strtoupper($type . " (" . $from . " - " . $to . ")");
         $data["type"] = $type;
+
         if ($type == "ledger_guest" || $type == "ledger_group") {
             $ledger_type=  str_replace('ledger_', '', $type);
             $data["collection"] = $this->resv_model->getLedger($ledger_type);

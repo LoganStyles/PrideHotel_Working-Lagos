@@ -551,6 +551,7 @@
         var master_id = $('.booking_radio.active .folio_hidden_master_id').val();
         master_id = (master_id) ? (master_id) : ("0");
         var client_name = $('.booking_radio.active .booking_hidden_client').text();
+        client_name = client_name.replace(/[^A-Za-z.\s?]/g, "");
         console.log('master_id is ' + master_id);
 
         var redirect = BASE_URL + "resv/viewFolios/" + resv_id + "/" + master_id + "/" + page_number + "/" + mode + "/" + client_name + "/" + bill_type + "/" + folio_room + "/" + room_number;
@@ -689,6 +690,7 @@
         var arrival = $('.booking_radio.active .booking_hidden_arrival').text();
         var departure = $('.booking_radio.active .booking_hidden_departure').text();
         var client_name = $('.booking_radio.active .booking_hidden_client').text();
+        client_name = client_name.replace(/[^A-Za-z.\s?]/g, "");
         var room_number = $('.booking_radio.active .booking_hidden_room').text();
         var resv_id = $('.booking_radio.active .booking_hidden_id').val();
         var app_date = "<?php echo date('d/m/Y', strtotime($app_date)); ?>";
@@ -716,6 +718,7 @@
         var arrival = $('.booking_radio.active .booking_hidden_arrival').text();
         var departure = $('.booking_radio.active .booking_hidden_departure').text();
         var client_name = $('.booking_radio.active .booking_hidden_client').text();
+        client_name = client_name.replace(/[^A-Za-z.\s?]/g, "");
         var resv_id = $('.booking_radio.active .booking_hidden_id').val();
         var app_date = "<?php echo date('d/m/Y', strtotime($app_date)); ?>";
         console.log('status : ' + mode);
@@ -751,6 +754,7 @@
         //display days to departure(diff bw app_date & departure)
         var app_date = "<?php echo date('d/m/Y', strtotime($app_date)); ?>";
         var days_to_dep = calcDateDiffWithSign(departure, app_date);
+        client_name = client_name.replace(/[^A-Za-z.\s?]/g, "");
         if (days_to_dep > 0) {
             alert("WARNING::Days to Departure: " + days_to_dep);
         }
@@ -841,6 +845,7 @@
 
             var resv_id = $('#folio_payment_resv').val();
             var client_name = $('#folio_payment_client_name').val();
+            client_name = client_name.replace(/[^A-Za-z.\s?]/g, "");
             var folio_room = $('#folio_payment_new_folio').val();
             var room_number = $('#folio_payment_room_number').val();
             var master_id = $('#folio_payment_master_id').val();
@@ -981,7 +986,6 @@
                 $('#guest_arrival').jqxDateTimeInput('setDate', arrivaldate);
                 $('#guest_departure').jqxDateTimeInput('setDate', departuredate);
             }
-//            reservation.calcRoomPrice();//calc room price
         }
 
         if (header_title === "Group") {
@@ -989,7 +993,6 @@
             var t = app_date.split(/[- :]/);
             var APP_DATE = new Date(Date.UTC(t[0], t[1] - 1, t[2]));
             var NEXT_DATE = new Date(Date.UTC(t[0], t[1] - 1, t[2]));
-//            var NEXT_DATE = new Date(Date.UTC(t[0], t[1] - 1, t[2], t[3], t[4], t[5]));
             NEXT_DATE = new Date(NEXT_DATE.setTime(NEXT_DATE.getTime() + 1 * 86400000));
 
             $('#group_arrival').jqxDateTimeInput({width: 100, height: 25});
@@ -1024,7 +1027,6 @@
             var t = app_date.split(/[- :]/);
             var APP_DATE = new Date(Date.UTC(t[0], t[1] - 1, t[2]));
             var NEXT_DATE = new Date(Date.UTC(t[0], t[1] - 1, t[2]));
-//            var NEXT_DATE = new Date(Date.UTC(t[0], t[1] - 1, t[2], t[3], t[4], t[5]));
             NEXT_DATE = new Date(NEXT_DATE.setTime(NEXT_DATE.getTime() + 1 * 86400000));
 
             $('#house_arrival').jqxDateTimeInput({width: 100, height: 25});
@@ -1162,21 +1164,46 @@
         $('#guest_form').submit(function () {
             $('#guest_status').prop('disabled', false);
             $('#guest_comp_visits').prop('disabled', false);
+            $('#guest_arrival').jqxDateTimeInput({disabled: false});
+            var sub_button=$(this).find(':submit');
+            sub_button.prop('disabled', true);
+            sub_button.val('...processing');
         });
 
         //group submission
         $('#group_form').submit(function () {
             $('#group_status').prop('disabled', false);
             $('#group_comp_visits').prop('disabled', false);
+            $('#group_arrival').jqxDateTimeInput({disabled: false});
+            var sub_button=$(this).find(':submit');
+            sub_button.prop('disabled', true);
+            sub_button.val('...processing');
         });
         
         //house submission
         $('#house_form').submit(function () {
             $('#house_status').prop('disabled', false);
+            $('#house_arrival').jqxDateTimeInput({disabled: false});
+            var sub_button=$(this).find(':submit');
+            sub_button.prop('disabled', true);
+            sub_button.val('...processing');
         });
 
         $('#checkin_form').submit(function () {
             $('#checkin_reservation_id').prop('disabled', false);
+            var sub_button=$(this).find(':submit');
+            sub_button.prop('disabled', true);
+            sub_button.val('...processing');
+        });
+        
+        $('#account_class_form,#account_type_form,#account_discount_form,#account_payment_form,\n\
+        #account_plu_group_form,#account_plu_number_form,#account_sale_form,#account_salescategory_form,\n\
+#folio_payment_form,#folio_sale_form,#folio_move_form,#housekeeping_form,#person_form,#delete_person_form,\n\
+#price_form,#delete_resv_form,#report_form,#role_form,#room_form,#roomclass_form,#roomtype_form,#site_form,#user_form,\n\
+#new_person_form').submit(function () {
+            var sub_button=$(this).find(':submit');
+            sub_button.prop('disabled', true);
+            sub_button.val('...processing');
         });
 
         $('body').on('change', '#folio_move_room_number', function () {
@@ -1208,6 +1235,10 @@
         //move dialog submission
         $('#folio_move_modal').submit(function (e) {
             e.preventDefault();
+            var sub_button=$(this).find(':submit');
+            sub_button.prop('disabled', true);
+            sub_button.val('...processing');
+            
             $('#folio_move_error').removeClass('alert alert-danger error');
             $('#folio_move_error').text('');
 
@@ -1258,6 +1289,7 @@
         //manual room charge submission
         $('#folio_manual_charge_modal').submit(function (e) {
             e.preventDefault();
+            
             $('#folio_manual_charge_error').removeClass('alert alert-danger error');
             $('#folio_manual_charge_error').text('');
 
