@@ -1,4 +1,4 @@
-<?php $trans_count=$debit_count=$credit_count=0;?>
+<?php $trans_count=$debit=$credit=$debit_count=$credit_count=0;?>
 
 <div class="row">
     <div class="col-sm-12">
@@ -86,11 +86,11 @@
                                 $folioid = $row["ID"];
                                 $description = $row['description'];
                                 $transactions = $row["transactions"];  
-                                $trans_count+=floatval($transactions);
-                                $debit = $row["debit"];
-                                $debit_count+=floatval($debit);
-                                $credit = $row["credit"];
-                                $credit_count+=floatval($credit);
+                                $trans_count=floatval($transactions);
+                                $debit = $row["folio_debit"];
+								$debit_count+=$debit;
+                                $credit = $row["folio_credit"];
+								$credit_count+=$credit;
 
                                 $content.="<tr class=\"booking_radio\">";
                                 $content.="<td><input class=\"booking_hidden_id\" type=\"hidden\" value=\"$folioid\">"
@@ -129,7 +129,7 @@
                             <td>Totals</td>
                             <td><?php echo $trans_count;?></td>
                             <td><?php echo number_format($debit_count,2);?></td>
-                            <td><?php echo number_format($credit_count,2);?></td>
+                            <td><?php echo number_format($credit,2);?></td>
                         </tr>
                     </tbody>
                 </table>

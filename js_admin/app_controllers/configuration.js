@@ -9,7 +9,6 @@ function fetchGridData(grid_type) {
     var action = $(form_action).val();
     console.log('fetchGridData action: ' + action);
 
-
     var url = BASE_URL + "app/fetchJsonData/" + grid_type + "/0";
     console.log(url);
     var img = BASE_URL + "images/notif/ajax-loader.gif";
@@ -44,13 +43,16 @@ function fetchGridData(grid_type) {
                         {name: 'ID', type: 'number'},
                         {name: 'title', type: 'string'},
                         {name: 'role_title', type: 'string'},
+                        {name: 'password', type: 'string'},
                         {name: 'signature', type: 'string'}
                     ];
 
                     columndata = [
                         {text: 'User Name', datafield: 'title', align: 'left', cellsalign: 'left'},
                         {text: 'Group', datafield: 'role_title'},
-                        {text: 'Signature', datafield: 'signature'}
+                        {text: 'Signature', datafield: 'signature'},
+                        {text: 'Password', datafield: 'password'}
+                        
                     ];
                     break;
                 case 'roomclass':
@@ -259,6 +261,7 @@ var configuration = {
         var edit_button = "#" + grid_type + "_edit";
         var delete_button = "#" + grid_type + "_delete";
         var grid_location = "#" + grid_type + "_data";
+        var update_button = "#housekeeping_room_status_button";
 
         var source =
                 {datatype: "json",
@@ -326,6 +329,7 @@ var configuration = {
             var id = row_data.ID;
 
             $(edit_button).attr("onclick", "modalLoader('" + grid_type + "','" + modal + "','edit'," + id + ")");
+            $(update_button).attr("onclick", "updateModallLoader('" + id + "')");
 
             if (grid_type === "housekeeping") {
                 //create button for operations

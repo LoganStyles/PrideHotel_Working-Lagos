@@ -172,6 +172,46 @@ if ($person_form_error) {
                                         echo 'selected';
                                     }
                                     ?>>Chief</option>
+                                    <option value="Dr." <?php
+                                    if ($title_ref === "Dr.") {
+                                        echo 'selected';
+                                    }
+                                    ?>>Dr.</option>
+                                    <option value="Engr." <?php
+                                    if ($title_ref === "Engr.") {
+                                        echo 'selected';
+                                    }
+                                    ?>>Engr.</option>
+                                    <option value="Ambassador" <?php
+                                    if ($title_ref === "Ambassador") {
+                                        echo 'selected';
+                                    }
+                                    ?>>Ambassador</option>
+                                    <option value="Barr." <?php
+                                    if ($title_ref === "Barr.") {
+                                        echo 'selected';
+                                    }
+                                    ?>>Barr.</option>
+                                    <option value="Hon." <?php
+                                    if ($title_ref === "Hon.") {
+                                        echo 'selected';
+                                    }
+                                    ?>>Hon.</option>
+                                    <option value="Pst." <?php
+                                    if ($title_ref === "Pst.") {
+                                        echo 'selected';
+                                    }
+                                    ?>>Pst.</option>
+                                    <option value="Rev." <?php
+                                    if ($title_ref === "Rev.") {
+                                        echo 'selected';
+                                    }
+                                    ?>>Rev.</option>
+                                    <option value="Bishop" <?php
+                                    if ($title_ref === "Bishop") {
+                                        echo 'selected';
+                                    }
+                                    ?>>Bishop</option>
 
                                 </select>                                                                 
                             </div> 

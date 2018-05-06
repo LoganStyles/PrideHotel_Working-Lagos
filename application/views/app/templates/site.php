@@ -52,8 +52,25 @@ if (!empty($ID)) {
                     <div class="form">                        
                         <div class="form-group ">
                             <label for="site_title" class="col-sm-2 control-label">Hotel Name</label>
-                            <div class="col-sm-10">
+                            <div class="col-sm-6">
                                 <input class=" form-control" id="site_title" value="<?php echo $title; ?>" name="site_title" type="text" />
+                            </div>
+                            
+                            <label for="site_show_passwords" class="col-sm-2 control-label">Show Staff Passwords</label>
+                            <div class="col-lg-2 col-sm-2">
+                                <select class="form-control " name="site_show_passwords" id="site_show_passwords">
+                                    <option value="0" <?php
+                                    if ($show_passwords === "0") {
+                                        echo 'selected';
+                                    }
+                                    ?>>NO</option>
+                                    <option value="1" <?php
+                                    if ($show_passwords === "1") {
+                                        echo 'selected';
+                                    }
+                                    ?>>YES</option>
+                                    
+                                </select>                                                                 
                             </div>
 
                         </div>

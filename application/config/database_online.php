@@ -74,10 +74,10 @@ $active_group = 'default';
 $query_builder = TRUE;
 
 $db['default'] = array(
-	'dsn'	=> 'mysql:host=localhost;dbname=hotel_lagos',
-	'username' => 'hotel_lagos',
-	'password' => 'hotel_lagos',
-	'database' => 'hotel_lagos',
+	'dsn'	=> 'mysql:host=localhost;dbname=webmobil_pant_d',
+	'username' => 'webmobil_pant_u',
+	'password' => ',k5j4xy;d0GO',
+	'database' => 'webmobil_pant_d',
 	'dbdriver' => 'pdo',
 	'dbprefix' => '',
 	'pconnect' => FALSE,

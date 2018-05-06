@@ -116,7 +116,7 @@ function getTitle($titles, $id, $result_type = NULL) {
                     $url = base_url();
                     echo $url;
                     ?>">
-<?php echo $site_logo . " " . date('d/m/Y', strtotime($app_date)); ?>
+                <?php echo $site_logo . " " . date('d/m/Y', strtotime($app_date)); ?>
                     </a>                    
                 </div>
 
@@ -358,7 +358,7 @@ function getTitle($titles, $id, $result_type = NULL) {
                                     <span class="caret"></span>
                                 </a>
                                 <ul class="dropdown-menu dropdown-menu-usermenu pull-right">
-                                    <li><a href="<?php echo base_url() . 'app'; ?>"> Change Password</a></li>
+                                    <li><a href="<?php echo base_url() . 'app/showPassword'; ?>"><i class="fa fa-user"></i> Change Password</a></li>
                                     <li><a href="<?php echo base_url() . 'app/logout'; ?>"><i class="fa fa-sign-out"></i> Log Out</a></li>
                                 </ul>
                             </li>

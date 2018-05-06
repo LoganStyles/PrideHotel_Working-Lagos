@@ -124,6 +124,52 @@ class App extends MY_Controller {
             }
         }
     }
+    
+    public function showPassword($errors = NULL) {
+        /* displays change password */
+        $data = $this->data;
+        if ($errors) {
+            $data['received'][0]['password_error'] = $this->session->error_message;
+        } else {//new change
+            $data['received'][0]['password_error'] = "";
+        }
+
+        if (!file_exists(APPPATH . 'views/app/password.php')) {
+            echo base_url() . 'views/app/password.php';
+            show_404();
+        }
+        $this->load->view('app/password', $data);
+    }
+    
+    public function changePassword() {
+        //displays and validates change of password
+        $type="user";
+        $item_oldpassword = "user_oldpassword";
+        $item_hashed_p = "user_hashed_p";
+        $item_cpassword = "user_cpassword";
+        $item_password_match = "required|matches[" . $item_hashed_p . "]";
+        
+        $this->form_validation->set_rules($item_oldpassword, 'Old password', 'required');
+        $this->form_validation->set_rules($item_hashed_p, 'New Password', 'required');
+        $this->form_validation->set_rules($item_cpassword, 'Confirm Password', $item_password_match);
+
+        if ($this->form_validation->run() == FALSE) {
+            $errors = TRUE;
+            $this->showPassword($errors);
+        } else {
+            $res_id = $this->app_model->updatePassword($type);
+            if ($res_id) {
+                $this->session->set_flashdata('success_message', 'Password changed successfully');
+                $redirect = "app/logout";
+                redirect($redirect);
+            } else {
+                //display invalid username/password
+                $this->session->set_flashdata('error_message', 'Password change failed');
+                $errors = TRUE;
+                $this->showPassword($errors);
+            }
+        }
+    }
 
     public function showLogin($errors = NULL) {
         /* displays login form */
@@ -160,6 +206,7 @@ class App extends MY_Controller {
         $page = $type;
         $item_id = $type . "_ID";
         $item_title = $type . "_title";
+        $item_show_passwords = $type . "_show_passwords";
         $item_street1 = $type . "_street1";
         $item_street2 = $type . "_street2";
         $item_state = $type . "_state";
@@ -186,6 +233,7 @@ class App extends MY_Controller {
             $data['received'][0]['title'] = "";
             $data['received'][0]['type'] = $type;
             $data['received'][0]['ID'] = 0;
+            $data['received'][0]['show_passwords'] = '0';
             $data['received'][0]['street1'] = "";
             $data['received'][0]['street2'] = "";
             $data['received'][0]['state'] = "";
@@ -204,6 +252,7 @@ class App extends MY_Controller {
             $data['received'][0]['title'] = $this->input->post($item_title);
             $data['received'][0]['type'] = $this->input->post($item_type);
             $data['received'][0]['ID'] = $this->input->post($item_id);
+            $data['received'][0]['show_passwords'] = $this->input->post($item_show_passwords);
             $data['received'][0]['street1'] = $this->input->post($item_street1);
             $data['received'][0]['street2'] = $this->input->post($item_street2);
             $data['received'][0]['state'] = $this->input->post($item_state);

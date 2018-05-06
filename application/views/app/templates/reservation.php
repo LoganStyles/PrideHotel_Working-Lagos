@@ -107,6 +107,7 @@ if ($form_error) {
                                     if ($count > 1) {
                                         $buttons.="<a href=\" " . base_url() . 'resv/guest/new' . " \" type=\"button\" class=\"btn btn-default \"><i class=\"fa fa-plus-square\"></i>&nbsp;New</a>&nbsp;";
                                         $buttons.="<a onclick=\"processResv('view','$offset','$type');\" type=\"button\" class=\"btn btn-default \"><i class=\"fa fa-eye\"></i>&nbsp;View</a>&nbsp;";                                        
+                                        $buttons.="<a onclick=\"processResv('reservation','$offset','$type');\" type=\"button\" class=\"btn btn-default \"><i class=\"fa fa-print\"></i>&nbsp;Print Reservations</a>&nbsp;";                                        
                                         if($type !=="cancelled"){
                                            $buttons.="<a onclick=\"processResv('edit','$offset','$type');\" type=\"button\" class=\"btn btn-default \"><i class=\"fa fa-edit\"></i>&nbsp;Edit</a>&nbsp;"; 
                                         }                                        

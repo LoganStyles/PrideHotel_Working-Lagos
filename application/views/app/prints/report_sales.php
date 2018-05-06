@@ -87,9 +87,9 @@
                                 $description = $row['description'];
                                 $transactions = $row["transactions"];  
                                 $trans_count+=floatval($transactions);
-                                $debit = $row["debit"];
+                                $debit = $row["folio_debit"];
                                 $debit_count+=floatval($debit);
-                                $credit = $row["credit"];
+                                $credit = $row["folio_credit"];
                                 $credit_count+=floatval($credit);
 
                                 $content.="<tr class=\"booking_radio\">";

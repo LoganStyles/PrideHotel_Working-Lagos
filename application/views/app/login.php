@@ -24,7 +24,7 @@ if (!empty($site[0]["logo"])) {
         <meta name="author" content="">
         <link rel="shortcut icon" href="#" type="image/png">
 
-        <title><?php echo $site_title; ?> | Login</title>
+        <title><?php echo $site_title; ?>  | Change Password</title>
 
         <!--common-->
         <link href="<?php echo base_url(); ?>css_admin/style.css" rel="stylesheet" type="text/css">
@@ -53,13 +53,16 @@ if (!empty($site[0]["logo"])) {
             </div>
             <div class="login-wrap">
                 <?php
+                $danger_style=$session_msg="";
                 if ($login_error) {
                     $danger_style = "alert alert-danger error";
-                } else {
-                    $danger_style = "";
+                    $session_msg=$login_error;
+                } elseif(isset($_SESSION['success_message'])) {
+                    $danger_style = "alert-success";
+                    $session_msg=$_SESSION['success_message'];
                 }
                 echo validation_errors('<span>***</span><span class="error">', '</span><span>***</span><br>');
-                echo '<div class="' . $danger_style . '">' . $login_error . '</div>';
+                echo '<div class="' . $danger_style . '">' . $session_msg . '</div>';
                 ?>
                 <input name="login_signature" type="text" class="form-control" placeholder="Username" value="<?php echo $signature; ?>" autofocus>
                 <input name="login_password" type="password" class="form-control" placeholder="Password" value="<?php echo $password; ?>">

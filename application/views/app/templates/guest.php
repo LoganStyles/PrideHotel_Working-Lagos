@@ -21,15 +21,19 @@ $client_name_class = $roomtype_class = $price_rate_class = "";
 //chk for specific errors
 if (!empty($client_name_error)) {
     $client_name_class = "brightyellow";
-    $form_error.="**".$client_name_error;
+    $form_error.="**".$client_name_error."<br>";
 }
 if (!empty($roomtype_error)) {
     $roomtype_class = "brightyellow";
-    $form_error.="**".$roomtype_error;
+    $form_error.="**".$roomtype_error."<br>";
 }
 if (!empty($price_rate_error)) {
     $price_rate_class = "brightyellow";
-    $form_error.="**".$price_rate_error;
+    $form_error.="**".$price_rate_error."<br>";
+}
+if (!empty($nights_error)) {
+//    $nights_class = "brightyellow";
+    $form_error.="**".$nights_error."<br>";
 }
 ?>
 
@@ -57,10 +61,11 @@ if (!empty($price_rate_error)) {
                 } else {
                     $danger_style = "";
                 }
-
+               
                 $attributes = array('class' => 'cmxform form-horizontal adminex-form', 'id' => 'guest_form');
                 echo '<div id="error_div" class="' . $form_danger_style . '">' . $form_error . '</div>';
                 echo '<div id="error_div" class="' . $danger_style . '">' . $arrival_error . '</div>';
+
                 if (isset($_SESSION["form_success"])) {
                     echo "<div class=\"alert alert-success\">" . $this->session->form_success . "</div>";
                 }
@@ -84,7 +89,7 @@ if (!empty($price_rate_error)) {
 
                             <label for="guest_nights" class="col-sm-1 col-lg-1 control-label">Nights</label>
                             <div class="col-sm-2 col-lg-2">
-                                <input  <?php echo $disabled; ?> class=" form-control" id="guest_nights" name="guest_nights" value="<?php echo $nights; ?>" type="number" />
+                                <input  <?php echo $disabled; ?> class="form-control" id="guest_nights" name="guest_nights" value="<?php echo $nights; ?>" type="number" />
                             </div>
 
                             <label  for="guest_departure" class="col-sm-1 col-lg-1 control-label">Departure</label>
@@ -109,14 +114,19 @@ if (!empty($price_rate_error)) {
 
                         <div class="form-group ">
                             <label for="guest_client_name" class="col-sm-2 control-label">Client Name</label>
-                            <div class="col-sm-3">
+                            <div class="col-sm-2">
                                 <input <?php echo $disabled; ?> class="<?php echo $client_name_class; ?> form-control" id="guest_client_name" name="guest_client_name" type="text" value="<?php echo $client_name; ?>" />                                
                             </div>  
 
                             <label for="guest_agency_name" class="col-sm-2 control-label">Agency Name</label>
-                            <div class="col-sm-3">
+                            <div class="col-sm-2">
                                 <input <?php echo $disabled; ?> class=" form-control" id="guest_agency_name" name="guest_agency_name" type="text" value="<?php echo $agency_name; ?>" />
-                            </div> 
+                            </div>
+                            
+                            <label for="guest_remarks" class="col-sm-2 control-label">Remarks</label>
+                            <div class="col-sm-2">
+                                <input <?php echo $disabled; ?> class=" form-control" id="guest_remarks" name="guest_remarks" type="text" value="<?php echo $remarks; ?>" />
+                            </div>
 
                             <div class="clearfix"></div>
 

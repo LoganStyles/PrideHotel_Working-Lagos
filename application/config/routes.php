@@ -62,6 +62,8 @@ $route['app/processAccountSale'] = 'app/processAccountSale';
 $route['app/processAccountPayment'] = 'app/processAccountPayment';
 $route['app/processAccountPlu'] = 'app/processAccountPlu';
 $route['app/processRole'] = 'app/processRole';
+$route['app/showPassword'] = 'app/showPassword';
+$route['app/changePassword'] = 'app/changePassword';
 $route['app/processUser'] = 'app/processUser';
 $route['app/processRoom'] = 'app/processRoom';
 $route['app/processDelete'] = 'app/processDelete';
@@ -84,6 +86,7 @@ $route['resv/processFolioPayment'] = 'resv/processFolioPayment';
 $route['resv/processFolioSale'] = 'resv/processFolioSale';
 $route['resv/moveFolios'] = 'resv/moveFolios';
 $route['resv/returnFolios'] = 'resv/returnFolios';
+
 $route['resv/updateOverdueDepartures'] = 'resv/updateOverdueDepartures';
 $route['resv/viewOverdueDepartures/(:any)'] = 'resv/viewOverdueDepartures/$1';
 $route['resv/confirmMoveFolioRoom'] = 'resv/confirmMoveFolioRoom';
@@ -94,7 +97,10 @@ $route['resv/reports'] = 'resv/showReports';
 $route['resv/confirmOperations'] = 'resv/confirmOperations';
 $route['resv/(:any)'] = 'resv/viewLists/$1';
 
+$route['report/printReceipt'] = 'report/printReceipt';
+
 $route['api/service/users/(:any)/(:any)'] = 'api/service/users/$1/$2'; 
+$route['api/service/sale/(:any)/(:any)/(:any)/(:any)/(:any)/(:any)'] = 'api/service/sale/$1/$2/$3/$4/$5/$6';
 
 $route['group'] = 'group';
 $route['group/processCheckIn'] = 'group/processCheckIn';

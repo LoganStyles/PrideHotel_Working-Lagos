@@ -10,9 +10,10 @@ class Service extends REST_Controller {
         parent::__construct();
         // Configure limits on our controller methods
         // Ensure you have created the 'limits' table and enabled 'limits' within application/config/rest.php
-        $this->methods['users_get']['limit'] = 500; // 500 requests per hour per user/key
+        $this->methods['users_get']['limit'] = 500; // 500 requests per hour per user/key        
         $this->methods['users_post']['limit'] = 100; // 100 requests per hour per user/key
         $this->methods['users_delete']['limit'] = 50; // 50 requests per hour per user/key
+        $this->methods['sale_post']['limit'] = 500; // 500 requests per hour per user/key
     }
 
     public function users_get() {
@@ -24,6 +25,17 @@ class Service extends REST_Controller {
             $this->response(NULL, REST_Controller::HTTP_BAD_REQUEST); // BAD_REQUEST (400) being the HTTP response code
         } else {
             $results = $this->resv_model->verifyRoom($type, $val);
+            // Set the response and exit
+            $this->response($results, REST_Controller::HTTP_OK); // OK (200) being the HTTP response code
+        }
+    }
+    
+    public function sale_post() {        
+        if (empty($this->post())) {
+            // Invalid set the response and exit.
+            $this->response(NULL, REST_Controller::HTTP_BAD_REQUEST); // BAD_REQUEST (400) being the HTTP response code
+        } else {
+            $results = $this->resv_model->savePOSFolio($this->post());
             // Set the response and exit
             $this->response($results, REST_Controller::HTTP_OK); // OK (200) being the HTTP response code
         }

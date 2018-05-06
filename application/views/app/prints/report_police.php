@@ -16,16 +16,21 @@
                                 $occupation = $row["occupation"];
                                 $street = $row["street"];
                                 $passport_no = $row["passport_no"];
+								$actual_arrival = date('d/m/Y',strtotime($row["actual_arrival"]));
                                 if(!empty($row["actual_departure"]) && ($row["actual_departure"])!=="0000-00-00 00:00:00"){
-                                    $checkout = date('H:i:s', strtotime($row["actual_departure"]));
-                                }else{$checkout="";}
+									$departure_day = date('d/m/Y',strtotime($row["actual_departure"]));
+                                    $checktime = date('H:i:s', strtotime($row["actual_departure"]));
+									$departure=$departure_day." ".$checktime;
+                                }else{$departure="";}
                                 
                                 $client_name = $row["client_name"];
                                 $gender = $row["gender"];
                                 $room_title = $row["room_title"];
                                 $roomtype = $row["roomtype"];
                                 $nationality = $row["nationality"];
+								$status = $row["status"];
                                 $checkin = date("H:i:s", strtotime($row["actual_arrival"]));
+								$arrival=$actual_arrival." ".$checkin;
 
                                 $content.="<tr class=\"booking_radio\">";
                                 $content.="<td><input class=\"booking_hidden_id\" type=\"hidden\" value=\"$userid\">"
@@ -36,8 +41,9 @@
                                 $content.="<td>$street</td>";
                                 $content.="<td>$passport_no</td>";
                                 $content.="<td>$room_title</td>";
-                                $content.="<td>$checkin</td>";
-                                $content.="<td>$checkout</td>";
+								$content.="<td>$arrival</td>";
+                                $content.="<td>$departure</td>";
+                                $content.="<td>$status</td>";
                                 $content.="</tr>";
 
                                 $count++;
@@ -62,8 +68,9 @@
                             <th>Street</th>
                             <th>Passport NO.</th>
                             <th>Room</th>
-                            <th>Checkin</th>
+							<th>Arrival</th>
                             <th>Checkout</th>
+                            <th>Status</th>
                         </tr>
                     </thead>
                     <tbody>

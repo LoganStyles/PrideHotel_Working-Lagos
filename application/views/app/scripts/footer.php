@@ -34,6 +34,16 @@
                                     <option value="mrs." >Mrs.</option>
                                     <option value="miss." >Miss.</option>
                                     <option value="chief" >Chief</option>
+                                    <option value="Dr." >Dr.</option>
+                                    <option value="Engr." >Engr.</option>
+                                    <option value="Ambassador" >Ambassador</option>
+                                    <option value="Barr." >Barr.</option>
+                                    <option value="Hon." >Hon.</option>
+                                    <option value="Pst." >Pst.</option>
+                                    <option value="Rev." >Rev.</option>
+                                    <option value="Bishop" >Bishop</option>
+                                    <option value="Alhaja" >Alhaja</option>
+                                    <option value="Alhaji" >Alhaji</option>
                                 </select>                                                                 
                             </div> 
 
@@ -258,6 +268,37 @@
     </div>
 </div>
 
+<div role="dialog" id="confirm_modal2" class="modal fade">
+    <div class="modal-dialog" style="width: 600px;">
+        <div class="modal-content">
+            <div class="modal-header panel-heading dark" >                
+                <h4 class="modal-title" style="text-align:center">ACTION CONFIRMATION</h4>
+            </div>
+            <div class="modal-body">
+                <h5><strong>Are You Sure You Want To Perform This Action</strong></h5>
+                <form class="cmxform form-horizontal adminex-form" id="confirm2_form" action="">
+                    <input type="hidden" name="confirm_type2_room"  id="confirm_type2_room">
+                    <div id="confirm_error"></div>
+                    <div class="panel-body">
+                        <div class="form">                            
+                            <div class="form-group ">
+                                <label for="confirm_reason2" class="col-sm-3 control-label">Provide Reason</label>
+                                <div class="col-sm-9">
+                                    <input  class=" form-control" id="confirm_reason2" name="confirm_reason2" type="text" />                                
+                                </div>                                                      
+                            </div>
+                        </div>
+                    </div>                
+            </div>
+            <div class="modal-footer">
+                <input class="btn btn-success btn-sm" type="submit" name="submit" value="SUBMIT" />
+                <button type="button" class="btn btn-default" data-dismiss="modal">CANCEL</button>
+            </div>
+            </form> 
+        </div>
+    </div>
+</div>
+
 <?php if ($print === "") { ?>
 
     <footer>
@@ -285,11 +326,16 @@
         console.log('update url: ' + url);
         window.location = url;
     }
-
+    
     function getRoomReservation(room) {
         var url = BASE_URL + "app/getRoomReservation/" + room;
         console.log('update url: ' + url);
         window.location = url;
+    }
+    
+    function updateModallLoader(id){
+        $('#confirm_type2_room').val(id);
+        $('#confirm_modal2').modal({backdrop: false, keyboard: false});
     }
 
     function closeWindow(mode, guest_type, page_number) {
@@ -513,8 +559,16 @@
 
         console.log('resv_id is ' + resv_id);
         console.log('type is ' + type);
-        var redirect = BASE_URL + "resv/guest/" + resv_id + "/0/" + page_number + "/" + type + "/" + mode;
-        window.location = redirect;
+        
+        if(type=="reservation"){
+            var url = BASE_URL + "report/getReservationReports/" + resv_id;
+            console.log('update url: ' + url);
+            window.location = url;
+        }else{
+           var redirect = BASE_URL + "resv/guest/" + resv_id + "/0/" + page_number + "/" + type + "/" + mode;
+            window.location = redirect; 
+        }
+        
     }
 
     function newGroupResv(page_number, mode) {
@@ -1123,6 +1177,8 @@
         $('#house_arrival').on('valueChanged', function () {
             reservation.calcDuration('house');
         });
+                      
+        
         $('body').on('blur', '#house_nights', function () {
             reservation.calcDuration('house');
         });
@@ -1157,6 +1213,19 @@
                 console.log('live_results is not hovered');
                 $('#agency_reservations_live').html("");
                 $('#agency_reservations_live').hide();
+            }
+        });
+        
+        $('#confirm2_form').submit(function(e){
+            e.preventDefault();
+            var id=$("#confirm_type2_room").val();
+            var status = $("#housekeeping_room_status").val();
+            var reason = $("#confirm_reason2").val();
+            console.log('id '+id);
+            console.log('status '+status);
+            console.log('reason '+reason);
+            if(reason !==""){
+               updateItem('room', id, status); 
             }
         });
 
@@ -1282,6 +1351,50 @@
                 error: function () {
                     console.log('move failed ');
                     showErrorResponse('#folio_move_error', 'move failed');
+                }
+            });
+        });
+        
+        //print receipt
+        $('#folio_receipt_modal').submit(function (e) {
+            e.preventDefault();
+            var sub_button=$(this).find(':submit');
+            sub_button.prop('disabled', true);
+            sub_button.val('...processing');
+            
+            $('#folio_receipt_error').removeClass('alert alert-danger error');
+            $('#folio_receipt_error').text('');
+
+            var receiver_resv = $('#folio_receipt_reservation_id').val();
+            var paper_type = $('#folio_receipt_paper_type').val();
+            
+            //get checked rows
+            var selected_rows = [];
+            $('.folio_row input:checked').each(function () {
+                selected_rows.push($(this).next('input').val());
+            });
+            
+            var checked_json = JSON.stringify(selected_rows);
+            console.log(selected_rows);
+            console.log(receiver_resv);
+            console.log(paper_type);
+            
+            
+            $.ajax({
+                url: "<?php echo site_url('report/printReceipt'); ?>",
+                type: "POST",
+                dataType: "html",
+                data: {
+                    "selected_rows": checked_json,
+                    "reservation_id": receiver_resv,
+                    "paper_type": paper_type
+                },
+                success: function (data) {
+                    document.write(data);
+                },
+                error: function () {
+                    console.log('Receipt printing failed');
+                    showErrorResponse('#folio_receipt_error', 'Receipt printing failed');
                 }
             });
         });

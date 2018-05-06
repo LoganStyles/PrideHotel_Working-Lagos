@@ -134,6 +134,10 @@ if (!empty($group_price_rate_error)) {
                             <button class="btn btn-default pull-left" data-toggle="button" onclick="fetchModalGridData('group','price_rate');">
                                 <i class="fa fa-list"></i>
                             </button>
+                            <label for="group_remarks" class="col-sm-2 control-label">Remarks</label>
+                            <div class="col-sm-2">
+                                <input <?php echo $disabled; ?> class=" form-control" id="group_remarks" name="group_remarks" type="text" value="<?php echo $remarks; ?>" />
+                            </div>
                             <div class="clearfix"></div>                           
 
                         </div>

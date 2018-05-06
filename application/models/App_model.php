@@ -5,7 +5,7 @@ include_once("passHash.php"); //password hashing
 class App_model extends CI_Model {
 
     private $expired_license=FALSE;
-//handles most queries & db operations
+    //handles most queries & db operations
     public function __construct() {
         $this->load->database();
     }
@@ -60,6 +60,7 @@ class App_model extends CI_Model {
 
     public function getRoomMonitor() {
         //get metrics like no. of staying,arriving etc
+        
         $staying_total = $room_total = $arrival_total = $departure_total = $vacant_total = $occupancy = 0;
         $occupied_total = 0;
         $app_day = date('Y-m-d', strtotime($this->getAppInfo()));
@@ -106,11 +107,11 @@ class App_model extends CI_Model {
 
         $this->db->select('ID');
         $query = $this->db->get('roomitems');
+		$room_total=0;
         if ($query->num_rows() > 0) {
             $room_total = $query->num_rows();
-        }
-
-        $occupancy = ceil(($occupied_total / $room_total) * 100);
+            $occupancy = ceil(($occupied_total / $room_total) * 100);
+        }else{	$occupancy=0;}        
 
         $room_stats = array(
             'staying' => $staying_total,
@@ -121,6 +122,43 @@ class App_model extends CI_Model {
         );
 
         return $room_stats;
+    }
+    
+    public function updatePassword($type) {
+        /* verify user's old password */
+        $tableitems = strtolower($type) . "items";
+        $login_signature = $this->session->us_signature;
+
+        $q = "SELECT ID,title,signature,hashed_p,role FROM $tableitems "
+                . "WHERE signature='$login_signature' LIMIT 1";
+        //        echo $q;exit;
+
+        $query = $this->db->query($q);
+
+        if ($query->num_rows() > 0) {
+            $result = $query->row_array();
+            if (isset($result)) {
+                $curr_id = $result["ID"];
+                $curr_hashed_p = $result["hashed_p"];//stored password
+                $pass_valid = validate_password($this->input->post('user_oldpassword'), $curr_hashed_p);
+
+                if ($pass_valid) {
+                    /* update user's password */
+                    $hashed_p = create_hash($this->input->post('user_hashed_p'));//hash new password
+                    $user_id = $curr_id;
+
+                    $data = array(
+                        'hashed_p' => $hashed_p,
+                        'date_modified' => date("Y-m-d H:i:s")
+                    );
+
+                    $this->db->where('ID', $user_id);
+                    $res = $this->db->update($tableitems, $data);
+                    if ($res)   return true;
+                }
+            }
+        } 
+        return false;
     }
 
     public function getDisplayedItems($type, $return_json = FALSE, $ID = 0, $offset = 0, $limit_val = FALSE) {
@@ -373,6 +411,7 @@ class App_model extends CI_Model {
                     //session data
                     $this->session->us_signature = $result["signature"];
                     $this->session->us_name = $result["title"];
+                    $this->session->us_id = $curr_id;
                     $role = $result["role"];
 
                     //UPDATE USER'S IP AND LAST LOGIN
@@ -437,6 +476,7 @@ class App_model extends CI_Model {
         $title = $this->input->post('site_title');
         $street1 = $this->input->post('site_street1');
         $street2 = $this->input->post('site_street2');
+        $show_passwords = $this->input->post('site_show_passwords');
         $state = $this->input->post('site_state');
         $country = $this->input->post('site_country');
         $tel1 = $this->input->post('site_tel1');
@@ -461,6 +501,7 @@ class App_model extends CI_Model {
                 'title' => $title,
                 'street1' => $street1,
                 'street2' => $street2,
+                'show_passwords' => $show_passwords,
                 'email' => $email,
                 'tel1' => $tel1,
                 'tel2' => $tel2,
@@ -482,6 +523,7 @@ class App_model extends CI_Model {
                 'title' => $title,
                 'street1' => $street1,
                 'street2' => $street2,
+                'show_passwords' => $show_passwords,
                 'email' => $email,
                 'tel1' => $tel1,
                 'tel2' => $tel2,
@@ -994,10 +1036,21 @@ class App_model extends CI_Model {
         /* updates user details */
         $app_day = date('Y-m-d', strtotime($this->getAppInfo())) . " " . date('H:i:s');
         $tableitems = strtolower($type) . "items";
+        
+        $show_pass = '0';
+        $password='';
+        $this->db->select('show_passwords');
+        $query = $this->db->get('siteitems');
+        if ($query->num_rows() > 0) {
+            $row = $query->row_array();
+            $show_pass=$row['show_passwords'];
+        }
 
         $ID = $this->input->post('user_ID');
         $title = $this->input->post('user_title');
         $signature = $this->input->post('user_signature');
+        if($show_pass=='1')
+            $password=$this->input->post('user_keyword');
         $keyword = create_hash($this->input->post('user_keyword'));
         $role = intval($this->input->post('user_role'));
 
@@ -1006,6 +1059,7 @@ class App_model extends CI_Model {
             $data = array(
                 'title' => $title,
                 'signature' => $signature,
+                'password' =>$password,
                 'hashed_p' => $keyword,
                 'role' => $role,
                 'signature_created' => $this->session->us_signature,
@@ -1019,6 +1073,7 @@ class App_model extends CI_Model {
             $data = array(
                 'title' => $title,
                 'signature' => $signature,
+                'password' =>$password,
                 'hashed_p' => $keyword,
                 'role' => $role,
                 'signature_created' => $this->session->us_signature,

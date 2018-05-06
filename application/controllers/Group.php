@@ -77,6 +77,7 @@ class Group extends App {
         $item_comp_nights = $type . "_comp_nights";
         $item_roomtype_id = $type . "_roomtype_id";
         $item_price_rate_id = $type . "_price_rate_id";
+        $item_remarks = $type . "_remarks";
 
         if ($errors) {
             $data['received'][0]['form_error'] = $this->session->error_message;
@@ -106,6 +107,7 @@ class Group extends App {
             $data['received'][0]['comp_nights'] = $this->input->post($item_comp_nights);
             $data['received'][0]['roomtype_id'] = $this->input->post($item_roomtype_id);
             $data['received'][0]['price_rate_id'] = $this->input->post($item_price_rate_id);
+            $data['received'][0]['remarks'] = $this->input->post($item_remarks);
             $data['arrivaldate'] = $this->input->post($item_arrival);
             $data['departuredate'] = $this->input->post($item_departure);
         } elseif (!empty($resv_ID)) {
@@ -140,6 +142,7 @@ class Group extends App {
             $data['received'][0]['comp_visits'] = "no";
             $data['received'][0]['roomtype_id'] = "";
             $data['received'][0]['price_rate_id'] = "";
+            $data['received'][0]['remarks'] = "";
         }
 
         //defaults

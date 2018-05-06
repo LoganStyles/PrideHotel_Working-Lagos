@@ -93,7 +93,12 @@ if (!empty($house_client_name_error)) {
                             <label for="house_client_name" class="col-sm-2 control-label">Client Name</label>
                             <div class="col-sm-3">
                                 <input <?php echo $disabled; ?> class="<?php echo $client_name_class; ?> form-control" id="house_client_name" name="house_client_name" type="text" value="<?php echo $client_name; ?>" />                                
-                            </div>                             
+                            </div> 
+
+                            <label for="house_remarks" class="col-sm-2 control-label">Remarks</label>
+                                <div class="col-sm-3">
+                                    <input <?php echo $disabled; ?> class="form-control" id="house_remarks" name="house_remarks" type="text" value="<?php echo $remarks; ?>" />                                
+                                </div>                             
 
                             <div class="clearfix"></div>
 

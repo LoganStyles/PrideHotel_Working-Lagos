@@ -39,10 +39,7 @@ if (!empty($red_bal)) {
         <div class="col-sm-12">
             <section class="panel">
                 <header class="panel-heading" style="text-align: center;">
-                    FOLIO &nbsp;&nbsp;[ <?php echo $header_title; ?>]&nbsp;&nbsp;
-                    <?php if(!empty($master_id)){
-                        echo "Master ID [".$master_id."]";
-                    } ?>
+                    
                     <?php if (count($collection) > 0) { ?>
                         <?php
                         $content = "";
@@ -122,6 +119,10 @@ if (!empty($red_bal)) {
                         endforeach;
                         ?>
                     <?php } ?>
+                    FOLIO &nbsp;&nbsp;[ <?php echo $header_title; ?>]&nbsp;&nbsp;[ROOM: <?php echo $resv_room_title;?>]
+                    <?php if(!empty($master_id)){
+                        echo "Master ID [".$master_id."]";
+                    } ?>
                     <div>
                         <div class="col-lg-2 col-sm-2">
                             <select  class="form-control " name="folio_bills" id="folio_bills">
@@ -331,6 +332,7 @@ if (!empty($red_bal)) {
                                     if(!empty($master_id)){
                                         $buttons.="<a onclick=\"showSingleDialog('confirm','master');\" type=\"button\" class=\"btn btn-default \"><i class=\"fa fa-sitemap\"></i>&nbsp;Master</a>&nbsp;";
                                     }                                
+                                $buttons.="<a onclick=\"showDialog('#folio_receipt_modal','#folio_receipt_error');\" type=\"button\" class=\"btn btn-default \"><i class=\"fa fa-print\"></i>&nbsp;Print Receipt</a>&nbsp;";
                                 $buttons.="<a onclick=\"showDialog('#folio_move_modal','#folio_move_error');\" type=\"button\" class=\"btn btn-default \"><i class=\"fa fa-external-link\"></i>&nbsp;Move</a>&nbsp;";
                                 $buttons.="<a onclick=\"showSingleDialog('confirm','return');\" type=\"button\" class=\"btn btn-default \"><i class=\"fa fa-undo\"></i>&nbsp;Return</a>&nbsp;";
                                 $buttons.="<a onclick=\"showDialog('#folio_manual_charge_modal','#folio_manual_charge_error');\" type=\"button\" class=\"btn btn-default \"><i class=\"fa fa-square-o\"></i>&nbsp;Room Charge</a>&nbsp;";
@@ -563,6 +565,44 @@ if (!empty($red_bal)) {
             </div>
             <div class="modal-footer">
                 <input class="btn btn-success btn-sm" type="submit" name="submit" value="SAVE" />
+                <button type="button" class="btn btn-default" data-dismiss="modal">CANCEL</button>
+            </div>
+            </form> 
+        </div>
+    </div>
+</div>
+
+<div role="dialog" id="folio_receipt_modal" class="modal fade">
+    <div class="modal-dialog" style="width: 600px;">
+        <div class="modal-content">
+            <div class="modal-header panel-heading dark" >                
+                <h4 class="modal-title" style="text-align:center">PRINT RECEIPT</h4>
+            </div>
+            <div class="modal-body">
+                <form class="cmxform form-horizontal adminex-form" id="folio_receipt_form" action="">
+                    <div id="folio_receipt_error"></div>
+                    <div class="panel-body">
+                        <div class="form">
+                            <div class="form-group "> 
+                                <input id="folio_receipt_reservation_id" value="<?php echo $client_reservation_id;?>" type="hidden" /> 
+                            </div>
+
+                            <div class="form-group ">
+                                <label for="folio_receipt_paper_type" class="col-sm-3 control-label">Paper Type</label>
+                                <div class="col-lg-6 col-sm-6">
+                                    <select  class="form-control " name="folio_receipt_paper_type" id="folio_receipt_paper_type">
+                                        <option value="plain">PLAIN PAPER</option> 
+                                        <option value="letter">LETTER HEAD</option>
+                                    </select>                                                                 
+                                </div>                                                     
+                            </div>
+                        </div>
+
+                    </div>
+
+            </div>
+            <div class="modal-footer">
+                <input class="btn btn-success btn-sm" type="submit" name="submit" value="PRINT" />
                 <button type="button" class="btn btn-default" data-dismiss="modal">CANCEL</button>
             </div>
             </form> 

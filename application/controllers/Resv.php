@@ -55,6 +55,7 @@ class Resv extends App {
         if ($errors) {
             $data['received'][0]['form_error'] = $this->session->form_error;
             $data['received'][0]['ID'] = $this->input->post('checkin_ID');
+            $data['received'][0]['comp_nights'] = $this->input->post('checkin_comp_nights');
             $data['received'][0]['reservation_id'] = $this->input->post('checkin_reservation_id');
             $data['received'][0]['price_title'] = $this->input->post('checkin_price_title');
             $data['received'][0]['room_number_id'] = $this->input->post('checkin_room_number_id');
@@ -86,8 +87,9 @@ class Resv extends App {
         
         $room_number_id = $this->input->post('checkin_room_number_id');
         $mode = $this->input->post('checkin_mode');
+        $comp_nights = $this->input->post('checkin_comp_nights');
         $reservation_id = $this->input->post('checkin_reservation_id');
-        if ($this->resv_model->checkin($reservation_id, $room_number_id)) {
+        if ($this->resv_model->checkin($reservation_id, $room_number_id,$comp_nights)) {
             //GO TO STAYING 
             $redirect = "resv/staying";
             redirect($redirect);
@@ -203,6 +205,7 @@ class Resv extends App {
         $data['received'][0]['client_name_error'] = "";
         $data['received'][0]['roomtype_error'] = "";
         $data['received'][0]['price_rate_error'] = "";
+        $data['received'][0]['nights_error'] = "";
         $data['received'][0]['form_error'] = "";
 
         $item_id = $type . "_ID";
@@ -215,6 +218,7 @@ class Resv extends App {
         $item_departure = $type . "_departure";
         $item_client_name = $type . "_client_name";
         $item_nights = $type . "_nights";
+        $item_remarks = $type . "_remarks";
         $item_agency_name = $type . "_agency_name";
         $item_agency_contact = $type . "_agency_contact";
         $item_guest1 = $type . "_guest1";
@@ -242,13 +246,16 @@ class Resv extends App {
         $item_room_number_id = $type . "_room_number_id";
         $item_price_rate_id = $type . "_price_rate_id";
 
-        if ($errors) {
+        if ($errors) {   
+//            echo 'errors show reservation '. $errors. ' '.$this->session->error_message;exit;
             $data['received'][0]['form_error'] = $this->session->error_message;
             $data['received'][0]['arrival_error'] = $this->session->arrival_error;
             $data['received'][0]['client_name_error'] = $this->session->client_name_error;
             $data['received'][0]['roomtype_error'] = $this->session->roomtype_error;
             $data['received'][0]['price_rate_error'] = $this->session->price_rate_error;
+            $data['received'][0]['nights_error'] = $this->session->nights_error;
             $data['received'][0]['action'] = $this->input->post($item_action);
+            $data['received'][0]['remarks'] = $this->input->post($item_remarks);
             $data['received'][0]['page_number'] = $this->input->post($item_page_number);
             $data['received'][0]['ID'] = $this->input->post($item_id);
             $data['received'][0]['master_id'] = $this->input->post($item_master_id);
@@ -293,6 +300,7 @@ class Resv extends App {
             $data['received'][0]['client_name_error'] = "";
             $data['received'][0]['roomtype_error'] = "";
             $data['received'][0]['price_rate_error'] = "";
+            $data['received'][0]['nights_error'] = "";
             $data['received'][0]['form_error'] = "";
         } elseif (!empty($master_id)) {//this executes only once, when adding new guest to group
             $data['received'] = $this->resv_model->getClientResvInfo($master_id,"GROUP");
@@ -307,6 +315,7 @@ class Resv extends App {
             $data['received'][0]['client_name_error'] = "";
             $data['received'][0]['roomtype_error'] = "";
             $data['received'][0]['price_rate_error'] = "";
+            $data['received'][0]['nights_error'] = "";
             $data['received'][0]['form_error'] = "";
         }else {
             $data['received'][0]['ID'] = $resv_ID;
@@ -318,6 +327,7 @@ class Resv extends App {
             $data['received'][0]['agency_contact'] = "";
             $data['received'][0]['guest1'] = "";
             $data['received'][0]['guest2'] = "";
+            $data['received'][0]['remarks'] = "";
             $data['received'][0]['adults'] = "1";
             $data['received'][0]['children'] = "0";
             $data['received'][0]['roomtype'] = "";
@@ -341,7 +351,7 @@ class Resv extends App {
             $data['received'][0]['room_number_id'] = "";
             $data['received'][0]['price_rate_id'] = "";
         }
-
+        
         //defaults
         $data['received'][0]['type'] = "reservation";
         $data['received'][0]['action'] = $action;
@@ -376,6 +386,7 @@ class Resv extends App {
         $app_date = strtotime($data['app_date']);
 
         $ID = $this->input->post('guest_ID');
+        $guest_master_id = $this->input->post('guest_master_id');
         $type = $this->input->post('guest_type');
         $action = $this->input->post('guest_action');
         $mode = $this->input->post('guest_mode');
@@ -384,7 +395,14 @@ class Resv extends App {
         $roomtype = trim($this->input->post('guest_roomtype'));
         $price_rate = trim($this->input->post('guest_price_rate'));
         $status = $this->input->post('guest_status');
+        $guest_nights = $this->input->post('guest_nights');
         $errors = FALSE;
+        
+        $this->form_validation->set_rules('guest_roomtype_id', 'Room Type', 'is_natural_no_zero|required');
+        $this->form_validation->set_rules('guest_adults', 'Adults', 'is_natural|required');
+        $this->form_validation->set_rules('guest_children', 'Children', 'is_natural|required');
+        $this->form_validation->set_rules('guest_price_rate_id', 'Price Rate', 'is_natural_no_zero|required');
+        $this->form_validation->set_rules('guest_nights', 'Nights', 'is_natural_no_zero|required');
 
         if (empty($client_name)) {
             $this->session->set_flashdata('client_name_error', "Invalid Client Name value");
@@ -398,21 +416,20 @@ class Resv extends App {
             $this->session->set_flashdata('price_rate_error', "Invalid Price rate value");
             $errors = TRUE;
         }
+        if (empty($guest_nights)) {
+            $this->session->set_flashdata('nights_error', "Invalid Nights value");
+            $errors = TRUE;
+        }
 
         $arrival_temp = $this->input->post('guest_arrival');
         $temp_date = str_replace('/', '-', $arrival_temp);
-        $arrival = strtotime($temp_date);
+        $arrival = strtotime($temp_date);        
 
-        $this->form_validation->set_rules('guest_roomtype_id', 'Room Type', 'is_natural_no_zero|required');
-        $this->form_validation->set_rules('guest_adults', 'Adults', 'is_natural|required');
-        $this->form_validation->set_rules('guest_children', 'Children', 'is_natural|required');
-        $this->form_validation->set_rules('guest_price_rate_id', 'Price Rate', 'is_natural_no_zero|required');
-        $this->form_validation->set_rules('guest_nights', 'Nights', 'is_natural_no_zero|required');
-
-        if ($errors || $this->form_validation->run() == FALSE) {
+        if ($errors || $this->form_validation->run() == FALSE) {            
             $errors = TRUE;
+//            echo validation_errors();exit;
             $this->session->set_flashdata('error_message', validation_errors());
-            $this->showReservation("guest", $ID, $page_number, $action, $mode, $errors);
+            $this->showReservation("guest", $ID,$guest_master_id, $page_number, $action, $mode, $errors);
         } else {
             $res_result = $this->resv_model->saveGuest($type);
             $res_id = $res_result['reservation_id'];
@@ -638,6 +655,7 @@ class Resv extends App {
     public function confirmOperations() {
         $reason=$_POST['reason'];
         $type=$_POST['type'];
+		//$type='close';
         
         switch ($type) {
             case 'backup':
@@ -696,7 +714,9 @@ class Resv extends App {
         $data = $this->data;
         $data["header_title"] = ucwords("Reports");
         $data["type"] = "reports";
-        $data["received"][0]["type"] = "report";       
+        $data["received"][0]["type"] = "report";     
+        $data["collection"] = $this->resv_model->getUsers();
+//        print_r($data["collection"]);exit;
         $page="report";
         //show page
         $this->showPage($data, $page, 0); 
@@ -774,9 +794,10 @@ class Resv extends App {
         } else {
             $results = $this->resv_model->getFolios($resv_ID, $offset, $limit);
         }
-
+        
         $data["collection"] = $results['data'];
         $data["total"] = $results['count'];
+        $data["resv_room_title"] = $results['room'];
         //totals
         $totals = $results['totals'];
         $data["sale_total"] = $totals['SALE_TOTAL'];

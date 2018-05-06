@@ -59,6 +59,7 @@ class House extends App {
         $item_client_name = $type . "_client_name";
         $item_nights = $type . "_nights";
         $item_folio_room = $type . "_folio_room";
+        $item_remarks = $type . "_remarks";
 
         if ($errors) {
             $data['received'][0]['form_error'] = $this->session->error_message;
@@ -69,6 +70,7 @@ class House extends App {
             $data['received'][0]['ID'] = $this->input->post($item_id);
             $data['received'][0]['client_type'] = $this->input->post($item_client_type);
             $data['received'][0]['status'] = $this->input->post($item_status);
+            $data['received'][0]['remarks'] = $this->input->post($item_remarks);
             $data['received'][0]['folio_room'] = $this->input->post($item_folio_room);
             $data['received'][0]['client_name'] = $this->input->post($item_client_name);
             $data['received'][0]['nights'] = $this->input->post($item_nights);
@@ -89,6 +91,7 @@ class House extends App {
             $data['received'][0]['client_type'] = "";
             $data['received'][0]['client_name'] = "";
             $data['received'][0]['status'] = "confirmed";
+            $data['received'][0]['remarks'] = "";
             $data['received'][0]['folio_room'] = "BILL1";
         }
 

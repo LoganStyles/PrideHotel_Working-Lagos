@@ -119,6 +119,51 @@ if ($form_error) {
                     </div>
 
                 </div>
+                <div class="row" class="col-sm-6">
+                    <div class="col-sm-3" style="font-weight: 700;margin-left: 2%;">Update Room Status</div>
+                    <div class="col-sm-3"><select class="form-control col-lg-3 col-sm-3" name="housekeeping_room_status" id="housekeeping_room_status">
+                            
+                            <option value="1" <?php
+                            if ($action === "1") {
+                                echo 'selected';
+                            }
+                            ?>>VACANT</option>
+                            <option value="2" <?php
+                            if ($action === "2") {
+                                echo 'selected';
+                            }
+                            ?>>VACANT DIRTY</option>
+                            <option value="3" <?php
+                            if ($action === "3") {
+                                echo 'selected';
+                            }
+                            ?>>OCCUPIED</option>
+                            <option value="4" <?php
+                            if ($action === "4") {
+                                echo 'selected';
+                            }
+                            ?>>OCCUPIED DIRTY</option>
+                            <option value="5" <?php
+                            if ($action === "5") {
+                                echo 'selected';
+                            }
+                            ?>>RESERVED</option>
+                            <option value="6" <?php
+                            if ($action === "6") {
+                                echo 'selected';
+                            }
+                            ?>>OUT OF USE</option>
+                            <option value="7" <?php
+                            if ($action === "7") {
+                                echo 'selected';
+                            }
+                            ?>>BLOCKED</option>
+                        </select></div>
+                    <div>
+                        <button id="housekeeping_room_status_button" type="button" class="btn btn-default col-sm-2">Update</button>
+                    </div> 
+                </div>
+                
             </section>
         </div>
 

@@ -33,6 +33,7 @@ $price_rate = getTitle($roomtypes, $price_title); //price title
                     <div class="form">                        
                         <input type="hidden" name="checkin_ID"  id="checkin_ID" value="<?php echo $ID; ?>">
                         <input type="hidden" name="checkin_mode" id="checkin_mode" value="<?php echo $mode; ?>">
+                        <input type="hidden" name="checkin_comp_nights" id="checkin_comp_nights" value="<?php echo $comp_nights; ?>">
                         <input type="hidden" name="checkin_room_number_id" id="checkin_room_number_id" value="<?php echo $room_number_id; ?>">
                         <input type="hidden" name="checkin_price_title" id="checkin_price_title" value="<?php echo $price_title; ?>">
 
@@ -56,12 +57,16 @@ $price_rate = getTitle($roomtypes, $price_title); //price title
 
                         <div class="form-group ">
                             <label for="checkin_client_name" class="col-sm-2 control-label">Guest (1)</label>
-                            <div class="col-sm-3">
+                            <div class="col-sm-2">
                                 <input readonly class="form-control" id="checkin_client_name" name="checkin_client_name" type="text" value="<?php echo $client_name; ?>" />                                
                             </div>  
                             <label for="checkin_guest2" class="col-sm-2 control-label">Guest (2)</label>
-                            <div class="col-sm-3">
+                            <div class="col-sm-2">
                                 <input readonly class=" form-control" id="checkin_guest2" name="checkin_guest2" type="text" value="<?php echo $guest2; ?>" />
+                            </div>
+                            <label for="checkin_comp_nights" class="col-sm-1 control-label">Comp.Nights</label>
+                            <div class="col-sm-2 col-lg-2">
+                                <input readonly class=" form-control" id="checkin_comp_nights" name="checkin_comp_nights" value="<?php echo $comp_nights; ?>" type="number" />
                             </div>
                             <div class="clearfix"></div>
                         </div>

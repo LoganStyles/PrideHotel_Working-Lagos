@@ -20,10 +20,9 @@ extract($current);
 
                 <div class="panel-body">
                     <div class="form">
-
                         <div class="form-group ">
                             <label for="report_type" class="col-sm-2 control-label">Report Type</label>
-                            <div class="col-lg-3 col-sm-3">
+                            <div class="col-lg-2 col-sm-2">
                                 <select class="form-control " name="report_type" id="report_type">
                                     <option value="arrivals">ARRIVALS</option>
                                     <option value="departures">DEPARTURES</option>
@@ -39,6 +38,27 @@ extract($current);
                                 </select>                                
                             </div>  
                             
+                            <label for="report_user" class="col-sm-1 control-label">Users</label>
+                            <div class="col-lg-2 col-sm-2">                                
+                                <select class="form-control " name="report_user" id="report_user">
+                                    
+                                    <?php if (count($collection) > 0) { $content="";?>
+                                    <?php 
+                                    $content.="<option value='all'>All</option>";
+                                    foreach ($collection as $row):
+                                         $content.="<option value='".$row['signature']."'>".$row['title']."</option>";
+                                    endforeach;
+                                    echo $content;
+                                    ?>
+                                   
+                                    <?php }else{                                        
+                                        echo"<option value='None'>None</option>";
+                                    } ?>
+                                </select>                                
+                            </div> 
+                        </div>
+                        
+                        <div class="form-group ">  
                             <label  for="report_from" class="col-sm-2 col-lg-2 control-label">From Date</label>
                             <div class="col-sm-1 col-lg-1" name="report_from" id="report_from"></div>
                             

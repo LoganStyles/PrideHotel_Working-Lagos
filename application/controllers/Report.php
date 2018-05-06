@@ -91,6 +91,41 @@ class Report extends App {
 
         $this->showPage($data, $page);
     }
+    
+    public function printReceipt() {
+        //prints receipts        
+        $this->checkAccess($this->session->reservation, 2);
+        $folio_IDs = json_decode($_POST['selected_rows']); 
+        $resv_id=$_POST['reservation_id'];
+
+        $page = "receipt";
+
+        $data = $this->data;
+        $data["header_title"] = strtoupper("Guest Reservation Receipt");
+        $data["type"] = "reservation";
+        $data["paper_type"]=$_POST['paper_type'];
+        
+        $results = $this->resv_model->getFoliosForReceipt($resv_id, $folio_IDs);
+
+        $data["collection"] = $results['data'];
+        $data['payment_total'] = $results['payment_total']['debit'];
+
+        $personal = $results['personal'];
+        $data['client_name'] = $personal['client_name'];
+        $data['date_created'] = date("d/m/Y", strtotime($personal['date_created']));
+        $data['actual_arrival'] = date("d/m/Y", strtotime($personal['actual_arrival']));
+        $data['actual_departure'] = (strtotime($personal["actual_departure"]) > strtotime($personal["departure"])) ? (date('d/m/Y', strtotime($personal["actual_departure"]))) : (date('d/m/Y', strtotime($personal["departure"])));
+        $data['nights'] = $personal['nights'];
+        $data['reservation_id'] = $personal['reservation_id'];
+        $data['room_number'] = $personal['folio_room_number'];
+        $data['room_type'] = $personal['folio_room_type'];
+
+        $page_nav = $this->page_nav;
+        $this->pagination->initialize($page_nav);
+        $data['pagination'] = $this->pagination->create_links();
+
+        $this->showPage($data, $page);
+    }
 
     public function printCheckout($resv_id, $paper_type, $filter = NULL) {
         //prints checkout details
@@ -124,6 +159,24 @@ class Report extends App {
         $this->pagination->initialize($page_nav);
         $data['pagination'] = $this->pagination->create_links();
 
+        $this->showPage($data, $page);
+    }
+    
+    public function getReservationReports($resv_id) {
+        $this->checkAccess($this->session->reservation, 2);
+        $results = $this->resv_model->getReports('reservation',$resv_id);
+        $results2 = $this->resv_model->getReports('resev_payments',$resv_id);
+        
+        
+        $page = "reservation_details";
+        
+        $data = $this->data;
+        $data["header_title"] = strtoupper('reservation');
+        $data["type"] = 'reservation';
+        
+        $data["collection"] = $results['data'];
+        $data["collection_payments"] = $results2['data'];
+            
         $this->showPage($data, $page);
     }
 
@@ -171,7 +224,7 @@ class Report extends App {
             $data["collection"] = $this->resv_model->getLedger($ledger_type);
         } else {
             $results = $this->resv_model->getReports($type);
-            $data["collection"] = $results['data'];
+            $data["collection"] = $results['data'];            
         }
 
         if ($type == "sales summary" || $type == "cashier summary") {

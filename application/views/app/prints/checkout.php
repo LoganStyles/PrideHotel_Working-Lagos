@@ -8,7 +8,7 @@
                     <div class="" style="text-align: center;font-weight: 700;">
                         <?php if (count($collection) > 0) { ?>
                             <?php
-                            $content = $room_number = $reservation_id = "";
+                            $content = $reservation_id = "";
                             $count = 1;
                             foreach ($collection as $row):
                                 $folio_id = $row["ID"];
@@ -46,7 +46,9 @@
             <div class="row" >
     <div style="margin-left: 30px;color: #000;font-weight: 600">
         <div>GUEST: &nbsp;&nbsp;<?php echo ucwords($client_name); ?></div>
-        <div>DURATION: &nbsp;&nbsp;<?php echo $actual_arrival." <".$nights."> ".$actual_departure."&nbsp;&nbsp;Room ".$room_number; ?></div>
+        <div>DURATION: &nbsp;&nbsp;<?php echo date('d/m/Y',strtotime($actual_arrival))." - ".date('d/m/Y',strtotime($actual_departure))."&nbsp;&nbsp;"; ?></div>
+        <div>NIGHTS: &nbsp;&nbsp;<?php echo $nights; ?></div>
+        <div>ROOM: &nbsp;&nbsp;<?php echo $room_number; ?></div>
     </div>
 </div>
 
