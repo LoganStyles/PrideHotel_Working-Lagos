@@ -75,6 +75,7 @@ $route['app/logout'] = 'app/logout';
 $route['app/process/(:any)'] = 'app/processTypeclass/$1';
 $route['app/(:any)'] = 'app/showTypeclass/$1';
 
+
 $route['resv/guest/new'] = 'resv/showReservation/guest/0/0/0/insert/confirmed';
 $route['resv/guest/(:any)/(:any)/(:any)/(:any)/(:any)'] = 'resv/showReservation/guest/$1/$2/$3/$4/$5';
 $route['resv/processGuest'] = 'resv/processGuest';
@@ -82,6 +83,7 @@ $route['resv/processPerson'] = 'resv/processPerson';
 $route['resv/processCheckIn'] = 'resv/processCheckIn';
 $route['resv/processResvDelete'] = 'resv/processResvDelete';
 $route['resv/processPersonDelete'] = 'resv/processPersonDelete';
+$route['resv/processPersonSearch'] = 'resv/processPersonSearch';
 $route['resv/processFolioPayment'] = 'resv/processFolioPayment';
 $route['resv/processFolioSale'] = 'resv/processFolioSale';
 $route['resv/moveFolios'] = 'resv/moveFolios';

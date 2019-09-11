@@ -166,8 +166,7 @@ class Report extends App {
         $this->checkAccess($this->session->reservation, 2);
         $results = $this->resv_model->getReports('reservation',$resv_id);
         $results2 = $this->resv_model->getReports('resev_payments',$resv_id);
-        
-        
+                
         $page = "reservation_details";
         
         $data = $this->data;
@@ -179,6 +178,24 @@ class Report extends App {
             
         $this->showPage($data, $page);
     }
+
+    public function getReservationReportsShowVAT($resv_id) {
+        $this->checkAccess($this->session->reservation, 2);
+        $results = $this->resv_model->getReports('reservation',$resv_id);
+        $results2 = $this->resv_model->getReports('resev_payments',$resv_id);
+                
+        $page = "reservation_details_vat";
+        
+        $data = $this->data;
+        $data["header_title"] = strtoupper('reservation');
+        $data["type"] = 'reservation';
+        
+        $data["collection"] = $results['data'];
+        $data["collection_payments"] = $results2['data'];
+            
+        $this->showPage($data, $page);
+    }
+
 
     public function getReports() {
         //prints reports
@@ -193,6 +210,7 @@ class Report extends App {
                 $page = "report";
                 break;
             case 'sales summary':
+            case 'sales_fnb_summary':
                 $page = "report_sales";
                 break;
             case 'cashier summary':
@@ -227,7 +245,7 @@ class Report extends App {
             $data["collection"] = $results['data'];            
         }
 
-        if ($type == "sales summary" || $type == "cashier summary") {
+        if ($type == "sales summary" || $type == "cashier summary" || $type == "sales_fnb_summary") {
             $data["collection2"] = $results['totals'];
         }
 

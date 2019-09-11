@@ -23,7 +23,9 @@ date_default_timezone_set('Africa/Lagos');
 | a PHP script and you can easily do that on your own.
 |
 */
-$config['base_url'] = 'http://localhost:81/pridehotel';
+// $config['base_url'] = 'http://localhost/pridehotel';
+$config['base_url'] = 'http://localhost:81/pridehotel_lagos';
+
 
 /*
 |--------------------------------------------------------------------------
@@ -213,7 +215,7 @@ $config['directory_trigger'] = 'd';
 | your log files will fill up very fast.
 |
 */
-$config['log_threshold'] = 0;
+$config['log_threshold'] = 4;
 
 /*
 |--------------------------------------------------------------------------
@@ -511,6 +513,20 @@ $config['rewrite_short_tags'] = FALSE;
 | Array:		array('10.0.1.200', '192.168.5.0/24')
 */
 $config['proxy_ips'] = '';
+
+/*
+ * added config files
+ */
+$config['username']='PrideHotel';
+$config['password']='PrideHotel';
+$config['database']='PrideHotel';
+$config['host']='localhost';
+$config['backup'] = "C:\\wamp64\\bin\\mysql\\mysql5.7.19\\bin\\mysqldump.exe --opt --host=" . $config['host'] . " --user=" . $config['username'] . " --password=" . $config['password'] . " " . $config['database'] . " > ";
+
+// $config['reports_base_url']="http://localhost:81/PrideAppReports/public/api";
+// $config['reservationitems_endpoint']="/report_reservationitems";
+
+// $config['report_app_api_token']='8Ge7CMG1vDguDw7eaCmKir9D5RMsFnecVMoMXfcVfCIkuElv54Kiy9oUFeRs';
 
 /*
   |--------------------------------------------------------------------------

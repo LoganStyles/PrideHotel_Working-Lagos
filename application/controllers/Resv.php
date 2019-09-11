@@ -10,7 +10,7 @@ class Resv extends App {
     }
 
     public function searchClient($type, $search_phrase) {
-//        search client name
+//      search client name
         $table = $type . "items";
         $cleaned_search_phrase = $this->security->xss_clean($search_phrase);
         $results = $this->resv_model->search($cleaned_search_phrase, $table);
@@ -36,6 +36,7 @@ class Resv extends App {
         $this->load->view('app/templates/'. $page, $data);
         $this->load->view('app/scripts/footer', $data);
     }
+    
 
     public function checkIn($mode, $resv_ID, $errors = FALSE) {
         /* checkin guest & gets reservation details, set mode 
@@ -545,6 +546,7 @@ class Resv extends App {
             $page_number = "0";
             if (isset($this->session->client_error_message)) {
                 $data['received'][0]['form_error'] = $this->session->client_error_message;
+                $data['received'][0]['search_title'] = $this->input->post('search_title');//search phrase
                 $data['received'][0]['title'] = $this->input->post('person_title');
                 $data['received'][0]['type'] = $this->input->post('person_type');
                 $data['received'][0]['action'] = $this->input->post('person_action');
@@ -573,6 +575,7 @@ class Resv extends App {
             } else {
                 $data['received'][0]['form_error'] = "";
                 $data['received'][0]['title'] = "";
+                $data['received'][0]['search_title'] = "";
                 $data['received'][0]['type'] = $type;
                 $data['received'][0]['action'] = "insert";
                 $data['received'][0]['page_number'] = $page_number;
@@ -601,8 +604,10 @@ class Resv extends App {
             //check for deletes
             if (isset($this->session->delete_person_error)) {
                 $data['received'][0]['person_form_error'] = $this->session->delete_person_error();
+                $data['received'][0]['search_form_error'] = "";
             } else {
                 $data['received'][0]['person_form_error'] = "";
+                $data['received'][0]['search_form_error'] = "";
             }
         } else {
             $page = "reservation";
@@ -616,6 +621,115 @@ class Resv extends App {
 
         $page_nav = $this->page_nav;
         $page_nav["base_url"] = base_url() . 'resv/viewLists/' . $type;
+        $page_nav["total_rows"] = $results['count'];
+        $page_nav["per_page"] = $limit;
+        $this->pagination->initialize($page_nav);
+        $data['pagination'] = $this->pagination->create_links();
+        //show page
+        $this->showPage($data, $page, 1); 
+    }
+    
+     public function processPersonSearch($type="person", $offset = 0) {
+        /* displays paginised list of reservation items 
+         * also displays client personal info
+         */
+         
+        $this->session->resv_back_uri = base_url() . uri_string();
+        $this->checkAccess($this->session->reservation, 2);
+
+        $data = $this->data;
+        $data['room_stats'] = $this->app_model->getRoomMonitor();
+        $data["header_title"] = ucwords($type);
+        $data["bar_title"] = ucwords('guest');
+        $data["module"] = "reservation";
+        $data["type"] = $type;
+        $data["new_client"] = (isset($this->session->new_client)) ? ($this->session->new_client) : ("");
+        $data['countries'] = $this->app_model->getDisplayedItems('ref_country')['data'];
+        
+        $search_title = $this->input->get('search_title');//search phrase
+
+        $limit = 10;
+        if ($type == "person") {
+            $this->session->back_uri = current_full_url();
+//            echo $this->session->back_uri;exit;
+            $page = $type;
+            $page_number = "0";
+            if (isset($this->session->client_error_message)) {
+                $data['received'][0]['form_error'] = $this->session->client_error_message;
+                $data['received'][0]['search_title'] = $this->input->get('search_title');//search phrase
+                $data['received'][0]['title'] = $this->input->post('person_title');
+                $data['received'][0]['type'] = $this->input->post('person_type');
+                $data['received'][0]['action'] = $this->input->post('person_action');
+                $data['received'][0]['page_number'] = $this->input->post('person_page_number');
+                $data['received'][0]['ID'] = $this->input->post('person_ID');
+                $data['received'][0]['title_ref'] = $this->input->post('person_title_ref');
+                $data['received'][0]['email'] = $this->input->post('person_email');
+                $data['received'][0]['phone'] = $this->input->post('person_phone');
+                $data['received'][0]['city'] = $this->input->post('person_city');
+                $data['received'][0]['state'] = $this->input->post('person_state');
+                $data['received'][0]['country'] = $this->input->post('person_country');
+                $data['received'][0]['street'] = $this->input->post('person_street');
+                $data['received'][0]['sex'] = $this->input->post('person_sex');
+                $data['received'][0]['occupation'] = $this->input->post('person_occupation');
+                $data['received'][0]['birth_location'] = $this->input->post('person_birth_location');
+                $data['received'][0]['passport_no'] = $this->input->post('person_passport_no');
+                $data['received'][0]['pp_issued_at'] = $this->input->post('person_pp_issued_at');
+                $data['received'][0]['spg_no'] = $this->input->post('person_spg_no');
+                $data['received'][0]['visa'] = $this->input->post('person_visa');
+                $data['received'][0]['resident_permit_no'] = $this->input->post('person_resident_permit_no');
+                $data['received'][0]['destination'] = $this->input->post('person_destination');
+                $data['received'][0]['group_name'] = $this->input->post('person_group_name');
+                $data['received'][0]['plate_number'] = $this->input->post('person_plate_number');
+                $data['received'][0]['remarks'] = $this->input->post('person_remarks');
+                $data['received'][0]['payment_method'] = $this->input->post('person_payment_method');
+            } else {
+                $data['received'][0]['form_error'] = "";
+                $data['received'][0]['title'] = "";
+                $data['received'][0]['search_title'] = $search_title;
+                $data['received'][0]['type'] = $type;
+                $data['received'][0]['action'] = "insert";
+                $data['received'][0]['page_number'] = $page_number;
+                $data['received'][0]['ID'] = 0;
+                $data['received'][0]['title_ref'] = "";
+                $data['received'][0]['email'] = "";
+                $data['received'][0]['phone'] = "";
+                $data['received'][0]['city'] = "";
+                $data['received'][0]['state'] = "";
+                $data['received'][0]['country'] = 172;
+                $data['received'][0]['street'] = "";
+                $data['received'][0]['sex'] = "";
+                $data['received'][0]['occupation'] = "";
+                $data['received'][0]['birth_location'] = "";
+                $data['received'][0]['passport_no'] = "";
+                $data['received'][0]['pp_issued_at'] = "";
+                $data['received'][0]['spg_no'] = "";
+                $data['received'][0]['visa'] = "";
+                $data['received'][0]['resident_permit_no'] = "";
+                $data['received'][0]['destination'] = "";
+                $data['received'][0]['group_name'] = "";
+                $data['received'][0]['plate_number'] = "";
+                $data['received'][0]['remarks'] = "";
+                $data['received'][0]['payment_method'] = "";
+            }
+            //check for deletes
+            if (isset($this->session->delete_person_error)) {
+                $data['received'][0]['person_form_error'] = $this->session->delete_person_error();
+                $data['received'][0]['search_form_error'] = "";
+            } else {
+                $data['received'][0]['person_form_error'] = "";
+                $data['received'][0]['search_form_error'] = "";
+            }
+        } 
+        
+        $data["received"][0]["type"] = $type;
+        $data["received"][0]["offset"] = $offset;
+
+        $results = $this->resv_model->searchAppClients($search_title,$type, $offset, $limit);
+        $data["collection"] = $results['data'];
+        $data["total"] = $results['count'];
+
+        $page_nav = $this->page_nav;
+        $page_nav["base_url"] = current_full_url();
         $page_nav["total_rows"] = $results['count'];
         $page_nav["per_page"] = $limit;
         $this->pagination->initialize($page_nav);
@@ -652,10 +766,12 @@ class Resv extends App {
         echo $res;
     }
     
+    
     public function confirmOperations() {
+//        $reason="yes";
+//        $type="charge";
         $reason=$_POST['reason'];
         $type=$_POST['type'];
-		//$type='close';
         
         switch ($type) {
             case 'backup':
@@ -786,6 +902,7 @@ class Resv extends App {
             $data['received'][0]['sale_amount'] = 0;
             $data['received'][0]['plu_description'] = "";
         }
+
 
         $limit = 10;
         $page = "folio";

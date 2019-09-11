@@ -557,11 +557,14 @@
         var resv_id = $('.booking_radio.active .booking_hidden_id').val();
         var status = $('.booking_radio.active .booking_hidden_status').text();
 
-        console.log('resv_id is ' + resv_id);
-        console.log('type is ' + type);
+        
         
         if(type=="reservation"){
             var url = BASE_URL + "report/getReservationReports/" + resv_id;
+            console.log('update url: ' + url);
+            window.location = url;
+        }else if(type=="reservation_show_vat"){
+            var url = BASE_URL + "report/getReservationReportsShowVAT/" + resv_id;
             console.log('update url: ' + url);
             window.location = url;
         }else{

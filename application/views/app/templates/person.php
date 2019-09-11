@@ -4,7 +4,7 @@ $form_error = (isset($this->session->delete_error) ? ($this->session->delete_err
 
 $current = $received[0];
 extract($current);
-$countries_list=displayOptions($countries,$country);
+$countries_list = displayOptions($countries, $country);
 
 $count = 1;
 
@@ -23,6 +23,14 @@ if ($person_form_error) {
 } else {
     $danger_person_style = $display_person_modal = $delete_person_mode = "";
 }
+
+if ($search_form_error) {
+    $danger_search_style = "alert alert-danger error";
+    $display_search_modal = "block";
+    $delete_search__mode = "in";
+} else {
+    $danger_search_style = $display_search_modal = $delete_search_mode = "";
+}
 ?>
 
 <!--body wrapper start-->
@@ -31,8 +39,22 @@ if ($person_form_error) {
         <div class="col-sm-12">
             <section class="panel">
                 <header class="panel-heading">
-                   Clients
+                    Clients
                     <div>
+                        <div class="pull-left">
+                            <div class="col-md-12 form-group">
+                                <!--<form action="" method="get" id="search_person_form">-->
+                                    <?php
+                                    $attributes = array('class' => 'cmxform form-horizontal adminex-form', 'id' => 'search_person_form','method'=>'get');
+                                    echo '<div class="' . $danger_search_style . '">' . $search_form_error . '</div>';
+                                    echo form_open('resv/processPersonSearch', $attributes);
+                                    ?>
+                                <input class="col-md-8 form-control" id="search_title" placeholder="Search" value="<?php echo $search_title ?>" name="search_title" type="text" />
+                                    <input class="col-md-4 btn btn-success btn-sm" type="submit" name="submit" value="Search" />
+                                </form>
+                                
+                            </div>
+                        </div>
                         <div class="pull-right">
                             <?php if (count($collection) > 0) { ?>
                                 <?php
@@ -52,13 +74,13 @@ if ($person_form_error) {
                                         $checked = "";
                                     }
 
-                                    $content.="<tr class=\"booking_radio $active\">";
-                                    $content.="<td><input class=\"booking_hidden_id\" type=\"hidden\" value=\"$personid\">"
+                                    $content .= "<tr class=\"booking_radio $active\">";
+                                    $content .= "<td><input class=\"booking_hidden_id\" type=\"hidden\" value=\"$personid\">"
                                             . "$person_title</td>";
-                                    $content.="<td>$person_email</td>";
-                                    $content.="<td>$person_phone</td>";
-                                    $content.="<td>$person_state</td>";
-                                    $content.="</tr>";
+                                    $content .= "<td>$person_email</td>";
+                                    $content .= "<td>$person_phone</td>";
+                                    $content .= "<td>$person_state</td>";
+                                    $content .= "</tr>";
 
                                     $count++;
                                 endforeach;
@@ -69,10 +91,10 @@ if ($person_form_error) {
                                     <?php
                                     $buttons = "<a onclick=\"modalLoader('person','#person_modal','new',0);\" class=\"btn btn-default  \" type=\"button\"><i class=\"fa fa-plus\"></i>&nbsp;New</a>&nbsp;"; //                                        
                                     if ($count > 1) {
-                                        $buttons.="<a onclick=\"processClient('view');\" type=\"button\" class=\"btn btn-default \"><i class=\"fa fa-eye\"></i>&nbsp;View</a>&nbsp;";
-                                        $buttons.="<a onclick=\"processClient('edit');\" type=\"button\" class=\"btn btn-default \"><i class=\"fa fa-plus-square\"></i>&nbsp;Edit</a>&nbsp;";
+                                        $buttons .= "<a onclick=\"processClient('view');\" type=\"button\" class=\"btn btn-default \"><i class=\"fa fa-eye\"></i>&nbsp;View</a>&nbsp;";
+                                        $buttons .= "<a onclick=\"processClient('edit');\" type=\"button\" class=\"btn btn-default \"><i class=\"fa fa-plus-square\"></i>&nbsp;Edit</a>&nbsp;";
                                         if ($delete == "1") {
-                                            $buttons.="<a onclick=\"deletePerson('person');\" type=\"button\" class=\"btn btn-default \"><i class=\"fa fa-trash-o\"></i>&nbsp;Delete</a>&nbsp;";
+                                            $buttons .= "<a onclick=\"deletePerson('person');\" type=\"button\" class=\"btn btn-default \"><i class=\"fa fa-trash-o\"></i>&nbsp;Delete</a>&nbsp;";
                                         }
                                     }
                                     echo $buttons;
@@ -148,7 +170,7 @@ if ($person_form_error) {
                             <div class="col-sm-2">
                                 <input  class=" form-control" id="person_title" value="<?php echo $title; ?>" name="person_title" type="text" />
                             </div>
-                            
+
                             <label for="person_title_ref" class="col-sm-1 control-label">Title</label>
                             <div class="col-lg-2 col-sm-2">
                                 <select  class="form-control " name="person_title_ref" id="person_title_ref">
@@ -218,12 +240,12 @@ if ($person_form_error) {
 
                             <label for="person_email" class="col-sm-1 control-label">Email</label>
                             <div class="col-sm-2">
-                                <input  class=" form-control" id="person_email" name="person_email" value="<?php echo $email;?>" type="text" />                                
+                                <input  class=" form-control" id="person_email" name="person_email" value="<?php echo $email; ?>" type="text" />                                
                             </div> 
 
                             <label for="person_phone" class="col-sm-1 control-label">Phone</label>
                             <div class="col-sm-2">
-                                <input  class=" form-control" id="person_phone" name="person_phone" value="<?php echo $phone;?>" type="text" />                                
+                                <input  class=" form-control" id="person_phone" name="person_phone" value="<?php echo $phone; ?>" type="text" />                                
                             </div> 
                         </div>
 
@@ -232,7 +254,7 @@ if ($person_form_error) {
                             <div class="col-sm-2">
                                 <input  class=" form-control" id="person_street" value="<?php echo $street; ?>" name="person_street" type="text" />
                             </div>
-                            
+
                             <label for="person_city" class="col-sm-1 control-label">City</label>
                             <div class="col-sm-2">
                                 <input  class=" form-control" id="person_city" value="<?php echo $city; ?>" name="person_city" type="text" />
@@ -240,7 +262,7 @@ if ($person_form_error) {
 
                             <label for="person_state" class="col-sm-1 control-label">State</label>
                             <div class="col-sm-2">
-                                <input  class=" form-control" id="person_state" name="person_state" value="<?php echo $state;?>" type="text" />                                
+                                <input  class=" form-control" id="person_state" name="person_state" value="<?php echo $state; ?>" type="text" />                                
                             </div> 
 
                             <label for="person_country" class="col-sm-1 control-label">Country</label>
@@ -250,7 +272,7 @@ if ($person_form_error) {
                                 </select>                                                                 
                             </div>
                         </div>
-                        
+
                         <div class="form-group ">
                             <label for="person_sex" class="col-sm-1 control-label">Gender</label>
                             <div class="col-lg-2 col-sm-2">
@@ -267,7 +289,7 @@ if ($person_form_error) {
                                     ?>>Female</option>
                                 </select>                                                                 
                             </div> 
-                            
+
                             <label for="person_occupation" class="col-sm-1 control-label">Occupation</label>
                             <div class="col-sm-2">
                                 <input  class=" form-control" id="person_occupation" value="<?php echo $occupation; ?>" name="person_occupation" type="text" />
@@ -275,19 +297,19 @@ if ($person_form_error) {
 
                             <label for="person_birthday" class="col-sm-1 control-label">Birthday</label>
                             <div class="col-sm-1 col-lg-1" name="person_birthday" id="person_birthday"></div>
-                            
+
                             <label for="person_birth_location" class="col-sm-1 control-label">Birth Location</label>
                             <div class="col-sm-2">
-                                <input  class=" form-control" id="person_birth_location" name="person_birth_location" value="<?php echo $birth_location;?>" type="text" />                                
+                                <input  class=" form-control" id="person_birth_location" name="person_birth_location" value="<?php echo $birth_location; ?>" type="text" />                                
                             </div> 
                         </div>
-                        
+
                         <div class="form-group ">
                             <label for="person_passport_no" class="col-sm-1 control-label">Passport No</label>
                             <div class="col-lg-2 col-sm-2">
                                 <input  class=" form-control" id="person_passport_no" value="<?php echo $passport_no; ?>" name="person_passport_no" type="text" />
                             </div>
-                            
+
                             <label for="person_pp_issued_at" class="col-sm-1 control-label">Issued At</label>
                             <div class="col-sm-2">
                                 <input  class=" form-control" id="person_pp_issued_at" value="<?php echo $pp_issued_at ?>" name="person_pp_issued_at" type="text" />
@@ -295,34 +317,34 @@ if ($person_form_error) {
 
                             <label for="person_pp_issued_date" class="col-sm-1 control-label">Issue Date</label>
                             <div class="col-sm-1 col-lg-1" name="person_pp_issued_date" id="person_pp_issued_date"></div>
-                            
+
                             <label for="person_pp_expiry_date" class="col-sm-1 control-label">Expiry Date</label>
                             <div class="col-sm-1 col-lg-1" name="person_pp_expiry_date" id="person_pp_expiry_date"></div>                          
-                             
+
                         </div>
-                        
+
                         <div class="form-group ">
                             <label for="person_visa" class="col-sm-1 control-label">Visa</label>
                             <div class="col-lg-2 col-sm-2">
                                 <input  class=" form-control" id="person_visa" value="<?php echo $visa; ?>" name="person_visa" type="text" />
                             </div>
-                            
+
                             <label for="person_resident_permit_no" class="col-sm-1 control-label">Resident Permit No.</label>
                             <div class="col-sm-2">
                                 <input  class=" form-control" id="person_resident_permit_no" value="<?php echo $resident_permit_no ?>" name="person_resident_permit_no" type="text" />
                             </div>
-                            
+
                             <label for="person_spg_no" class="col-sm-1 control-label">SPG No.</label>
                             <div class="col-sm-2">
                                 <input  class=" form-control" id="person_spg_no" value="<?php echo $spg_no ?>" name="person_spg_no" type="text" />
                             </div>
-                             
+
                             <label for="person_destination" class="col-sm-1 control-label">Destination</label>
                             <div class="col-sm-2">
                                 <input  class=" form-control" id="person_destination" value="<?php echo $destination ?>" name="person_destination" type="text" />
                             </div>
                         </div>
-                        
+
                         <div class="form-group ">
                             <label for="person_payment_method" class="col-sm-1 control-label">Payment Method</label>
                             <div class="col-lg-2 col-sm-2">
@@ -349,17 +371,17 @@ if ($person_form_error) {
                                     ?>>Cheque</option>
                                 </select>                                                                 
                             </div>
-                            
+
                             <label for="person_group_name" class="col-sm-1 control-label">Group Name</label>
                             <div class="col-sm-2">
                                 <input  class=" form-control" id="person_group_name" value="<?php echo $group_name ?>" name="person_group_name" type="text" />
                             </div>
-                            
+
                             <label for="person_plate_number" class="col-sm-1 control-label">Plate Number</label>
                             <div class="col-sm-2">
                                 <input  class=" form-control" id="person_plate_number" value="<?php echo $plate_number ?>" name="person_plate_number" type="text" />
                             </div>
-                             
+
                             <label for="person_remarks" class="col-sm-1 control-label">Remarks</label>
                             <div class="col-sm-2">
                                 <input  class=" form-control" id="person_remarks" value="<?php echo $remarks ?>" name="person_remarks" type="text" />

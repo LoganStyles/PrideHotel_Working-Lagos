@@ -107,7 +107,16 @@ if ($form_error) {
                                     if ($count > 1) {
                                         $buttons.="<a href=\" " . base_url() . 'resv/guest/new' . " \" type=\"button\" class=\"btn btn-default \"><i class=\"fa fa-plus-square\"></i>&nbsp;New</a>&nbsp;";
                                         $buttons.="<a onclick=\"processResv('view','$offset','$type');\" type=\"button\" class=\"btn btn-default \"><i class=\"fa fa-eye\"></i>&nbsp;View</a>&nbsp;";                                        
-                                        $buttons.="<a onclick=\"processResv('reservation','$offset','$type');\" type=\"button\" class=\"btn btn-default \"><i class=\"fa fa-print\"></i>&nbsp;Print Reservations</a>&nbsp;";                                        
+                                     //$buttons.="<a onclick=\"processResv('reservation','$offset','$type');\" type=\"button\" class=\"btn btn-default \"><i class=\"fa fa-print\"></i>&nbsp;Print Reservations</a>&nbsp;";                                        
+                                     $buttons.="<div class=\"btn-group\"><button class=\"btn btn-default\" type=\"button\"><i class=\"fa fa-print\"></i>&nbsp;Print Reservations</button>"
+                                                . "<button data-toggle=\"dropdown\" class=\"btn btn-default dropdown-toggle\" type=\"button\">"
+                                                . "<span class=\"caret\"></span>"
+                                                . "<span class=\"sr-only\">Toggle Dropdown</span>"
+                                                . "</button>"
+                                                . "<ul role=\"menu\" class=\"dropdown-menu\">"
+                                                . "<li><a onclick=\"processResv('reservation','$offset','$type');\" href=\"#\">Print Reservations</a></li>"
+                                                . "<li><a onclick=\"processResv('reservation_show_vat','$offset','$type');\" href=\"#\">Print Reservations With VAT</a></li>"
+                                                . "</ul></div>&nbsp;";
                                         if($type !=="cancelled"){
                                            $buttons.="<a onclick=\"processResv('edit','$offset','$type');\" type=\"button\" class=\"btn btn-default \"><i class=\"fa fa-edit\"></i>&nbsp;Edit</a>&nbsp;"; 
                                         }                                        
@@ -169,6 +178,7 @@ if ($form_error) {
     </div>
 </div>
 <!--body wrapper end-->
+
 
 <div role="dialog" id="delete_resv_modal" class="modal fade <?php echo $modal_mode; ?>" style="display:<?php echo $display_modal; ?>;">
     <div class="modal-dialog" style="width: 600px;">

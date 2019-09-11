@@ -30,6 +30,20 @@ class Service extends REST_Controller {
         }
     }
     
+    public function saleAccounts_get() {
+        $type = 'sale';
+
+        if (empty($type)) {
+            // Invalid selection, set the response and exit.
+            $this->response(NULL, REST_Controller::HTTP_BAD_REQUEST); // BAD_REQUEST (400) being the HTTP response code
+        } else {
+            $results = $this->app_model->getSaleAccounts();
+            // Set the response and exit
+            $this->response($results, REST_Controller::HTTP_OK); // OK (200) being the HTTP response code
+        }
+    }
+
+    
     public function sale_post() {        
         if (empty($this->post())) {
             // Invalid set the response and exit.
@@ -40,5 +54,6 @@ class Service extends REST_Controller {
             $this->response($results, REST_Controller::HTTP_OK); // OK (200) being the HTTP response code
         }
     }
+    
 
 }

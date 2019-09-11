@@ -74,10 +74,14 @@ $active_group = 'default';
 $query_builder = TRUE;
 
 $db['default'] = array(
-	'dsn'	=> 'mysql:host=localhost;dbname=hotel_lagos',
-	'username' => 'hotel_lagos',
-	'password' => 'hotel_lagos',
-	'database' => 'hotel_lagos',
+    'dsn'	=> 'mysql:host=localhost;dbname=pridehotel_290819_copy',
+	'username' => 'pridehotel_290819_copy',
+	'password' => 'pridehotel_290819_copy',
+	'database' => 'pridehotel_290819_copy',
+	// 'dsn'	=> 'mysql:host=localhost;dbname=pridehotel',
+	// 'username' => 'PrideHotel',
+	// 'password' => 'PrideHotel',
+	// 'database' => 'pridehotel',
 	'dbdriver' => 'pdo',
 	'dbprefix' => '',
 	'pconnect' => FALSE,

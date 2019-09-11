@@ -57,6 +57,27 @@ class App_model extends CI_Model {
         }
         return $app_date;
     }
+    
+    //fetches acct sales used in pos app
+    public function getSaleAccounts() {
+        $res = array();
+        $q = "SELECT ID,description as title from account_saleitems";
+        try {
+            $query = $this->db->query($q);
+            if ($query->num_rows() > 0) {
+                $res["response"] = "success";
+                $res["data"] = $query->result_array();
+            } else {
+                $res["response"] = "error";
+                $res["message"] = "empty";
+            }
+        } catch (Exception $e) {
+            $res["response"] = "error";
+            $res["message"] = 'Error in SQL: ' . $err->getMessage();
+        }
+
+        return ($res);
+    }
 
     public function getRoomMonitor() {
         //get metrics like no. of staying,arriving etc

@@ -13,6 +13,7 @@ class App extends MY_Controller {
         $this->data['roomclasses'] = $this->app_model->getDisplayedItems('roomclass')['data'];
     }
     
+
     private function showPage($data, $page,$top_nav=FALSE) {
         //displays resv pages        
         if (!file_exists(APPPATH . 'views/app/templates/' .$page. '.php')) {
@@ -1340,4 +1341,5 @@ class App extends MY_Controller {
         $this->load->view('app/page404');
     }
 
+    
 }

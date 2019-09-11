@@ -28,6 +28,7 @@ extract($current);
                                     <option value="departures">DEPARTURES</option>
                                     <option value="staying guests">STAYING GUESTS</option>
                                     <option value="sales summary">SALES SUMMARY</option>
+                                    <option value="sales_fnb_summary">SALES FROM RESTAURANT</option>
                                     <option value="cashier summary">CASHIER SUMMARY</option>
                                     <option value="audit trail">AUDIT TRAIL</option>
                                     <option value="ledger_guest">LEDGER GUEST</option>

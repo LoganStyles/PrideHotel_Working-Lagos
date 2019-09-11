@@ -15,18 +15,6 @@ class Resv_model extends App_model {
         return preg_replace('/[^A-Za-z0-9.,-_\s?]/', '', $param);
     }
 
-    public function search($search_phrase, $table) {
-        $results = array();
-
-        $this->db->select('ID,title,phone');
-        $this->db->like('title', $search_phrase);
-        $query = $this->db->get($table);
-
-        if ($query->num_rows() > 0)
-            $results = $query->result_array();
-        return json_encode($results);
-    }
-
     public function deleteResv() {
         $reason = $this->input->post('delete_resv_reason');
         $resv_id = $this->input->post('delete_resv_id');
@@ -40,6 +28,25 @@ class Resv_model extends App_model {
         $this->db->set('remarks',$reason);
         $this->db->where('reservation_id',$resv_id);
         $this->db->update('reservationitems');
+
+        //send to report api
+        // $this->db->select('ID');
+        // $this->db->where('reservation_id',$resv_id);
+        // $query = $this->db->get('reservationitems');
+
+        // $selected_id=0;
+        // if ($query->num_rows() > 0) {
+        //     $row = $query->row_array();
+        //     $selected_id = $row['ID'];
+        // }
+
+        // $section="reservation_item";
+        // $action="update_report";
+        // $data_for_update=array(
+        //     "status" => 'cancelled',
+        //     "remarks" => $reason
+        // );
+        // $this->sendToReports("PUT",$section,$action,$data_for_update,$selected_id);
         
         //log this action
         $log_id = $this->createLog($type, "delete", $description, $oldvalue, $newvalue, $reason);
@@ -198,8 +205,13 @@ class Resv_model extends App_model {
                 'terminal' => $terminal,
                 'status' => $status
             );
+
             $this->db->insert($table, $data);
             $insert_id = $this->db->insert_id();
+
+            //send to report if configured
+            // $this->sendToReports($data);
+
             //log if account was already closed
             if ($log_action === "yes") {
                 $module = "folio";
@@ -256,6 +268,7 @@ class Resv_model extends App_model {
         $plu_group = $debit = $plu = 0;
         $terminal = "001";
         $status = "active";
+
         $data = array(
             'reservation_id' => $pos_data["reservation_id"],
             'description' => $pos_data["description"],
@@ -266,7 +279,8 @@ class Resv_model extends App_model {
             'credit' => $pos_data["price"],
             'pak' => $pak,
             'sub_folio' => 'BILL1',
-            'account_number' => 13, //food=13,drinks=14
+            'source_app'=>'fnb',//indicates fnb payment
+            'account_number' => $pos_data["sale_acct_id"], //food=13,drinks=14
             'links' => $links,
             'qty' => $pos_data["qty"],
             'reference' => $reference,
@@ -521,6 +535,11 @@ class Resv_model extends App_model {
                 'date_created' => $curr_date
             );
             $this->db->insert("reservationitems", $data);
+            
+            //send to report api
+            // $section="reservation_item";
+            // $action="insert_into_report";
+            // $this->sendToReports("POST",$section,$action,$data);
 
             //insert prices
             $data = array(
@@ -556,6 +575,43 @@ class Resv_model extends App_model {
         } else {
             return false;
         }
+    }
+    
+    //09/10/2018...AM not sure where this is currently being implemented
+    //but will use the logic
+    public function searchAppClients($search_phrase, $type,$offset = 0, $limit_val = FALSE) {
+        $results = array();
+        $limit = $filter = "";
+        $sort = " order by ID ASC";
+        $results['data'] = array();
+        $results['count'] = 0;
+
+        if ($limit_val) {
+            $limit = "LIMIT $offset,$limit_val";
+        }
+        
+        $tableitems = $type . "items";
+        $cleaned_search_phrase = $this->security->xss_clean($search_phrase);
+
+//        $this->db->select('ID,title,phone');
+//        $this->db->like('title', $search_phrase);
+//        $query = $this->db->get($table);
+        
+        $q = "SELECT * from $tableitems where title like '%$cleaned_search_phrase%' $sort $limit";
+        $q_total = "SELECT * from $tableitems where title like '%$cleaned_search_phrase%' $sort ";
+        
+        $query = $this->db->query($q);
+        if ($query->num_rows() > 0)
+            $results['data'] = $query->result_array();
+
+        $query = $this->db->query($q_total);
+        if ($query->num_rows() > 0)
+            $results['count'] = $query->num_rows();
+
+//        if ($query->num_rows() > 0)
+//            $results = $query->result_array();
+//        return json_encode($results);
+        return $results;
     }
 
     public function getReservations($type, $offset = 0, $limit_val = FALSE) {
@@ -803,6 +859,10 @@ class Resv_model extends App_model {
                 'date_created' => $curr_date
             );
             $this->db->insert("reservationitems", $data);
+            //send to report api
+            // $section="reservation_item";
+            // $action="insert_into_report";
+            // $this->sendToReports("POST",$section,$action,$data);
 
             //insert prices
             $data = array(
@@ -955,6 +1015,11 @@ class Resv_model extends App_model {
                 'actual_arrival' => $curr_date
             );
             $this->db->insert("reservationitems", $data);
+            //send to report api
+            // $section="reservation_item";
+            // $action="insert_into_report";
+            // $this->sendToReports("POST",$section,$action,$data);
+            
             $res_result['reservation_id'] = $padded_reservation_id;
             return $res_result;
         } else {
@@ -1828,7 +1893,6 @@ class Resv_model extends App_model {
                     );
                     $this->db->insert('reservationfolioitems', $data);
                     $insert_id = $this->db->insert_id();
-//                    return $insert_id;
                     //update room_charge for this reservation
                     $this->db->set('last_room_charge', $now);
                     $this->db->where('reservation_id', $curr_resv);
@@ -1888,12 +1952,12 @@ class Resv_model extends App_model {
                 if ($query->num_rows() > 0) {
                     $results = $query->result_array();
                     $charge_count = 0;
-					$terminal = "001";
+			$terminal = "001";
                         $pak = "A:";
                         $charge = "ROOM";
                         $qty = $plu_group = $plu = 1;
                         $reason = "";
-						$time=date("H:i:s");
+			$time=date("H:i:s");
                         $now = $last_rooms_charge . " " .$time ;
                     foreach ($results as $result):                        
                         $curr_resv = $result['reservation_id'];
@@ -1917,6 +1981,7 @@ class Resv_model extends App_model {
                             'signature_created' => $this->session->us_signature,
                             'date_created' => $now
                         );
+                        
                         $this->db->insert('reservationfolioitems', $data);
                         $insert_id = $this->db->insert_id();
 
@@ -2053,16 +2118,18 @@ class Resv_model extends App_model {
 
         return $results;
     }
+    
 
     public function backup() {
         $res['response'] = "error";
         $message = "Backups Failed/Incomplete ";
         //backup locally
         $app_day = date("Y-m-d", strtotime($this->getAppInfo()));
-        $host = "localhost";
-        $user = "hotel_lagos";
-        $pass = 'hotel_lagos';
-        $dbname = 'hotel_lagos';
+        $host = $this->config->item('host');
+        $user = $this->config->item('username');
+        $pass = $this->config->item('password');
+        $dbname = $this->config->item('database');
+        
         $file_name = str_replace("-", "_", $app_day);
         $local_backup_dir = 'backups/';
         $backup_name = $local_backup_dir . $file_name . ".sql";
@@ -2073,7 +2140,7 @@ class Resv_model extends App_model {
         //        }else{
         //            echo 'dir exist';exit;
         //        }
-        $backup = "C:\\wamp\\bin\\mysql\\mysql5.6.17\\bin\\mysqldump.exe --opt --host=" . $host . " --user=" . $user . " --password=" . $pass . " " . $dbname . " > " . $backup_name;
+        $backup = $this->config->item('backup') . $backup_name;
         exec($backup, $output, $return);
         if (!$return) {
             $message = "";
@@ -2280,6 +2347,8 @@ class Resv_model extends App_model {
         if ($query->num_rows() > 0)
             return $query->result_array();
     }
+    
+    
 
     public function getGroupResvInfo($resv_id) {
         /* get info for reservation,prices, etc for a client */
@@ -2326,14 +2395,12 @@ class Resv_model extends App_model {
         $from_date=new DateTime($temp_date);
         $from_date->setTime(0,0,0);
         $from= $from_date->format('Y-m-d H:i:s');
-//        $from = date('Y-m-d', strtotime($temp_date));
 
         $report_to = $this->input->post('report_to');
         $temp_date = str_replace('/', '-', $report_to);
         $to_date=new DateTime($temp_date);
         $to_date->setTime(23,59,59);
         $to= $to_date->format('Y-m-d H:i:s');
-//        $to = date('Y-m-d', strtotime($temp_date));
 
         $results['data'] = array();
         $results['count'] = 0;
@@ -2373,9 +2440,25 @@ class Resv_model extends App_model {
                     . "and fo.action='sale' $fo_and_user order by fo.date_created,fo.signature_created";
 
             $q_totals = "SELECT *,SUM(credit) as folio_credit,sum(debit) as folio_debit,"
-                    . "count(description) as transactions from reservationfolioitems "
+                    . "count(description) as transactions from reservationfolioitems as fo "
                     . "where date_created between '$from' and '$to' "
                     . "and action='sale' $fo_and_user group by account_number";
+            
+        }else if ($type == "sales_fnb_summary") {
+            $q = "SELECT fo.*,ro.title as room_title,ri.client_name from "
+                    . "reservationfolioitems as fo left join "
+                    . "reservationitems as ri on(fo.reservation_id =ri.reservation_id) "
+                    . "left join roomitems as ro on(ri.room_number=ro.ID)"
+                    . "where fo.date_created between '$from' and '$to' "
+                    . "and fo.source_app = 'fnb'"
+                    . "and fo.action='sale' $fo_and_user order by fo.date_created,fo.signature_created";
+
+            $q_totals = "SELECT *,SUM(credit) as folio_credit,sum(debit) as folio_debit,"
+                    . "count(description) as transactions from reservationfolioitems as fo "
+                    . "where date_created between '$from' and '$to' "
+                    . "and fo.source_app = 'fnb'"
+                    . "and action='sale' $fo_and_user group by account_number";
+            
         } else if ($type == "cashier summary") {
             $q = "SELECT fo.*,ro.title as room_title,ri.client_name from "
                     . "reservationfolioitems as fo left join "
@@ -2430,15 +2513,15 @@ class Resv_model extends App_model {
                     . "on(ri.roomtype =rt.ID) where 1=1 $where";
         }
 
-//                    echo $q;echo '<br>';
-//                    echo $q_totals;echo '<br>';
-//                    exit;
+                //    echo $q;echo '<br>';
+////                    echo $q_totals;echo '<br>';
+                //    exit;
         $query = $this->db->query($q);
         if ($query->num_rows() > 0) {
             $results['count'] = $query->num_rows();
             $results['data'] = $query->result_array();
         }
-        if ($type == "sales summary" || $type == "cashier summary") {
+        if ($type == "sales summary" || $type == "cashier summary" || $type == "sales_fnb_summary") {
             $query = $this->db->query($q_totals);
             if ($query->num_rows() > 0) {
                 $results['totals'] = $query->result_array();
@@ -2487,5 +2570,109 @@ class Resv_model extends App_model {
         }
         return $res;
     }
+
+    /*send items to report db*/
+    // public function sendToReports($action_type,$section,$action,$data=null,$id_for_update=null){
+
+    //     $report_base_url=$this->config->item("reports_base_url");
+    //     $report_store_endpoint = $this->config->item('reservationitems_endpoint');
+
+    //     if(!empty($data) && !empty($report_base_url) && !empty($report_store_endpoint)){
+
+    //         $payload = json_encode($data);   
+
+    //         if($action_type=="PUT"){
+    //             //set id
+    //             $report_store_endpoint.="/".$id_for_update;
+    //         }
+
+    //         $endpoint=$report_base_url. $report_store_endpoint;
+    //         // echo $endpoint;exit;
+         
+    //         // Prepare new cURL resource
+    //         $ch = curl_init($endpoint);
+    //         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    //         curl_setopt($ch, CURLINFO_HEADER_OUT, true);
+
+    //         if($action_type=="POST"){
+    //             curl_setopt($ch, CURLOPT_POST, true);
+    //         }elseif($action_type=="DELETE"){
+    //             curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "DELETE");
+    //         }elseif($action_type=="PUT"){
+    //             curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "PUT");
+    //         }
+            
+    //         curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
+             
+    //         // Set HTTP Header for POST request 
+    //         curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+    //             'Content-Type: application/json',
+    //             'Content-Length: ' . strlen($payload)
+    //             // 'Authorization: '.$api_token
+    //             )
+    //         );
+             
+    //         // Submit the POST request
+    //         $result = curl_exec($ch);
+    //         if(!$result){
+    //             //log this error
+    //             $description="Failed to update report app";
+    //             $reason="unknown";
+
+    //             //log this action
+    //         $log_id = $this->createLog($section, $action, $description, "", "", $reason);
+    //         }
+                         
+    //         // Close cURL session handle
+    //         curl_close($ch);
+    //     }
+        
+    // }
+
+    /*update items to report db*/
+    // public function updateItemsForReport($section,$action,$data=null){
+
+    //     $report_base_url=$this->config->item("reports_base_url");
+    //     $report_store_endpoint = $this->config->item('reservationitems_endpoint');
+
+    //     if(!empty($data) && !empty($report_base_url) && !empty($report_store_endpoint)){
+
+    //         $payload = json_encode($data);       
+    //         $endpoint=$report_base_url. $report_store_endpoint;
+         
+    //         // Prepare new cURL resource
+    //         $ch = curl_init($endpoint);
+    //         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    //         curl_setopt($ch, CURLINFO_HEADER_OUT, true);
+    //         // curl_setopt($ch, CURLOPT_POST, true);
+    //         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PUT');
+    //         curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
+             
+    //         // Set HTTP Header for POST request 
+    //         curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+    //             'Content-Type: application/json',
+    //             'Content-Length: ' . strlen($payload)
+    //             // 'Authorization: '.$api_token
+    //             )
+    //         );
+             
+    //         // Submit the POST request
+    //         $result = curl_exec($ch);
+    //         if(!$result){
+
+    //             //log this error
+    //             $description="Failed to update report app";
+    //             $reason="unknown";
+
+    //             //log this action
+    //         $log_id = $this->createLog($section, $action, $description, "", "", $reason);
+    //         }
+                         
+    //         // Close cURL session handle
+    //         curl_close($ch);
+
+    //     }
+        
+    // }
 
 }
