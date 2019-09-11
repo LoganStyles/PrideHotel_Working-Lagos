@@ -523,8 +523,8 @@ $config['database']='PrideHotel';
 $config['host']='localhost';
 $config['backup'] = "C:\\wamp64\\bin\\mysql\\mysql5.7.19\\bin\\mysqldump.exe --opt --host=" . $config['host'] . " --user=" . $config['username'] . " --password=" . $config['password'] . " " . $config['database'] . " > ";
 
-// $config['reports_base_url']="http://localhost:81/PrideAppReports/public/api";
-// $config['reservationitems_endpoint']="/report_reservationitems";
+$config['reports_base_url']="http://localhost:81/PrideAppReports/public/api";
+$config['reservationitems_endpoint']="/report_reservationitems";
 
 // $config['report_app_api_token']='8Ge7CMG1vDguDw7eaCmKir9D5RMsFnecVMoMXfcVfCIkuElv54Kiy9oUFeRs';
 

@@ -30,23 +30,23 @@ class Resv_model extends App_model {
         $this->db->update('reservationitems');
 
         //send to report api
-        // $this->db->select('ID');
-        // $this->db->where('reservation_id',$resv_id);
-        // $query = $this->db->get('reservationitems');
+        $this->db->select('ID');
+        $this->db->where('reservation_id',$resv_id);
+        $query = $this->db->get('reservationitems');
 
-        // $selected_id=0;
-        // if ($query->num_rows() > 0) {
-        //     $row = $query->row_array();
-        //     $selected_id = $row['ID'];
-        // }
+        $selected_id=0;
+        if ($query->num_rows() > 0) {
+            $row = $query->row_array();
+            $selected_id = $row['ID'];
+        }
 
-        // $section="reservation_item";
-        // $action="update_report";
-        // $data_for_update=array(
-        //     "status" => 'cancelled',
-        //     "remarks" => $reason
-        // );
-        // $this->sendToReports("PUT",$section,$action,$data_for_update,$selected_id);
+        $section="reservation_item";
+        $action="update_report";
+        $data_for_update=array(
+            "status" => 'cancelled',
+            "remarks" => $reason
+        );
+        $this->sendToReports("PUT",$section,$action,$data_for_update,$selected_id);
         
         //log this action
         $log_id = $this->createLog($type, "delete", $description, $oldvalue, $newvalue, $reason);
@@ -537,9 +537,9 @@ class Resv_model extends App_model {
             $this->db->insert("reservationitems", $data);
             
             //send to report api
-            // $section="reservation_item";
-            // $action="insert_into_report";
-            // $this->sendToReports("POST",$section,$action,$data);
+            $section="reservation_item";
+            $action="insert_into_report";
+            $this->sendToReports("POST",$section,$action,$data);
 
             //insert prices
             $data = array(
@@ -860,9 +860,9 @@ class Resv_model extends App_model {
             );
             $this->db->insert("reservationitems", $data);
             //send to report api
-            // $section="reservation_item";
-            // $action="insert_into_report";
-            // $this->sendToReports("POST",$section,$action,$data);
+            $section="reservation_item";
+            $action="insert_into_report";
+            $this->sendToReports("POST",$section,$action,$data);
 
             //insert prices
             $data = array(
@@ -1016,9 +1016,9 @@ class Resv_model extends App_model {
             );
             $this->db->insert("reservationitems", $data);
             //send to report api
-            // $section="reservation_item";
-            // $action="insert_into_report";
-            // $this->sendToReports("POST",$section,$action,$data);
+            $section="reservation_item";
+            $action="insert_into_report";
+            $this->sendToReports("POST",$section,$action,$data);
             
             $res_result['reservation_id'] = $padded_reservation_id;
             return $res_result;
@@ -2572,62 +2572,62 @@ class Resv_model extends App_model {
     }
 
     /*send items to report db*/
-    // public function sendToReports($action_type,$section,$action,$data=null,$id_for_update=null){
+    public function sendToReports($action_type,$section,$action,$data=null,$id_for_update=null){
 
-    //     $report_base_url=$this->config->item("reports_base_url");
-    //     $report_store_endpoint = $this->config->item('reservationitems_endpoint');
+        $report_base_url=$this->config->item("reports_base_url");
+        $report_store_endpoint = $this->config->item('reservationitems_endpoint');
 
-    //     if(!empty($data) && !empty($report_base_url) && !empty($report_store_endpoint)){
+        if(!empty($data) && !empty($report_base_url) && !empty($report_store_endpoint)){
 
-    //         $payload = json_encode($data);   
+            $payload = json_encode($data);   
 
-    //         if($action_type=="PUT"){
-    //             //set id
-    //             $report_store_endpoint.="/".$id_for_update;
-    //         }
+            if($action_type=="PUT"){
+                //set id
+                $report_store_endpoint.="/".$id_for_update;
+            }
 
-    //         $endpoint=$report_base_url. $report_store_endpoint;
-    //         // echo $endpoint;exit;
+            $endpoint=$report_base_url. $report_store_endpoint;
+            // echo $endpoint;exit;
          
-    //         // Prepare new cURL resource
-    //         $ch = curl_init($endpoint);
-    //         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    //         curl_setopt($ch, CURLINFO_HEADER_OUT, true);
+            // Prepare new cURL resource
+            $ch = curl_init($endpoint);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLINFO_HEADER_OUT, true);
 
-    //         if($action_type=="POST"){
-    //             curl_setopt($ch, CURLOPT_POST, true);
-    //         }elseif($action_type=="DELETE"){
-    //             curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "DELETE");
-    //         }elseif($action_type=="PUT"){
-    //             curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "PUT");
-    //         }
+            if($action_type=="POST"){
+                curl_setopt($ch, CURLOPT_POST, true);
+            }elseif($action_type=="DELETE"){
+                curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "DELETE");
+            }elseif($action_type=="PUT"){
+                curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "PUT");
+            }
             
-    //         curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
              
-    //         // Set HTTP Header for POST request 
-    //         curl_setopt($ch, CURLOPT_HTTPHEADER, array(
-    //             'Content-Type: application/json',
-    //             'Content-Length: ' . strlen($payload)
-    //             // 'Authorization: '.$api_token
-    //             )
-    //         );
+            // Set HTTP Header for POST request 
+            curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+                'Content-Type: application/json',
+                'Content-Length: ' . strlen($payload)
+                // 'Authorization: '.$api_token
+                )
+            );
              
-    //         // Submit the POST request
-    //         $result = curl_exec($ch);
-    //         if(!$result){
-    //             //log this error
-    //             $description="Failed to update report app";
-    //             $reason="unknown";
+            // Submit the POST request
+            $result = curl_exec($ch);
+            if(!$result){
+                //log this error
+                $description="Failed to update report app";
+                $reason="unknown";
 
-    //             //log this action
-    //         $log_id = $this->createLog($section, $action, $description, "", "", $reason);
-    //         }
+                //log this action
+            $log_id = $this->createLog($section, $action, $description, "", "", $reason);
+            }
                          
-    //         // Close cURL session handle
-    //         curl_close($ch);
-    //     }
+            // Close cURL session handle
+            curl_close($ch);
+        }
         
-    // }
+    }
 
     /*update items to report db*/
     // public function updateItemsForReport($section,$action,$data=null){
