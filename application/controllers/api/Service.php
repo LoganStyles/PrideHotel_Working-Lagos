@@ -54,6 +54,25 @@ class Service extends REST_Controller {
             $this->response($results, REST_Controller::HTTP_OK); // OK (200) being the HTTP response code
         }
     }
+
+    //reports
+    public function arrivals_get() {
+        // $type = $this->get('type');
+        // $val = $this->get('val');
+
+        $from="2018-09-01";
+        $to="2019-09-12";
+        $type="arrivals";
+
+        // if (empty($val)) {
+        //     // Invalid room_number/reservation_id, set the response and exit.
+        //     $this->response(NULL, REST_Controller::HTTP_BAD_REQUEST); // BAD_REQUEST (400) being the HTTP response code
+        // } else {
+            $results = $this->resv_model->getReportsApi($type, $from,$to);
+            // Set the response and exit
+            $this->response($results, REST_Controller::HTTP_OK); // OK (200) being the HTTP response code
+        // }
+    }
     
 
 }

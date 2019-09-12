@@ -525,6 +525,7 @@ $config['backup'] = "C:\\wamp64\\bin\\mysql\\mysql5.7.19\\bin\\mysqldump.exe --o
 
 $config['reports_base_url']="http://localhost:81/PrideAppReports/public/api";
 $config['reservationitems_endpoint']="/report_reservationitems";
+$config['reservationfolioitems_endpoint']="/report_reservationfolioitems";
 
 // $config['report_app_api_token']='8Ge7CMG1vDguDw7eaCmKir9D5RMsFnecVMoMXfcVfCIkuElv54Kiy9oUFeRs';
 

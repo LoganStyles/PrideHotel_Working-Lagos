@@ -252,6 +252,63 @@ class Report extends App {
         $this->showPage($data, $page);
     }
 
+    // public function getReportsApi() {
+    //     //prints reports
+    //     // $this->checkAccess($this->session->reports, 2);
+
+    //     $type = $this->input->post('report_type');
+    //     $from = $this->input->post('report_from');
+    //     $to = $this->input->post('report_to');
+
+    //     switch ($type) {
+    //         case 'arrivals':
+    //         case 'departures':
+    //         case 'staying guests':
+    //             $page = "report";
+    //             break;
+    //         case 'sales summary':
+    //         case 'sales_fnb_summary':
+    //             $page = "report_sales";
+    //             break;
+    //         case 'cashier summary':
+    //             $page = "report_cashier";
+    //             break;
+    //         case 'audit trail':
+    //             $page = "report_audit";
+    //             break;
+    //         case 'ledger_guest':
+    //         case 'ledger_group':
+    //             $page = "report_ledger";
+    //             break;
+    //         case 'police':
+    //             $page = "report_police";
+    //             break;
+    //         case 'client history':
+    //             $page = "report_client";
+    //             break;
+    //         default:
+    //             break;
+    //     }
+
+    //     $data = $this->data;
+    //     $data["header_title"] = strtoupper($type . " (" . $from . " - " . $to . ")");
+    //     $data["type"] = $type;
+
+    //     if ($type == "ledger_guest" || $type == "ledger_group") {
+    //         $ledger_type=  str_replace('ledger_', '', $type);
+    //         $data["collection"] = $this->resv_model->getLedger($ledger_type);
+    //     } else {
+    //         $results = $this->resv_model->getReports($type);
+    //         $data["collection"] = $results['data'];            
+    //     }
+
+    //     if ($type == "sales summary" || $type == "cashier summary" || $type == "sales_fnb_summary") {
+    //         $data["collection2"] = $results['totals'];
+    //     }
+
+    //     $this->showPage($data, $page);
+    // }
+
     private function showPage($data, $page) {
         //        displays print out
         if (!file_exists(APPPATH . 'views/app/prints/' . $page . '.php')) {

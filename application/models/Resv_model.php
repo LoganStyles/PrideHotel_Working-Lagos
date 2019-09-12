@@ -32,12 +32,14 @@ class Resv_model extends App_model {
         //send to report api        
         $section="reservation_item";
         $action="update_report";
+        $endpoint_type = 'reservationitems';
         $data_for_update=array(
             "status" => 'cancelled',
             "remarks" => $reason
         );
 
-        $this->getIDAndUpdateReports($section,$action,$data_for_update,'reservationitems','reservation_id',$resv_id);
+        $this->getIDAndUpdateReports($section,$action,$data_for_update,'reservationitems','reservation_id',$resv_id,$endpoint_type);
+                
 
         //log this action
         $log_id = $this->createLog($type, "delete", $description, $oldvalue, $newvalue, $reason);
@@ -132,7 +134,7 @@ class Resv_model extends App_model {
         }
     }
 
-    //        saves folio both sales & payment
+    // saves folio both sales & payment
     public function saveFolio($type) {
 
         $table = "reservationfolioitems";
@@ -201,9 +203,12 @@ class Resv_model extends App_model {
 
             $this->db->insert($table, $data);
             $insert_id = $this->db->insert_id();
-
-            //send to report if configured
-            // $this->sendToReports($data);
+            
+            //send to report api
+            $section=$table;
+            $action="insert_into_report";
+            $endpoint_type=$table;
+            $this->sendToReports("POST",$section,$action,$endpoint_type,$data);
 
             //log if account was already closed
             if ($log_action === "yes") {
@@ -237,8 +242,22 @@ class Resv_model extends App_model {
                 'terminal' => $terminal,
                 'status' => $status
             );
+
+            // print_r($data);exit;
+
             $this->db->where('ID', $folio_ID);
             $this->db->update($table, $data);
+
+            //send to report api        
+            $section="reservation_folio_item";
+            $action="update_report";
+            $data_for_update=$data;
+            $endpoint_type = 'reservationfolioitems';
+
+            $this->getIDAndUpdateReports($section,$action,$data_for_update,$table,'ID',$folio_ID,$endpoint_type);
+            
+            
+
             //log if account was already closed
             if ($log_action === "yes") {
                 $module = "folio";
@@ -288,6 +307,12 @@ class Resv_model extends App_model {
             'date_created' => $pos_data["date_created"]
         );
         $this->db->insert($table, $data);
+
+        //send to report api
+        $section=$table;
+        $action="insert_into_report";
+        $endpoint_type=$table;
+        $this->sendToReports("POST",$section,$action,$endpoint_type,$data);
     }
 
     /* updates client personal details */
@@ -474,7 +499,10 @@ class Resv_model extends App_model {
             $section="reservation_item";
             $action="update_report";
             $data_for_update=$data;
-            $this->getIDAndUpdateReports($section,$action,$data_for_update,'reservationitems','reservation_id',$reservation_ID);
+            $endpoint_type = 'reservationitems';
+            $this->getIDAndUpdateReports($section,$action,$data_for_update,'reservationitems','reservation_id',$reservation_ID,$endpoint_type);
+            
+            
 
             //update prices
             $data = array(
@@ -498,6 +526,7 @@ class Resv_model extends App_model {
             $res_result['reservation_id'] = $reservation_ID;
             $res_result['client_exists'] = "";
             return $res_result;
+
         } elseif ($reservation_ID == 0) {
             //insert reservation
             //get last reservation id
@@ -540,6 +569,7 @@ class Resv_model extends App_model {
             $section="reservation_item";
             $action="insert_into_report";
             $this->sendToReports("POST",$section,$action,$data);
+            
 
             //insert prices
             $data = array(
@@ -812,7 +842,10 @@ class Resv_model extends App_model {
             $section="reservation_item";
             $action="update_report";
             $data_for_update=$data;
-            $this->getIDAndUpdateReports($section,$action,$data_for_update,'reservationitems','reservation_id',$reservation_ID);
+            $endpoint_type='reservationitems';
+            $this->getIDAndUpdateReports($section,$action,$data_for_update,'reservationitems','reservation_id',$reservation_ID,$endpoint_type);
+            
+            
 
             //update prices
             $data = array(
@@ -992,7 +1025,9 @@ class Resv_model extends App_model {
             $section="reservation_item";
             $action="update_report";
             $data_for_update=$data;
-            $this->getIDAndUpdateReports($section,$action,$data_for_update,'reservationitems','reservation_id',$reservation_ID);
+            $endpoint_type='reservationitems';
+            $this->getIDAndUpdateReports($section,$action,$data_for_update,'reservationitems','reservation_id',$reservation_ID,$endpoint_type);
+            
 
             $res_result['reservation_id'] = $reservation_ID;
             $res_result['client_exists'] = "";
@@ -1796,6 +1831,14 @@ class Resv_model extends App_model {
                     );
                     $this->db->where('ID', $return_ID);
                     $this->db->update('reservationfolioitems', $data);
+
+                    //send to report api        
+                    $section="reservationfolioitems";
+                    $action="update_report";
+                    $endpoint_type = 'reservationfolioitems';
+                    $data_for_update=$data;
+
+                    $this->getIDAndUpdateReports($section,$action,$data_for_update,'reservationfolioitems','ID',$return_ID,$endpoint_type);
                 }
             endforeach;
 
@@ -1839,7 +1882,9 @@ class Resv_model extends App_model {
                 $section="reservation_item";
                 $action="update_report";
                 $data_for_update=$data;
-                $this->getIDAndUpdateReports($section,$action,$data_for_update,'reservationitems','reservation_id',$reservation_id);
+                $endpoint_type='reservationitems';
+                $this->getIDAndUpdateReports($section,$action,$data_for_update,'reservationitems','reservation_id',$reservation_id,$endpoint_type);
+                
 
             endforeach;
 
@@ -1925,7 +1970,9 @@ class Resv_model extends App_model {
                     $section="reservation_item";
                     $action="update_report";
                     $data_for_update=array('last_room_charge'=>$now);
-                    $this->getIDAndUpdateReports($section,$action,$data_for_update,'reservationitems','reservation_id',$curr_resv);
+                    $endpoint_type='reservationitems';
+                    $this->getIDAndUpdateReports($section,$action,$data_for_update,'reservationitems','reservation_id',$curr_resv,$endpoint_type);
+                    
 
                     
                     //update room status
@@ -2025,7 +2072,9 @@ class Resv_model extends App_model {
                         $section="reservation_item";
                         $action="update_report";
                         $data_for_update=array('last_room_charge'=>$now);
-                        $this->getIDAndUpdateReports($section,$action,$data_for_update,'reservationitems','reservation_id',$curr_resv);
+                        $endpoint_type='reservationitems';
+                        $this->getIDAndUpdateReports($section,$action,$data_for_update,'reservationitems','reservation_id',$curr_resv,$endpoint_type);
+                       
 
                         //update room status
                         $this->db->set('status', 4);
@@ -2107,7 +2156,9 @@ class Resv_model extends App_model {
                         $section="reservation_item";
                         $action="update_report";
                         $data_for_update=array('last_account_close'=>$nextcloseday);
-                        $this->getIDAndUpdateReports($section,$action,$data_for_update,'reservationitems','reservation_id',$reservation_id);
+                        $endpoint_type='reservationitems';
+                        $this->getIDAndUpdateReports($section,$action,$data_for_update,'reservationitems','reservation_id',$reservation_id,$endpoint_type);
+                        
                     endforeach;
 
                     $res['response'] = "success";
@@ -2243,7 +2294,9 @@ class Resv_model extends App_model {
                 $section="reservation_item";
                 $action="update_report";
                 $data_for_update=$data;
-                $this->getIDAndUpdateReports($section,$action,$data_for_update,'reservationitems','reservation_id',$resv_id);
+                $endpoint_type='reservationitems';
+                $this->getIDAndUpdateReports($section,$action,$data_for_update,'reservationitems','reservation_id',$resv_id,$endpoint_type);
+                
 
 
                 //update folio as well
@@ -2316,7 +2369,9 @@ class Resv_model extends App_model {
             $section="reservation_item";
             $action="update_report";
             $data_for_update=$data;
-            $this->getIDAndUpdateReports($section,$action,$data_for_update,'reservationitems','reservation_id',$r_ID);
+            $endpoint_type='reservationitems';
+            $this->getIDAndUpdateReports($section,$action,$data_for_update,'reservationitems','reservation_id',$r_ID,$endpoint_type);
+            
 
 
             //update folio status just in case
@@ -2353,7 +2408,9 @@ class Resv_model extends App_model {
         $section="reservation_item";
         $action="update_report";
         $data_for_update=$data;
-        $this->getIDAndUpdateReports($section,$action,$data_for_update,'reservationitems','reservation_id',$r_ID);
+        $endpoint_type='reservationitems';
+        $this->getIDAndUpdateReports($section,$action,$data_for_update,'reservationitems','reservation_id',$r_ID,$endpoint_type);
+        
 
         return TRUE;
     }
@@ -2450,6 +2507,153 @@ class Resv_model extends App_model {
             return $query->result_array();
     }
 
+    /*gets reports for api*/
+    public function getReportsApi($type,$report_from,$report_to, $resv_id=NULL){
+
+        $app_date = date('Y-m-d', strtotime($this->getAppInfo()));
+        $report_user="all";
+        $and_user="";
+        $fo_and_user="";
+
+        //convert report_from
+        $temp_date = str_replace('/', '-', $report_from);
+        $from_date=new DateTime($temp_date);
+        $from_date->setTime(0,0,0);
+        $from= $from_date->format('Y-m-d H:i:s');
+
+        //convert report_to
+        $temp_date = str_replace('/', '-', $report_to);
+        $to_date=new DateTime($temp_date);
+        $to_date->setTime(23,59,59);
+        $to= $to_date->format('Y-m-d H:i:s');
+
+        $results['data'] = array();
+        $results['count'] = 0;
+        $results['totals'] = [];
+
+
+        switch ($type) {
+            /*get only guests arriving in this duration:confirmed*/
+            case "arrivals":
+                $where = "and ri.arrival between '$from' AND '$to' $and_user "
+                        . "and ri.status='confirmed' ORDER BY ri.arrival ASC";
+                break;
+            case "departures":
+                $where = "and ri.departure between '$from' AND '$to' $and_user "
+                        . " ORDER BY ri.departure ASC";
+                break;
+            case "staying guests":
+                $where = " and ri.account_type ='ROOM' and DATE(ri.actual_arrival) <= '$from' "
+                        . "AND (DATE(ri.actual_departure) >='$to' or ri.actual_departure='0000-00-00 00:00:00') "
+                        . "$and_user ORDER BY ri.actual_arrival ASC";
+                break;
+            case "reservation":
+            case "resev_payments":
+                if($resv_id){
+                   $where = " and ri.reservation_id ='$resv_id'  "; 
+                }                
+                break;
+            default:
+                break;
+        }
+
+        if ($type == "sales summary") {
+            $q = "SELECT fo.*,ro.title as room_title,ri.client_name from "
+                    . "reservationfolioitems as fo left join "
+                    . "reservationitems as ri on(fo.reservation_id =ri.reservation_id) "
+                    . "left join roomitems as ro on(ri.room_number=ro.ID)"
+                    . "where fo.date_created between '$from' and '$to' "
+                    . "and fo.action='sale' $fo_and_user order by fo.date_created,fo.signature_created";
+
+            $q_totals = "SELECT *,SUM(credit) as folio_credit,sum(debit) as folio_debit,"
+                    . "count(description) as transactions from reservationfolioitems as fo "
+                    . "where date_created between '$from' and '$to' "
+                    . "and action='sale' $fo_and_user group by account_number";
+            
+        }else if ($type == "sales_fnb_summary") {
+            $q = "SELECT fo.*,ro.title as room_title,ri.client_name from "
+                    . "reservationfolioitems as fo left join "
+                    . "reservationitems as ri on(fo.reservation_id =ri.reservation_id) "
+                    . "left join roomitems as ro on(ri.room_number=ro.ID)"
+                    . "where fo.date_created between '$from' and '$to' "
+                    . "and fo.source_app = 'fnb'"
+                    . "and fo.action='sale' $fo_and_user order by fo.date_created,fo.signature_created";
+
+            $q_totals = "SELECT *,SUM(credit) as folio_credit,sum(debit) as folio_debit,"
+                    . "count(description) as transactions from reservationfolioitems as fo "
+                    . "where date_created between '$from' and '$to' "
+                    . "and fo.source_app = 'fnb'"
+                    . "and action='sale' $fo_and_user group by account_number";
+            
+        } else if ($type == "cashier summary") {
+            $q = "SELECT fo.*,ro.title as room_title,ri.client_name from "
+                    . "reservationfolioitems as fo left join "
+                    . "reservationitems as ri on(fo.reservation_id =ri.reservation_id) "
+                    . "left join roomitems as ro on(ri.room_number=ro.ID) "
+                    . "where fo.date_created between '$from' and '$to' "
+                    . "and fo.action='payment' $fo_and_user order by fo.date_created,fo.signature_created";
+
+            $q_totals = "SELECT *,SUM(credit) as folio_credit,sum(debit) as folio_debit,"
+                    . "count(description) as transactions from reservationfolioitems "
+                    . "where date_created between '$from' and '$to' "
+                    . "and action='payment' $fo_and_user group by account_number";					
+					 
+        } else if ($type == "audit trail") {
+            $q = "SELECT log.*, user.title as user_title from logitems as log "
+                    . "left join useritems as user on(log.signature_created=user.signature) "
+                    . "where log.date_created between '$from' and '$to' order by log.date_created";
+        } else if ($type == "police") {
+            $q = "SELECT distinct ri.*,ro.title as room_title,(CASE WHEN p.sex='m' THEN 'Male' WHEN p.sex='f' THEN 'Female' ELSE '' END) as gender,"
+                    . "co.title as nationality,p.occupation,p.street,p.passport_no from reservationitems as ri "
+                    . "left join personitems as p on (ri.client_name = p.title) "
+                    . "left join ref_countryitems as co on(p.country = co.ID) "
+                    . "left join roomitems as ro on(ri.room_number=ro.ID) "
+                    . "where ri.account_type ='ROOM' AND DATE(ri.actual_arrival) >= '$from' "
+                    . "AND '$to' >= DATE(ri.actual_arrival) $and_user  ORDER BY ri.reservation_id";
+        } else if ($type == "client history") {
+            $q = "SELECT distinct p.*,(CASE WHEN p.sex='m' THEN 'Male' WHEN p.sex='f' THEN 'Female' ELSE '' END) as gender,"
+                    . "co.title as nationality,p.occupation,p.street,p.passport_no from reservationitems as ri "
+                    . "left join personitems as p on (ri.client_name = p.title) "
+                    . "left join ref_countryitems as co on(p.country = co.ID) "
+                    . "where p.title <>'' AND DATE(ri.actual_arrival) >= '$from' AND '$to' >= DATE(ri.actual_arrival) ORDER BY p.title ";
+        }else if ($type == "reservation") {
+            $q = "SELECT DISTINCT ri.ID,ri.arrival,ri.nights,ri.departure,ri.client_name,ri.remarks,ri.adults,"
+                    . "ri.signature_created,ri.signature_modified,ri.status,ri.actual_arrival,ri.actual_departure,"
+                    . "rp.price_room,rp.price_total,p.description as price_r,rp.comp_nights,rp.block_pos,ro.title as room_title,"
+                    . "rt.title as roomtype, rp.weekday,rp.weekend"
+                    . " from reservationitems as "
+                    . "ri left join reservationpriceitems as rp on (ri.reservation_id=rp.reservation_id)"
+                    . " left join priceitems as p on (rp.price_rate = p.ID) "
+                    . "left join reservationfolioitems as rf on (ri.reservation_id=rf.reservation_id)"
+                    . "left join roomitems as ro on(ri.room_number=ro.ID)"
+                    . "left join roomtypeitems as rt on(ri.roomtype =rt.ID)"
+                    . " where 1=1 $where";
+        } else if ($type =="resev_payments"){
+            $q="SELECT rf.description,rf.debit,rf.credit,rf.date_created FROM reservationfolioitems as rf "
+                    . "left join reservationitems as ri on(rf.reservation_id=ri.reservation_id) where 1=1 "
+                    . "and rf.action='payment' $where ";
+        }else {
+            $q = "SELECT ri.*,ro.title as room_title,rt.title as roomtype FROM "
+                    . "reservationitems as ri left join roomitems as ro "
+                    . "on(ri.room_number=ro.ID) left join roomtypeitems as rt "
+                    . "on(ri.roomtype =rt.ID) where 1=1 $where";
+        }
+
+        $query = $this->db->query($q);
+        if ($query->num_rows() > 0) {
+            $results['count'] = $query->num_rows();
+            $results['data'] = $query->result_array();
+        }
+        if ($type == "sales summary" || $type == "cashier summary" || $type == "sales_fnb_summary") {
+            $query = $this->db->query($q_totals);
+            if ($query->num_rows() > 0) {
+                $results['totals'] = $query->result_array();
+            }
+        }
+
+        return $results;
+    }
+
     /* gets all fields for a reservation
          * ::used for reports etc */
     public function getReports($type,$resv_id=NULL) {
@@ -2475,6 +2679,8 @@ class Resv_model extends App_model {
         $to_date=new DateTime($temp_date);
         $to_date->setTime(23,59,59);
         $to= $to_date->format('Y-m-d H:i:s');
+
+        echo 'to '.$to.' from '.$from;exit;
 
         $results['data'] = array();
         $results['count'] = 0;
@@ -2642,7 +2848,7 @@ class Resv_model extends App_model {
     }
 
     //send an update to the report api
-    private function getIDAndUpdateReports($section,$action,$data_for_update,$table,$where_field,$update_id){
+    private function getIDAndUpdateReports($section,$action,$data_for_update,$table,$where_field,$update_id,$endpoint_type){
         
         $this->db->select('ID');
         $this->db->where($where_field,$update_id);
@@ -2655,25 +2861,37 @@ class Resv_model extends App_model {
         }
 
         $action_type="PUT";
-        $this->sendToReports($action_type,$section,$action,$data_for_update,$selected_id);
+        $this->sendToReports($action_type,$section,$action,$endpoint_type,$data_for_update,$selected_id);
     }
 
 
     /*send items to report db*/
-    public function sendToReports($action_type,$section,$action,$data=null,$id_for_update=null){
+    public function sendToReports($action_type,$section,$action,$endpoint_type,$data=null,$id_for_update=null){
 
-        $report_base_url=$this->config->item("reports_base_url");
-        $report_store_endpoint = $this->config->item('reservationitems_endpoint');
+        $report_base_url=$this->config->item("reports_base_url");//if this is not empty report configuration has been set
 
-        if(!empty($data) && !empty($report_base_url) && !empty($report_store_endpoint)){
+        //get the endpoint for this request
+        $selected_endpoint_type="";
+
+        switch($endpoint_type){
+            case 'reservationitems':
+            $selected_endpoint_type=$this->config->item('reservationitems_endpoint');
+            break;
+
+            case 'reservationfolioitems':
+            $selected_endpoint_type=$this->config->item('reservationfolioitems_endpoint');
+            break;
+        }
+
+        if(!empty($data) && !empty($report_base_url) && !empty($selected_endpoint_type) ){
 
             $payload = json_encode($data);   
 
-            if($action_type=="PUT"){
-                $report_store_endpoint.="/".$id_for_update;
+            if($action_type=="PUT" ){
+                $selected_endpoint_type.="/".$id_for_update;
             }
 
-            $endpoint=$report_base_url. $report_store_endpoint;
+            $endpoint=$report_base_url. $selected_endpoint_type;
          
             // Prepare new cURL resource
             $ch = curl_init($endpoint);
