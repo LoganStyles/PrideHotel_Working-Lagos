@@ -3,7 +3,7 @@
 /**
  * Description of Resv_model
  *
- * @author EMMANUEL
+ * @author EMMANUEL OKPUKPAN
  */
 class Resv_model extends App_model {
 
@@ -29,25 +29,16 @@ class Resv_model extends App_model {
         $this->db->where('reservation_id',$resv_id);
         $this->db->update('reservationitems');
 
-        //send to report api
-        $this->db->select('ID');
-        $this->db->where('reservation_id',$resv_id);
-        $query = $this->db->get('reservationitems');
-
-        $selected_id=0;
-        if ($query->num_rows() > 0) {
-            $row = $query->row_array();
-            $selected_id = $row['ID'];
-        }
-
+        //send to report api        
         $section="reservation_item";
         $action="update_report";
         $data_for_update=array(
             "status" => 'cancelled',
             "remarks" => $reason
         );
-        $this->sendToReports("PUT",$section,$action,$data_for_update,$selected_id);
-        
+
+        $this->getIDAndUpdateReports($section,$action,$data_for_update,'reservationitems','reservation_id',$resv_id);
+
         //log this action
         $log_id = $this->createLog($type, "delete", $description, $oldvalue, $newvalue, $reason);
         return $log_id;
@@ -63,6 +54,7 @@ class Resv_model extends App_model {
         $tableitems = $type . "items";
         $this->db->where('ID', $person_id);
         $this->db->delete($tableitems);
+        
         //log this action
         $log_id=0;
         if($log_id){
@@ -71,8 +63,9 @@ class Resv_model extends App_model {
         return $log_id;
     }
 
+    //logs certain operations for auditing
     private function createLog($module, $action, $description, $oldvalue, $newvalue, $reason) {
-//        logs certain operations for auditing
+
         $curr_date = date('Y-m-d', strtotime($this->getAppInfo())) . " " . date('H:i:s');
         $data = array(
             'section' => $module,
@@ -89,10 +82,10 @@ class Resv_model extends App_model {
         return $insert_id;
     }
 
-    public function getModalItems($type, $return_json = FALSE, $ID = 0, $filter_val = FALSE) {
-        /* gets all fields for a table with filters,limit & offsets
+    /* gets all fields for a table with filters,limit & offsets
          * ::used for page navigations etc */
-
+    public function getModalItems($type, $return_json = FALSE, $ID = 0, $filter_val = FALSE) {
+        
         $results['data'] = array();
         $results['count'] = 0;
         $filter = ($ID > 0) ? ("") : ("WHERE 1=1");
@@ -123,7 +116,6 @@ class Resv_model extends App_model {
                         . "on(pi.title=rti.ID) $filter ";
                 break;
         }
-//        echo $q;exit;
 
         $query = $this->db->query($q);
         if ($query->num_rows() > 0)
@@ -140,8 +132,9 @@ class Resv_model extends App_model {
         }
     }
 
+    //        saves folio both sales & payment
     public function saveFolio($type) {
-//        saves folio both sales & payment
+
         $table = "reservationfolioitems";
         $curr_date = date('Y-m-d', strtotime($this->getAppInfo())) . " " . date('H:i:s');
         $folio_action = str_replace("folio_", "", $type);
@@ -260,8 +253,9 @@ class Resv_model extends App_model {
         }
     }
     
+    //saves pos sales to folio
     public function savePOSFolio($pos_data) {
-//        saves pos sales to folio
+
         $table = "reservationfolioitems";
         $pak = $links = $reference = $audit = $reason = "";
         $charge = 'POS1';
@@ -294,11 +288,11 @@ class Resv_model extends App_model {
             'date_created' => $pos_data["date_created"]
         );
         $this->db->insert($table, $data);
-//        $insert_id = $this->db->insert_id();
     }
 
+    /* updates client personal details */
     public function savePerson($type) {
-        /* updates client personal details */
+        
         $tableitems = strtolower($type) . "items";
         $curr_date = date('Y-m-d', strtotime($this->getAppInfo())) . " " . date('H:i:s');
 
@@ -476,6 +470,12 @@ class Resv_model extends App_model {
             $this->db->where('reservation_id', $reservation_ID);
             $this->db->update("reservationitems", $data);
 
+            //update reports
+            $section="reservation_item";
+            $action="update_report";
+            $data_for_update=$data;
+            $this->getIDAndUpdateReports($section,$action,$data_for_update,'reservationitems','reservation_id',$reservation_ID);
+
             //update prices
             $data = array(
                 'price_rate' => $price_rate_id,
@@ -559,6 +559,7 @@ class Resv_model extends App_model {
                 'comp_visits' => $comp_visits,
                 'block_pos' => $block_pos
             );
+            
             $this->db->insert("reservationpriceitems", $data);
             //chk for existing client name
             $this->db->select('*');
@@ -614,9 +615,10 @@ class Resv_model extends App_model {
         return $results;
     }
 
-    public function getReservations($type, $offset = 0, $limit_val = FALSE) {
-        /* gets all fields for a reservation with filters,limit & offsets
+    /* gets all fields for a reservation with filters,limit & offsets
          * ::used for page navigations etc */
+    public function getReservations($type, $offset = 0, $limit_val = FALSE) {
+        
         $app_date = date('Y-m-d', strtotime($this->getAppInfo()));
 
         $limit = $filter = "";
@@ -674,9 +676,6 @@ class Resv_model extends App_model {
                     . "from reservationitems as ri where ri.account_type='ROOM' $sort";
         }
 
-//                    echo $q;echo '<br>';
-//                    echo $q_total;
-//                    exit;
         $query = $this->db->query($q);
         if ($query->num_rows() > 0)
             $results['data'] = $query->result_array();
@@ -694,9 +693,10 @@ class Resv_model extends App_model {
         return $results;
     }
 
-    public function getGroupReservations($type, $offset = 0, $limit_val = FALSE) {
-        /* gets all fields for a reservation with filters,limit & offsets
+    /* gets all fields for a reservation with filters,limit & offsets
          * ::used for page navigations etc */
+    public function getGroupReservations($type, $offset = 0, $limit_val = FALSE) {
+        
         $app_date = date('Y-m-d', strtotime($this->getAppInfo()));
 
         $limit = $filter = "";
@@ -745,9 +745,6 @@ class Resv_model extends App_model {
         $q_sum_resv_nights = "SELECT COUNT(ri.reservation_id) as sum_resv,sum(ri.nights) as sum_nights "
                 . "from reservationitems as ri where ri.account_type='GROUP' $sort";
 
-//                    echo $q;echo '<br>';
-//                    echo $q_total;
-//                    exit;
         $query = $this->db->query($q);
         if ($query->num_rows() > 0)
             $results['data'] = $query->result_array();
@@ -763,8 +760,9 @@ class Resv_model extends App_model {
         return $results;
     }
 
+    /* updates group details */
     public function saveGroup($type) {
-        /* updates group details */
+        
         $res_result = array();
         $curr_date = date('Y-m-d', strtotime($this->getAppInfo())) . " " . date('H:i:s');
 
@@ -810,6 +808,12 @@ class Resv_model extends App_model {
             $this->db->where('reservation_id', $reservation_ID);
             $this->db->update("reservationitems", $data);
 
+            //update reports
+            $section="reservation_item";
+            $action="update_report";
+            $data_for_update=$data;
+            $this->getIDAndUpdateReports($section,$action,$data_for_update,'reservationitems','reservation_id',$reservation_ID);
+
             //update prices
             $data = array(
                 'price_rate' => $price_rate_id,
@@ -837,6 +841,7 @@ class Resv_model extends App_model {
             $this->db->select('reservation_id');
             $this->db->from('reservationitems');
             $this->db->order_by('ID', 'DESC');
+            
             $query = $this->db->get();
             if ($query->num_rows() > 0) {
                 $results = $query->row_array();
@@ -859,6 +864,7 @@ class Resv_model extends App_model {
                 'date_created' => $curr_date
             );
             $this->db->insert("reservationitems", $data);
+
             //send to report api
             $section="reservation_item";
             $action="insert_into_report";
@@ -890,9 +896,10 @@ class Resv_model extends App_model {
         }
     }
     
-    public function getHouseReservations($type, $offset = 0, $limit_val = FALSE) {
-        /* gets all fields for a reservation with filters,limit & offsets
+    /* gets all fields for a reservation with filters,limit & offsets
          * ::used for page navigations etc */
+    public function getHouseReservations($type, $offset = 0, $limit_val = FALSE) {
+        
         $app_date = date('Y-m-d', strtotime($this->getAppInfo()));
 
         $limit = $filter = "";
@@ -931,9 +938,6 @@ class Resv_model extends App_model {
         $q_sum_resv_nights = "SELECT COUNT(ri.reservation_id) as sum_resv,sum(ri.nights) as sum_nights "
                 . "from reservationitems as ri where ri.account_type='HOUSE' $sort";
 
-//                    echo $q;echo '<br>';
-//                    echo $q_total;
-//                    exit;
         $query = $this->db->query($q);
         if ($query->num_rows() > 0)
             $results['data'] = $query->result_array();
@@ -949,8 +953,9 @@ class Resv_model extends App_model {
         return $results;
     }
     
+    /* updates house details */
     public function saveHouse($type) {
-        /* updates house details */
+        
         $res_result = array();
         $curr_date = date('Y-m-d', strtotime($this->getAppInfo())) . " " . date('H:i:s');
 
@@ -982,6 +987,12 @@ class Resv_model extends App_model {
             );
             $this->db->where('reservation_id', $reservation_ID);
             $this->db->update("reservationitems", $data);
+
+            //update reports
+            $section="reservation_item";
+            $action="update_report";
+            $data_for_update=$data;
+            $this->getIDAndUpdateReports($section,$action,$data_for_update,'reservationitems','reservation_id',$reservation_ID);
 
             $res_result['reservation_id'] = $reservation_ID;
             $res_result['client_exists'] = "";
@@ -1015,6 +1026,7 @@ class Resv_model extends App_model {
                 'actual_arrival' => $curr_date
             );
             $this->db->insert("reservationitems", $data);
+            
             //send to report api
             $section="reservation_item";
             $action="insert_into_report";
@@ -1316,12 +1328,12 @@ class Resv_model extends App_model {
         return $results;
     }
     
-    public function getFoliosForReceipt($receiver_resv, $folio_IDs) {
-        /*
+    /*
          * select * rows where ID in array and action is payment
          * sum all the rows
          */
-//        print_r($folio_IDs);exit;
+    public function getFoliosForReceipt($receiver_resv, $folio_IDs) {
+
         $res['response'] = "error";
         $res['message'] = "Receipt Generation failed";
         $res['data']=[];
@@ -1337,6 +1349,7 @@ class Resv_model extends App_model {
             'folio_room_type'=>''
             );
         $res['payment_total']=array('debit'=>0);
+
         //confirm reservation exists as a staying guest
         $receiver_resvation_id = $this->security->xss_clean($receiver_resv);
         $this->db->select('ID');
@@ -1346,7 +1359,6 @@ class Resv_model extends App_model {
         if ($query->num_rows() <= 0) {
             $res['message'] = "Account is not a staying guest";
             return $res;
-//            return json_encode($res);
         }
 
         //get selected payments
@@ -1362,7 +1374,6 @@ class Resv_model extends App_model {
                     . "on (ri.room_number = ro.ID) left join roomtypeitems as rt "
                     . "on (ri.roomtype = rt.ID) "
                     . " WHERE ri.reservation_id='$receiver_resvation_id' ";
-//        echo $q;exit;
 
             $query_personal = $this->db->query($q);
             if ($query_personal->num_rows() > 0) {
@@ -1381,7 +1392,6 @@ class Resv_model extends App_model {
             $res['message'] = "Receipt Successful";
         }
         return $res;
-//        return json_encode($res);
     }
 
     public function getFoliosForPrint($reservation_id, $filter_val = FALSE) {
@@ -1449,13 +1459,13 @@ class Resv_model extends App_model {
         return $results;
     }
 
-    public function checkout($reservation_id, $modifier = FALSE) {
-        /* get resv & folio details
+    /* get resv & folio details
          * calc total sales,received & bal
          * update room status to vacant_dirty(2)
          * update resv status to departed,set actual_departure,
          * update folios to closed
          */
+    public function checkout($reservation_id, $modifier = FALSE) {
 
         $sale_total = $refund_total = $payment_total = 0;
         $app_day = date("Y-m-d", strtotime($this->getAppInfo())) . " " . date("H:i:s");
@@ -1519,7 +1529,6 @@ class Resv_model extends App_model {
         $q = "SELECT ri.client_name,ri.actual_arrival,ri.actual_departure,ri.nights,ro.title as folio_room_number "
                 . "FROM reservationitems as ri left join roomitems as ro "
                 . "on (ri.room_number = ro.ID) WHERE ri.reservation_id='$reservation_id' ";
-//        echo $q;exit;
 
         $query_personal = $this->db->query($q);
         if ($query_personal->num_rows() > 0) {
@@ -1685,10 +1694,11 @@ class Resv_model extends App_model {
         return $ledgers;
     }
     
-    public function confirmMoveFolioRoom($room_id) {
-        /* check if a valid reservation exists for the room selected
+    /* check if a valid reservation exists for the room selected
          * i.e client is staying 
          */
+    public function confirmMoveFolioRoom($room_id) {
+        
         $res['response'] = "error";
         $res['message'] = "Reservation not found";
 
@@ -1753,11 +1763,12 @@ class Resv_model extends App_model {
         return json_encode($res);
     }
 
-    public function returnFolios($folio_IDs, $return_reason) {
-        /*
+    /*
          * select * rows where ID in array
          * foreach of the rows get the links then update resvs & empty links
          */
+    public function returnFolios($folio_IDs, $return_reason) {
+        
         $res['response'] = "error";
         $res['message'] = "return failed";
         $curr_date = date('Y-m-d', strtotime($this->getAppInfo())) . " " . date('H:i:s');
@@ -1765,12 +1776,14 @@ class Resv_model extends App_model {
         $this->db->select('*');
         $this->db->where_in('ID', $folio_IDs);
         $query = $this->db->get('reservationfolioitems');
+
         if ($query->num_rows() > 0) {
             $results = $query->result_array();
             foreach ($results as $row):
                 $reservation_id = $row['links']; //returning reservation_id
                 $return_ID = $row['ID']; //donating id
                 $links = "";
+
                 //update folios if link is not empty
                 if (!empty($reservation_id)) {
                     $return_reason_cleaned = $this->security->xss_clean($return_reason);
@@ -1806,6 +1819,7 @@ class Resv_model extends App_model {
         $query = $this->db->get('reservationitems');
         if ($query->num_rows() > 0) {
             $results = $query->result_array();
+
             foreach ($results as $row):
                 $reservation_id = $row['reservation_id']; //reservation id
                 //calc nights spent
@@ -1820,6 +1834,13 @@ class Resv_model extends App_model {
                 );
                 $this->db->where('reservation_id', $reservation_id);
                 $this->db->update('reservationitems', $data);
+
+                //update reports
+                $section="reservation_item";
+                $action="update_report";
+                $data_for_update=$data;
+                $this->getIDAndUpdateReports($section,$action,$data_for_update,'reservationitems','reservation_id',$reservation_id);
+
             endforeach;
 
             $res['response'] = "success";
@@ -1828,17 +1849,19 @@ class Resv_model extends App_model {
         return json_encode($res);
     }
 
-    public function manualRoomCharge($resv_id, $reason) {
-        /* confrim valid charge date
+     /* confrim valid charge date
          * select price,room_type,resv etc for this reservation
          * insert into folio,update last_room_charge for this resv
          * update room to 'occupied dirty'
          */
+    public function manualRoomCharge($resv_id, $reason) {
+       
         $res['response'] = "error";
         $res['message'] = "room charge failed";
         //confrim valid charge date
         $this->db->select('last_rooms_charge,last_close_account');
         $query = $this->db->get('maintenance');
+
         if ($query->num_rows() > 0) {
             $result = $query->row_array();
             $last_rooms_charge = date("Y-m-d", strtotime($result['last_rooms_charge']));
@@ -1897,6 +1920,14 @@ class Resv_model extends App_model {
                     $this->db->set('last_room_charge', $now);
                     $this->db->where('reservation_id', $curr_resv);
                     $this->db->update('reservationitems');
+
+                    //update reports
+                    $section="reservation_item";
+                    $action="update_report";
+                    $data_for_update=array('last_room_charge'=>$now);
+                    $this->getIDAndUpdateReports($section,$action,$data_for_update,'reservationitems','reservation_id',$curr_resv);
+
+                    
                     //update room status
                     $this->db->set('status', 4);
                     $this->db->where('ID', $room_number);
@@ -1910,13 +1941,13 @@ class Resv_model extends App_model {
         return json_encode($res);
     }
 
-    public function autoRoomCharge() {
-        /* confrim valid charge date
+    /* confrim valid charge date
          * get the day of the week so as to determine price of room
          * select price,room_type,resv etc for each reservation
          * insert into folio,update last_room_charge for each resv
          * update rooms to 'occupied dirty'
          */
+    public function autoRoomCharge() {        
         $res['response'] = "error";
         $res['message'] = "Failed: No Rooms Charged";
         //confrim valid charge date
@@ -1989,6 +2020,13 @@ class Resv_model extends App_model {
                         $this->db->set('last_room_charge', $now);
                         $this->db->where('reservation_id', $curr_resv);
                         $this->db->update('reservationitems');
+
+                        //update reports
+                        $section="reservation_item";
+                        $action="update_report";
+                        $data_for_update=array('last_room_charge'=>$now);
+                        $this->getIDAndUpdateReports($section,$action,$data_for_update,'reservationitems','reservation_id',$curr_resv);
+
                         //update room status
                         $this->db->set('status', 4);
                         $this->db->where('ID', $room_number);
@@ -2008,20 +2046,24 @@ class Resv_model extends App_model {
         return $res;
     }
 
-    public function closeAccount() {
-        /* get last_close_account,today & day_of_charge,
+
+    /* get last_close_account,today & day_of_charge,
          * chk if any rooms have not been charged:yes(return)
          * if last_close_account < today get reservations to be closed
          * get the next close_account day & update these reservations
          * update maintenance set last_close_account & last_room_charge
          * chk for overdue-departures
          */
+    public function closeAccount() {
+        
         $res['response'] = "error";
         $res['message'] = "Account Closing Process Failed";
         $res['overdue_departures'] = "NO";
+        
         //get last_close_account,today & day_of_charge
         $this->db->select('last_rooms_charge,last_close_account');
         $query = $this->db->get('maintenance');
+        
         if ($query->num_rows() > 0) {
 
             $result = $query->row_array();
@@ -2056,9 +2098,16 @@ class Resv_model extends App_model {
 
                     $results = $query->result_array();
                     foreach ($results as $result):
+                        $reservation_id=$result['reservation_id'];
                         $this->db->set('last_account_close', $nextcloseday);
-                        $this->db->where('reservation_id', $result['reservation_id']);
+                        $this->db->where('reservation_id',$reservation_id);
                         $this->db->update('reservationitems');
+
+                        //update reports
+                        $section="reservation_item";
+                        $action="update_report";
+                        $data_for_update=array('last_account_close'=>$nextcloseday);
+                        $this->getIDAndUpdateReports($section,$action,$data_for_update,'reservationitems','reservation_id',$reservation_id);
                     endforeach;
 
                     $res['response'] = "success";
@@ -2152,12 +2201,13 @@ class Resv_model extends App_model {
         return $res;
     }
 
-    public function reactivateAccount($resv_id, $reason) {
-        /* get last_acct_close,actual_departure
+    /* get last_acct_close,actual_departure
          * chk if actual_departue > last_acct_close
          * yes(update),no(do nothing)
          * log this action
          */
+    public function reactivateAccount($resv_id, $reason) {
+        
         $res['response'] = "error";
         $res['message'] = "Invalid Reactivation Attempt";
 
@@ -2188,6 +2238,14 @@ class Resv_model extends App_model {
                 );
                 $this->db->where('reservation_id', $resv_id);
                 $this->db->update('reservationitems', $data);
+
+                //update reports
+                $section="reservation_item";
+                $action="update_report";
+                $data_for_update=$data;
+                $this->getIDAndUpdateReports($section,$action,$data_for_update,'reservationitems','reservation_id',$resv_id);
+
+
                 //update folio as well
                 $this->db->set('status', 'active');
                 $this->db->where('reservation_id', $resv_id);
@@ -2203,10 +2261,11 @@ class Resv_model extends App_model {
         return $res;
     }
 
-    public function masterFolios($resv_id, $master_id, $reason) {
-        /* get master_id for this resv
+    /* get master_id for this resv
          * update all folios for this resv to the master_id         
          */
+    public function masterFolios($resv_id, $master_id, $reason) {
+        
         $res['response'] = "error";
         $res['message'] = "Invalid Master Action";
 
@@ -2252,6 +2311,14 @@ class Resv_model extends App_model {
             );
             $this->db->where('reservation_id', $r_ID);
             $this->db->update('reservationitems', $data);
+
+            //update reports
+            $section="reservation_item";
+            $action="update_report";
+            $data_for_update=$data;
+            $this->getIDAndUpdateReports($section,$action,$data_for_update,'reservationitems','reservation_id',$r_ID);
+
+
             //update folio status just in case
             $this->db->set('status', 'active');
             $this->db->where('reservation_id', $r_ID);
@@ -2281,14 +2348,22 @@ class Resv_model extends App_model {
         );
         $this->db->where('reservation_id', $r_ID);
         $this->db->update('reservationitems', $data);
+
+        //update reports
+        $section="reservation_item";
+        $action="update_report";
+        $data_for_update=$data;
+        $this->getIDAndUpdateReports($section,$action,$data_for_update,'reservationitems','reservation_id',$r_ID);
+
         return TRUE;
     }
 
+    /* check if a room is vacant or vacant_dirty */
     private function isRoomVacant($room_id) {
-        /* check if a room is vacant or vacant_dirty */
+        
         $test = FALSE;
         $q = "SELECT status from roomitems where ID='$room_id'";
-//        echo $q;exit;
+
 
         $query = $this->db->query($q);
         if ($query->num_rows() > 0) {
@@ -2314,21 +2389,19 @@ class Resv_model extends App_model {
         return $field_val;
     }
     
+    /* get all users except admins */
     public function getUsers(){
-                /* get all users except admins */
         $q = "SELECT title,signature FROM useritems "
                 . "WHERE role >='28'";
-        
-//        echo $q;exit;
 
         $query = $this->db->query($q);
         if ($query->num_rows() > 0)
             return $query->result_array();
-
     }
 
+    /* get info for reservation,prices, etc for a client */
     public function getClientResvInfo($resv_id, $account_type) {
-        /* get info for reservation,prices, etc for a client */
+        
         $q = "SELECT ri.*,ri.room_number as room_number_id,ri.roomtype as roomtype_id,"
                 . "ro.title as room_number,"
                 . "rt.title as roomtype,rp.*,rp.price_rate as price_rate_id,"
@@ -2349,9 +2422,9 @@ class Resv_model extends App_model {
     }
     
     
-
+/* get info for reservation,prices, etc for a client */
     public function getGroupResvInfo($resv_id) {
-        /* get info for reservation,prices, etc for a client */
+        
         $q = "SELECT ri.*,ri.roomtype as roomtype_id,"
                 . "rt.title as roomtype,rp.*,rp.price_rate as price_rate_id,"
                 . "pi.title as price_title from reservationitems as ri "
@@ -2368,8 +2441,8 @@ class Resv_model extends App_model {
             return $query->result_array();
     }
     
+    /* get info for house account etc for a client */
     public function getHouseResvInfo($resv_id) {
-        /* get info for house account etc for a client */
         $q = "SELECT * from reservationitems where reservation_id='$resv_id' AND account_type='HOUSE'";
 
         $query = $this->db->query($q);
@@ -2377,9 +2450,10 @@ class Resv_model extends App_model {
             return $query->result_array();
     }
 
-    public function getReports($type,$resv_id=NULL) {
-        /* gets all fields for a reservation
+    /* gets all fields for a reservation
          * ::used for reports etc */
+    public function getReports($type,$resv_id=NULL) {
+        
         $app_date = date('Y-m-d', strtotime($this->getAppInfo()));
 
         $report_user = $this->input->post('report_user');
@@ -2513,9 +2587,6 @@ class Resv_model extends App_model {
                     . "on(ri.roomtype =rt.ID) where 1=1 $where";
         }
 
-                //    echo $q;echo '<br>';
-////                    echo $q_totals;echo '<br>';
-                //    exit;
         $query = $this->db->query($q);
         if ($query->num_rows() > 0) {
             $results['count'] = $query->num_rows();
@@ -2551,7 +2622,6 @@ class Resv_model extends App_model {
                 . "on (ri.reservation_id = rp.reservation_id) left join roomitems as ro "
                 . "on (ri.room_number = ro.ID) $where and ri.status='staying' "
                 . "and ri.account_type='ROOM' ORDER BY ri.ID desc limit 1";
-        //echo $q;exit;
 
         $query = $this->db->query($q);
         if ($query->num_rows() > 0) {
@@ -2571,6 +2641,24 @@ class Resv_model extends App_model {
         return $res;
     }
 
+    //send an update to the report api
+    private function getIDAndUpdateReports($section,$action,$data_for_update,$table,$where_field,$update_id){
+        
+        $this->db->select('ID');
+        $this->db->where($where_field,$update_id);
+        $query = $this->db->get($table);
+
+        $selected_id=0;
+        if ($query->num_rows() > 0) {
+            $row = $query->row_array();
+            $selected_id = $row['ID'];
+        }
+
+        $action_type="PUT";
+        $this->sendToReports($action_type,$section,$action,$data_for_update,$selected_id);
+    }
+
+
     /*send items to report db*/
     public function sendToReports($action_type,$section,$action,$data=null,$id_for_update=null){
 
@@ -2582,12 +2670,10 @@ class Resv_model extends App_model {
             $payload = json_encode($data);   
 
             if($action_type=="PUT"){
-                //set id
                 $report_store_endpoint.="/".$id_for_update;
             }
 
             $endpoint=$report_base_url. $report_store_endpoint;
-            // echo $endpoint;exit;
          
             // Prepare new cURL resource
             $ch = curl_init($endpoint);
@@ -2628,51 +2714,5 @@ class Resv_model extends App_model {
         }
         
     }
-
-    /*update items to report db*/
-    // public function updateItemsForReport($section,$action,$data=null){
-
-    //     $report_base_url=$this->config->item("reports_base_url");
-    //     $report_store_endpoint = $this->config->item('reservationitems_endpoint');
-
-    //     if(!empty($data) && !empty($report_base_url) && !empty($report_store_endpoint)){
-
-    //         $payload = json_encode($data);       
-    //         $endpoint=$report_base_url. $report_store_endpoint;
-         
-    //         // Prepare new cURL resource
-    //         $ch = curl_init($endpoint);
-    //         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    //         curl_setopt($ch, CURLINFO_HEADER_OUT, true);
-    //         // curl_setopt($ch, CURLOPT_POST, true);
-    //         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PUT');
-    //         curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
-             
-    //         // Set HTTP Header for POST request 
-    //         curl_setopt($ch, CURLOPT_HTTPHEADER, array(
-    //             'Content-Type: application/json',
-    //             'Content-Length: ' . strlen($payload)
-    //             // 'Authorization: '.$api_token
-    //             )
-    //         );
-             
-    //         // Submit the POST request
-    //         $result = curl_exec($ch);
-    //         if(!$result){
-
-    //             //log this error
-    //             $description="Failed to update report app";
-    //             $reason="unknown";
-
-    //             //log this action
-    //         $log_id = $this->createLog($section, $action, $description, "", "", $reason);
-    //         }
-                         
-    //         // Close cURL session handle
-    //         curl_close($ch);
-
-    //     }
-        
-    // }
 
 }
