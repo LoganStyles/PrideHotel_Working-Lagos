@@ -73,6 +73,20 @@ class Service extends REST_Controller {
             $this->response($results, REST_Controller::HTTP_OK); // OK (200) being the HTTP response code
         // }
     }
+
+
+    //POSTS
+    public function reservationitemsinsert_post() {        
+        if (empty($this->post())) {
+            // Invalid set the response and exit.
+            $this->response(NULL, REST_Controller::HTTP_BAD_REQUEST); // BAD_REQUEST (400) being the HTTP response code
+        } else {
+            // print_r($this->post());exit;
+            $results = $this->LocalUpdater_model->insertReservations($this->post());
+            //Set the response and exit
+            $this->response($results, REST_Controller::HTTP_OK); // OK (200) being the HTTP response code
+        }
+    }
     
 
 }

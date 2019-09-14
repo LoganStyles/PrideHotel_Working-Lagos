@@ -74,14 +74,18 @@ $active_group = 'default';
 $query_builder = TRUE;
 
 $db['default'] = array(
-    'dsn'	=> 'mysql:host=localhost;dbname=pridehotel_290819_copy',
-	'username' => 'pridehotel_290819_copy',
-	'password' => 'pridehotel_290819_copy',
-	'database' => 'pridehotel_290819_copy',
+    // 'dsn'	=> 'mysql:host=localhost;dbname=pridehotel_290819_copy',
+	// 'username' => 'pridehotel_290819_copy',
+	// 'password' => 'pridehotel_290819_copy',
+	// 'database' => 'pridehotel_290819_copy',
 	// 'dsn'	=> 'mysql:host=localhost;dbname=pridehotel',
 	// 'username' => 'PrideHotel',
 	// 'password' => 'PrideHotel',
 	// 'database' => 'pridehotel',
+	'dsn'	=> 'mysql:host=localhost;dbname=pridehotel_online_reports',
+	'username' => 'pridehotel_online_reports',
+	'password' => 'pridehotel_online_reports',
+	'database' => 'pridehotel_online_reports',
 	'dbdriver' => 'pdo',
 	'dbprefix' => '',
 	'pconnect' => FALSE,
