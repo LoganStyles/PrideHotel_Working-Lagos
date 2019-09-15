@@ -81,8 +81,62 @@ class Service extends REST_Controller {
             // Invalid set the response and exit.
             $this->response(NULL, REST_Controller::HTTP_BAD_REQUEST); // BAD_REQUEST (400) being the HTTP response code
         } else {
-            // print_r($this->post());exit;
-            $results = $this->LocalUpdater_model->insertReservations($this->post());
+            $results = $this->LocalUpdater_model->insert("reservationitems","reservation_id",$this->post());
+            //Set the response and exit
+            $this->response($results, REST_Controller::HTTP_OK); // OK (200) being the HTTP response code
+        }
+    }
+
+    public function reservationitemsupdate_post() {        
+        if (empty($this->post())) {
+            // Invalid set the response and exit.
+            $this->response(NULL, REST_Controller::HTTP_BAD_REQUEST); // BAD_REQUEST (400) being the HTTP response code
+        } else {
+            $results = $this->LocalUpdater_model->update("reservationitems","reservation_id",$this->post());
+            //Set the response and exit
+            $this->response($results, REST_Controller::HTTP_OK); // OK (200) being the HTTP response code
+        }
+    }
+
+    public function reservationpriceitemsinsert_post() {        
+        if (empty($this->post())) {
+            // Invalid set the response and exit.
+            $this->response(NULL, REST_Controller::HTTP_BAD_REQUEST);
+        } else {
+            $results = $this->LocalUpdater_model->insert("reservationpriceitems","reservation_id",$this->post());
+            //Set the response and exit
+            $this->response($results, REST_Controller::HTTP_OK);
+        }
+    }
+
+    public function reservationpriceitemsupdate_post() {        
+        if (empty($this->post())) {
+            // Invalid set the response and exit.
+            $this->response(NULL, REST_Controller::HTTP_BAD_REQUEST); // BAD_REQUEST (400) being the HTTP response code
+        } else {
+            $results = $this->LocalUpdater_model->update("reservationpriceitems","reservation_id",$this->post());
+            //Set the response and exit
+            $this->response($results, REST_Controller::HTTP_OK); // OK (200) being the HTTP response code
+        }
+    }
+
+    public function reservationfolioitemsinsert_post() {        
+        if (empty($this->post())) {
+            // Invalid set the response and exit.
+            $this->response(NULL, REST_Controller::HTTP_BAD_REQUEST);
+        } else {
+            $results = $this->LocalUpdater_model->insert("reservationfolioitems","ID",$this->post());
+            //Set the response and exit
+            $this->response($results, REST_Controller::HTTP_OK);
+        }
+    }
+
+    public function reservationfolioitemsupdate_post() {        
+        if (empty($this->post())) {
+            // Invalid set the response and exit.
+            $this->response(NULL, REST_Controller::HTTP_BAD_REQUEST); // BAD_REQUEST (400) being the HTTP response code
+        } else {
+            $results = $this->LocalUpdater_model->update("reservationfolioitems","ID",$this->post());
             //Set the response and exit
             $this->response($results, REST_Controller::HTTP_OK); // OK (200) being the HTTP response code
         }
