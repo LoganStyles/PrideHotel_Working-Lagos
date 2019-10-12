@@ -205,6 +205,8 @@ class Report extends App {
         $to = $this->input->post('report_to');
         switch ($type) {
             case 'arrivals':
+            $page = "report_arrivals";
+                break;
             case 'departures':
             case 'staying guests':
                 $page = "report";

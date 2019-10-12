@@ -10,6 +10,7 @@
                             <?php
                             $content = "";
                             $count = 1;
+                            
                             foreach ($collection as $row):
                                 $userid = $row["ID"];
                                 $reservation_id = $row["reservation_id"];

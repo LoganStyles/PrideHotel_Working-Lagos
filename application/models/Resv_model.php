@@ -2680,7 +2680,7 @@ class Resv_model extends App_model {
         $to_date->setTime(23,59,59);
         $to= $to_date->format('Y-m-d H:i:s');
 
-        echo 'to '.$to.' from '.$from;exit;
+        // echo 'to '.$to.' from '.$from;exit;
 
         $results['data'] = array();
         $results['count'] = 0;
@@ -2689,7 +2689,7 @@ class Resv_model extends App_model {
         switch ($type) {
             /*get only guests arriving in this duration:confirmed*/
             case "arrivals":
-                $where = "and ri.arrival between '$from' AND '$to' $and_user "
+                $where = "and cast(ri.arrival as date) between '$from' AND '$to' $and_user "
                         . "and ri.status='confirmed' ORDER BY ri.arrival ASC";
                 break;
             case "departures":
@@ -2792,6 +2792,8 @@ class Resv_model extends App_model {
                     . "on(ri.room_number=ro.ID) left join roomtypeitems as rt "
                     . "on(ri.roomtype =rt.ID) where 1=1 $where";
         }
+
+        // echo $q;exit;
 
         $query = $this->db->query($q);
         if ($query->num_rows() > 0) {
