@@ -464,6 +464,9 @@ class Resv_model extends App_model {
         $price_room = $this->input->post('guest_price_room');
         $price_extra = $this->input->post('guest_price_extra');
         $price_total = $this->input->post('guest_price_total');
+        $discount = $this->input->post('guest_discount');
+        $discount_type = $this->input->post('guest_discount_type');
+        $discount_ratio = $this->input->post('guest_discount_ratio');
         $invoice = $this->input->post('guest_invoice');
         $comp_nights = $this->input->post('guest_comp_nights');
         $comp_visits = $this->input->post('guest_comp_visits');
@@ -495,15 +498,6 @@ class Resv_model extends App_model {
             $this->db->where('reservation_id', $reservation_ID);
             $this->db->update("reservationitems", $data);
 
-            //update reports
-            $section="reservation_item";
-            $action="update_report";
-            $data_for_update=$data;
-            $endpoint_type = 'reservationitems';
-            $this->getIDAndUpdateReports($section,$action,$data_for_update,'reservationitems','reservation_id',$reservation_ID,$endpoint_type);
-            
-            
-
             //update prices
             $data = array(
                 'price_rate' => $price_rate_id,
@@ -516,6 +510,9 @@ class Resv_model extends App_model {
                 'price_room' => $price_room,
                 'price_extra' => $price_extra,
                 'price_total' => $price_total,
+                'discount' => $discount,
+                'discount_type'=>$discount_type,
+                'discount_ratio'=>$discount_ratio,
                 'invoice' => $invoice,
                 'comp_nights' => $comp_nights,
                 'comp_visits' => $comp_visits,
@@ -566,9 +563,9 @@ class Resv_model extends App_model {
             $this->db->insert("reservationitems", $data);
             
             //send to report api
-            $section="reservation_item";
-            $action="insert_into_report";
-            $this->sendToReports("POST",$section,$action,$data);
+            // $section="reservation_item";
+            // $action="insert_into_report";
+            // $this->sendToReports("POST",$section,$action,$data);
             
 
             //insert prices
@@ -584,6 +581,9 @@ class Resv_model extends App_model {
                 'price_room' => $price_room,
                 'price_extra' => $price_extra,
                 'price_total' => $price_total,
+                'discount' => $discount,
+                'discount_type'=>$discount_type,
+                'discount_ratio'=>$discount_ratio,
                 'invoice' => $invoice,
                 'comp_nights' => $comp_nights,
                 'comp_visits' => $comp_visits,
@@ -818,6 +818,10 @@ class Resv_model extends App_model {
         $price_room = $this->input->post('group_price_room');
         $price_extra = $this->input->post('group_price_extra');
         $price_total = $this->input->post('group_price_total');
+        $discount = $this->input->post('group_discount');
+        $discount_type = $this->input->post('group_discount_type');
+        $discount_ratio = $this->input->post('group_discount_ratio');
+        $price_total = $this->input->post('group_price_total');
         $comp_nights = $this->input->post('group_comp_nights');
         $comp_visits = $this->input->post('group_comp_visits');
 
@@ -838,14 +842,6 @@ class Resv_model extends App_model {
             $this->db->where('reservation_id', $reservation_ID);
             $this->db->update("reservationitems", $data);
 
-            //update reports
-            $section="reservation_item";
-            $action="update_report";
-            $data_for_update=$data;
-            $endpoint_type='reservationitems';
-            $this->getIDAndUpdateReports($section,$action,$data_for_update,'reservationitems','reservation_id',$reservation_ID,$endpoint_type);
-            
-            
 
             //update prices
             $data = array(
@@ -859,6 +855,9 @@ class Resv_model extends App_model {
                 'price_room' => $price_room,
                 'price_extra' => $price_extra,
                 'price_total' => $price_total,
+                'discount' => $discount,
+                'discount_type'=>$discount_type,
+                'discount_ratio'=>$discount_ratio,
                 'comp_nights' => $comp_nights,
                 'comp_visits' => $comp_visits
             );
@@ -898,11 +897,6 @@ class Resv_model extends App_model {
             );
             $this->db->insert("reservationitems", $data);
 
-            //send to report api
-            $section="reservation_item";
-            $action="insert_into_report";
-            $this->sendToReports("POST",$section,$action,$data);
-
             //insert prices
             $data = array(
                 'reservation_id' => $padded_reservation_id,
@@ -916,6 +910,9 @@ class Resv_model extends App_model {
                 'price_room' => $price_room,
                 'price_extra' => $price_extra,
                 'price_total' => $price_total,
+                'discount' => $discount,
+                'discount_type'=>$discount_type,
+                'discount_ratio'=>$discount_ratio,
                 'comp_nights' => $comp_nights,
                 'comp_visits' => $comp_visits,
                 'block_pos' => 'no',
@@ -2234,12 +2231,7 @@ class Resv_model extends App_model {
         $local_backup_dir = 'backups/';
         $backup_name = $local_backup_dir . $file_name . ".sql";
 
-        //        if (!is_dir($backup_dir)) {
-        //            //Directory does not exist
-        //            echo 'dir does not exist';exit;
-        //        }else{
-        //            echo 'dir exist';exit;
-        //        }
+        
         $backup = $this->config->item('backup') . $backup_name;
         exec($backup, $output, $return);
         if (!$return) {

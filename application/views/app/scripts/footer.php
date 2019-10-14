@@ -338,6 +338,43 @@
         $('#confirm_modal2').modal({backdrop: false, keyboard: false});
     }
 
+    function showDiscountModal(prefix){
+        var modal = "#" + prefix + "_discount_popup_modal";
+        console.log('prefix modal'+modal )
+        $(modal).modal({backdrop: false, keyboard: false});
+    }
+
+    function setDiscountValFromInputedPercentage(prefix,max_percent_discount_allowed){
+        var error_msg_id="#"+prefix + "_discount_error_msg";
+        $(error_msg_id).hide();
+
+        var discount_rate_inputed_id="#"+prefix + "_discount_rate_inputed";
+        var discount_id="#"+prefix + "_discount";
+        var price_room_id="#"+prefix + "_price_room";
+        var discount_ratio_id="#"+prefix + "_discount_ratio";
+        
+        var max_discount_allowed=parseFloat(max_percent_discount_allowed);
+
+        var discount_val=$(discount_rate_inputed_id).val();
+
+        //chk if inputted amt is valid
+        if(discount_val > max_discount_allowed){
+            $(error_msg_id).text("Invalid Discount rate inputted!!");
+            $(error_msg_id).show();
+            return false;
+        }
+        
+        var discount_ratio=discount_val/100;
+        discount_ratio = (discount_ratio > 0) ? (parseFloat(discount_ratio)) : (0);
+        $(discount_ratio_id).val(discount_ratio);//set the discount ratio in hidden field
+
+        var price_room=$(price_room_id).val();//get the current room price
+        var discount = discount_ratio * (parseFloat(price_room));//calc d discount
+        $(discount_id).val(discount);//set the discount val
+
+        reservation.calcRoomPrice(prefix);
+    }
+
     function closeWindow(mode, guest_type, page_number) {
         var controller = "";
         switch (guest_type) {
@@ -1155,8 +1192,15 @@
         $('#guest_arrival').on('valueChanged', function () {
             reservation.calcRoomPrice('guest');
         });
+
         $('body').on('blur', '#guest_nights,#guest_weekday,#guest_weekend,#guest_holiday,\n\
-        #guest_price_extra,#guest_comp_nights', function () {
+        #guest_price_extra,#guest_comp_nights,#guest_discount', function () {
+            reservation.calcRoomPrice('guest');
+        });
+
+        $('body').on('blur', '#guest_discount', function () {
+            //Set discount type
+            $('#guest_discount_type').val('value')
             reservation.calcRoomPrice('guest');
         });
 
@@ -1171,8 +1215,14 @@
         $('#group_arrival').on('valueChanged', function () {
             reservation.calcRoomPrice('group');
         });
+
         $('body').on('blur', '#group_nights,#group_weekday,#group_weekend,#group_holiday,\n\
-        #group_price_extra,#group_comp_nights', function () {
+        #group_price_extra,#group_comp_nights,#group_discount', function () {
+            reservation.calcRoomPrice('group');
+        });
+
+        $('body').on('blur', '#group_discount', function () {
+            $('#group_discount_type').val('value')
             reservation.calcRoomPrice('group');
         });
         

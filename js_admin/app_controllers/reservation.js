@@ -101,9 +101,10 @@ function deletePerson(type) {
     $("#delete_person_modal").modal({backdrop: false, keyboard: false});
 }
 
+
 function fetchModalGridData(prefix, grid_type) {
     var url = "";
-    console.log('grid_type ' + grid_type);
+    // console.log('grid_type ' + grid_type);
     switch (grid_type) {
         case 'room_number':
         case 'price_rate':
@@ -194,10 +195,12 @@ function fetchModalGridData(prefix, grid_type) {
         }
     });
 }
+
+
 var reservation = {
     calcRoomPrice: function (resv_type) {
         /*calcs room price*/
-        var count = 0, weekend_count = 0, week_days = 0, price_total = 0, comp_nights = 0, price_extra = 0, price_total_comp = 0;
+        var count = 0, weekend_count = 0, week_days = 0, price_total = 0, comp_nights = 0,discount = 0, price_extra = 0, price_total_comp = 0;
         var arrival_field = "#" + resv_type + "_arrival";
         var departure_field = "#" + resv_type + "_departure";
         var night_field = "#" + resv_type + "_nights";
@@ -210,6 +213,7 @@ var reservation = {
         var price_extra_field = "#" + resv_type + "_price_extra";
         var comp_nights_field = "#" + resv_type + "_comp_nights";
         var comp_visits_field = "#" + resv_type + "_comp_visits";
+        var discount_field = "#" + resv_type + "_discount";
 
         var arrival_date = $(arrival_field).jqxDateTimeInput('getDate');
         console.log('arrival_date is ' + arrival_date);
@@ -260,6 +264,16 @@ var reservation = {
 
         price_total_comp = price_total + price_extra;
         console.log('price total before complimentary ' + price_total_comp);
+
+        //subtract discount if any
+        discount = $(discount_field).val();
+        discount = (discount > 0) ? (parseInt(discount)) : (0);
+        count = 0;
+        if(discount >0){
+            price_total_comp = price_total_comp - discount;
+        }
+       
+        console.log('price total after discount deduction ' + price_total_comp);
 
         //subtract complimentary nights if any
         comp_nights = $(comp_nights_field).val();

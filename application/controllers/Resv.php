@@ -235,6 +235,9 @@ class Resv extends App {
         $item_price_room = $type . "_price_room";
         $item_price_extra = $type . "_price_extra";
         $item_price_total = $type . "_price_total";
+        $item_discount_type = $type . "_discount_type";
+        $item_discount = $type . "_discount";
+        $item_discount_ratio = $type . "_discount_ratio";
         $item_comp_nights = $type . "_comp_nights";
         $item_folio_room = $type . "_folio_room";
         $item_folio_extra = $type . "_folio_extra";
@@ -285,6 +288,9 @@ class Resv extends App {
             $data['received'][0]['price_room'] = $this->input->post($item_price_room);
             $data['received'][0]['price_extra'] = $this->input->post($item_price_extra);
             $data['received'][0]['price_total'] = $this->input->post($item_price_total);
+            $data['received'][0]['discount_type'] = $this->input->post($item_discount_type);
+            $data['received'][0]['discount'] = $this->input->post($item_discount);
+            $data['received'][0]['discount_ratio'] = $this->input->post($item_discount_ratio);
             $data['received'][0]['comp_nights'] = $this->input->post($item_comp_nights);
             $data['received'][0]['roomtype_id'] = $this->input->post($item_roomtype_id);
             $data['received'][0]['room_number_id'] = $this->input->post($item_room_number_id);
@@ -340,6 +346,9 @@ class Resv extends App {
             $data['received'][0]['price_room'] = "0";
             $data['received'][0]['price_extra'] = "0";
             $data['received'][0]['price_total'] = "0";
+            $data['received'][0]['discount_type'] = "none";
+            $data['received'][0]['discount'] = "0";
+            $data['received'][0]['discount_ratio'] = "0";
             $data['received'][0]['comp_nights'] = "0";
             $data['received'][0]['status'] = "confirmed";
             $data['received'][0]['folio_room'] = "BILL1";

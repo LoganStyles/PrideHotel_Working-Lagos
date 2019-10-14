@@ -211,9 +211,7 @@ class App_model extends CI_Model {
             $q = "SELECT * from $tableitems where 1=1 and ID='$ID' $sort $limit ";
             $q_total = "SELECT * from $tableitems where 1=1 and ID='$ID' $sort";
         }
-//                    echo $q;echo '<br>';
-//                    echo $q_total;
-//                    exit;
+
         $query = $this->db->query($q);
         if ($query->num_rows() > 0)
             $results['data'] = $query->result_array();
@@ -462,6 +460,8 @@ class App_model extends CI_Model {
                         $this->session->prices = $result["prices"];
                         $this->session->overview = $result["overview"];
                         $this->session->delete_group = $result["delete_group"];
+                        $this->session->maximum_discount_allowed = $result["maximum_discount_allowed"];
+                        $this->session->cash_discount_allowed = $result["cash_discount_allowed"];
                     }
                     return true;
                 } else {
@@ -583,6 +583,8 @@ class App_model extends CI_Model {
         $prices = $this->input->post('role_prices');
         $overview = $this->input->post('role_overview');
         $delete_group = $this->input->post('role_delete_group');
+        $maximum_discount_allowed = $this->input->post('role_maximum_discount_allowed');
+        $cash_discount_allowed = $this->input->post('role_cash_discount_allowed');
 
         if ($ID > 0) {
             //update   
@@ -598,6 +600,8 @@ class App_model extends CI_Model {
                 'prices' => $prices,
                 'overview' => $overview,
                 'delete_group' => $delete_group,
+                'maximum_discount_allowed' => $maximum_discount_allowed,
+                'cash_discount_allowed' => $cash_discount_allowed,
                 'date_modified' => $app_day
             );
             $this->db->where('ID', $ID);
@@ -617,6 +621,8 @@ class App_model extends CI_Model {
                 'prices' => $prices,
                 'overview' => $overview,
                 'delete_group' => $delete_group,
+                'maximum_discount_allowed' => $maximum_discount_allowed,
+                'cash_discount_allowed' => $cash_discount_allowed,
                 'type' => $type,
                 'signature_created' => $this->session->us_signature,
                 'date_created' => $app_day

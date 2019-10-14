@@ -121,7 +121,7 @@ if ($form_error) {
                                            $buttons.="<a onclick=\"processResv('edit','$offset','$type');\" type=\"button\" class=\"btn btn-default \"><i class=\"fa fa-edit\"></i>&nbsp;Edit</a>&nbsp;"; 
                                         }                                        
                                         if ($delete == "1") {
-                                            $buttons.="<a onclick=\"deleteReservation();\" type=\"button\" class=\"btn btn-default \"><i class=\"fa fa-trash-o\"></i>&nbsp;Delete</a>&nbsp;";
+                                            $buttons.="<a onclick=\"deleteReservation();\" type=\"button\" class=\"btn btn-default \"><i class=\"fa fa-trash-o\"></i>&nbsp;Cancel</a>&nbsp;";
                                         }
                                         
                                         $buttons.="<a onclick=\"getFolio('$offset','$type','ALL','$room_number_only','$departure');\" type=\"button\" class=\"btn btn-default \"><i class=\"fa fa-folder-open-o\"></i>&nbsp;Folio</a>&nbsp;";

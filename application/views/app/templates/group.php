@@ -76,6 +76,8 @@ if (!empty($group_price_rate_error)) {
                         <input type="hidden" name="group_page_number" id="group_page_number" value="<?php echo $page_number; ?>">
                         <input type="hidden" name="group_roomtype_id" id="group_roomtype_id" value="<?php echo $roomtype_id; ?>">
                         <input type="hidden" name="group_price_rate_id" id="group_price_rate_id" value="<?php echo $price_rate_id; ?>">
+                        <input type="hidden" name="group_discount_type" id="group_discount_type" value="<?php echo $discount_type; ?>">
+                        <input type="hidden" name="group_discount_ratio" id="group_discount_ratio" value="<?php echo $discount_ratio; ?>">
 
                         <div class="form-group ">
                             <label  for="group_arrival" class="col-sm-1 col-lg-1 control-label">Arrival</label>
@@ -300,16 +302,28 @@ if (!empty($group_price_rate_error)) {
                                 <input <?php echo $disabled; ?> readonly class=" form-control" id="group_price_room" name="group_price_room" value="<?php echo $price_room; ?>" type="number" />                              
                             </div>
 
-                            <label for="group_price_extra" class="col-sm-2 control-label">Price: Extra</label>
+                            <label for="group_price_extra" class="col-sm-1 control-label">Price: Extra</label>
                             <div class="col-sm-2">
                                 <input <?php echo $disabled; ?> <?php echo $readonly_field; ?> class=" form-control" id="group_price_extra" name="group_price_extra" value="<?php echo $price_extra; ?>" type="number" />
                             </div>
 
-                            <label for="group_price_total" class="col-sm-2 control-label">Price: Total</label>
+                            <label for="group_discount" class="col-sm-2 control-label">Discount</label>
+                            <div class="col-sm-2 col-lg-2">
+                                <input <?php echo $disabled; ?> class=" form-control" id="group_discount" name="group_discount" value="<?php echo $discount; ?>" type="number" />
+                            </div>
+                            <button class="btn btn-default pull-left" data-toggle="button" onclick="showDiscountModal('group');">
+                                <i class="fa fa-list"></i>
+                            </button>
+
+                                                       
+
+                        </div>
+
+                        <div class="form-group">
+                        <label for="group_price_total" class="col-sm-2 control-label">Price: Total</label>
                             <div class="col-sm-2">
                                 <input <?php echo $disabled; ?> readonly class=" form-control" id="group_price_total" name="group_price_total" value="<?php echo $price_total; ?>" type="number" />
-                            </div>                            
-
+                            </div>   
                         </div>
                        
                         <div class="form-group ">
@@ -452,6 +466,45 @@ if (!empty($group_price_rate_error)) {
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-danger" data-dismiss="modal">CANCEL</button>                
+            </div>
+        </div>
+    </div>
+</div>
+
+<div role="dialog" id="group_discount_popup_modal" class="modal fade">
+    <div class="modal-dialog" style="width: 800px;">
+        <div class="modal-content">
+            <div class="modal-header panel-heading dark" >                
+                <h4 class="modal-title" style="text-align:center">DISCOUNTS</h4>
+            </div>
+            <div class="modal-body">                
+                <header class="panel-heading">
+                    <!--Discount-->
+                    <div>
+                        <div class="">
+                            <div class="form-group ">
+                                <div class="col-sm-12">
+                                    Discount should not be higher than 10 %
+                                </div>
+                            </div>
+                        </div>
+                        <div class="clearfix"></div>
+
+                    </div>
+                </header>
+
+
+                <div class="panel-body">
+                    <div class="" id="group_discount_popup_data">
+                    <div class="col-sm-4 col-lg-4">
+                        <input class=" form-control" id="discount_rate" name="discount_rate" type="number" min="0" max="100"/>%
+                    </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success" onclick="setDiscountValFromInputedPercentage('group');" >OK</button>
+                <button type="button" class="btn btn-danger" data-dismiss="modal">CLOSE</button>                
             </div>
         </div>
     </div>

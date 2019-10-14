@@ -40,6 +40,8 @@ if ($form_error) {
                                     $buttons = "<a onclick=\"modalLoader('role','#role_modal','new',0);\" class=\"btn btn-default  \" type=\"button\"><i class=\"fa fa-plus\"></i>&nbsp;New</a>&nbsp;"; //                    
                                     if ($count >= 1) {                                        
                                         $buttons.="<a id=\"role_edit\" onclick=\"\" type=\"button\" class=\"btn btn-success \"><i class=\"fa fa-edit\"></i>&nbsp;Edit</a>&nbsp;";
+                                        // $buttons.="<a id=\"role_discount\" onclick=\"\" type=\"button\" class=\"btn btn-success \"><i class=\"fa fa-edit\"></i>&nbsp;Discount</a>&nbsp;";
+                                        
                                         if(isset($_SESSION["delete_group"]) && $_SESSION["delete_group"] === '1'){
                                             $buttons.="<a id=\"role_delete\"onclick=\"\" type=\"button\" class=\"btn btn-primary \"><i class=\"fa fa-trash-o\"></i>&nbsp;Delete</a>&nbsp;";
                                         }                                        
@@ -332,6 +334,33 @@ if ($form_error) {
                                 </select>
                             </div>
                         </div>
+
+                        <div class="form-group ">
+                            <label for="role_maximum_discount_allowed" class="col-sm-6 control-label">Maximum Discount Allowed (%)</label>
+                            <div class="col-lg-4 col-sm-4">
+                                <input class=" form-control" id="role_maximum_discount_allowed" value="<?php echo $maximum_discount_allowed; ?>" name="role_maximum_discount_allowed" type="number" />
+                            </div>
+                        </div>
+
+
+                        <div class="form-group ">
+                            <label class="col-sm-6 control-label col-lg-6" for="role_cash_discount_allowed">Is Cash Discount Allowed?</label>
+                            <div class="col-lg-4 col-sm-4">
+                                <select class="form-control " name="role_cash_discount_allowed" id="role_cash_discount_allowed">
+                                    <option value="0" <?php
+                                    if ($cash_discount_allowed === "0") {
+                                        echo 'selected';
+                                    }
+                                    ?>>NO</option>
+                                    <option value="1" <?php
+                                    if ($cash_discount_allowed === "1") {
+                                        echo 'selected';
+                                    }
+                                    ?>>YES</option>
+                                    
+                                </select>
+                            </div>
+                        </div>
                     </div>   
                 </div>
                 <div class="pull-right">
@@ -341,8 +370,11 @@ if ($form_error) {
                 <div class="clearfix"></div>
                 </form>
             </div>
+            
         </div>
     </div>
 </div>
 
 <!--role_modal modal-->
+
+

@@ -352,6 +352,8 @@ class App extends MY_Controller {
         $this->form_validation->set_rules('role_prices', 'Prices', 'in_list[1,2,3,4]');
         $this->form_validation->set_rules('role_overview', 'Overview', 'in_list[1,2,3,4]');
         $this->form_validation->set_rules('role_delete_group', 'Delete', 'in_list[0,1]');
+        $this->form_validation->set_rules('role_cash_discount_allowed', 'Cash Discount Allowed', 'in_list[0,1]');
+        $this->form_validation->set_rules('role_maximum_discount_allowed', 'Mazimum Discount Percentage', 'less_than_equal_to[100]');
 
 
         if ($this->form_validation->run() == FALSE) {
@@ -717,6 +719,8 @@ class App extends MY_Controller {
         $item_prices = $type . "_prices";
         $item_overview = $type . "_overview";
         $item_delete_group = $type . "_delete_group";
+        $item_maximum_discount_allowed = $type . "_maximum_discount_allowed";
+        $item_cash_discount_allowed = $type . "_cash_discount_allowed";
         $item_type = $type . "_type";
 
         if ($errors) {
@@ -735,6 +739,8 @@ class App extends MY_Controller {
             $data['received'][0]['prices'] = $this->input->post($item_prices);
             $data['received'][0]['overview'] = $this->input->post($item_overview);
             $data['received'][0]['delete_group'] = $this->input->post($item_delete_group);
+            $data['received'][0]['maximum_discount_allowed'] = $this->input->post($item_maximum_discount_allowed);
+            $data['received'][0]['cash_discount_allowed'] = $this->input->post($item_cash_discount_allowed);
             $data['received'][0]['count'] = $this->app_model->getDisplayedItems($type, FALSE, $ID)['count'];
         } else {
             $data['received'][0]['form_error'] = "";
@@ -752,6 +758,8 @@ class App extends MY_Controller {
             $data['received'][0]['prices'] = "";
             $data['received'][0]['overview'] = "";
             $data['received'][0]['delete_group'] = "";
+            $data['received'][0]['maximum_discount_allowed'] = 0;
+            $data['received'][0]['cash_discount_allowed'] = "0";
             $data['received'][0]['count'] = $this->app_model->getDisplayedItems($type, FALSE, $ID)['count'];
         }
         //show page

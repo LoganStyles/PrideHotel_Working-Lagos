@@ -4,12 +4,24 @@ extract($current);
 
 $price_rate = getTitle($roomtypes, $price_title); //price title
 
+
 $access = $this->session->reservation;
 if ($access < 4) {//set readonly fields
     $readonly_field = "readonly";
 } else {
     $readonly_field = "";
 }
+
+//chk if cash discount is allowed
+$is_cash_discount_allowed = $this->session->cash_discount_allowed;
+if ($is_cash_discount_allowed ==="0") {//set readonly fields
+    $cash_discount_allowed_readonly_field = "readonly";
+} else {
+    $cash_discount_allowed_readonly_field = "";
+}
+
+//get maximum percentage discount allowed
+$maximum_discount_allowed = $this->session->maximum_discount_allowed;
 
 $disabled = "";
 if ($action == "view") {
@@ -82,9 +94,11 @@ if (!empty($nights_error)) {
                         <input type="hidden" name="guest_roomtype_id" id="guest_roomtype_id" value="<?php echo $roomtype_id; ?>">
                         <input type="hidden" name="guest_room_number_id" id="guest_room_number_id" value="<?php echo $room_number_id; ?>">
                         <input type="hidden" name="guest_price_rate_id" id="guest_price_rate_id" value="<?php echo $price_rate_id; ?>">
+                        <input type="hidden" name="guest_discount_type" id="guest_discount_type" value="<?php echo $discount_type; ?>">
+                        <input type="hidden" name="guest_discount_ratio" id="guest_discount_ratio" value="<?php echo $discount_ratio; ?>">
 
                         <div class="form-group ">
-                            <label  for="guest_arrival" class="col-sm-1 col-lg-1 control-label">Arrival</label>
+                            <label for="guest_arrival" class="col-sm-1 col-lg-1 control-label">Arrival</label>
                             <div class="col-sm-1 col-lg-1" name="guest_arrival" id="guest_arrival"></div>
 
                             <label for="guest_nights" class="col-sm-1 col-lg-1 control-label">Nights</label>
@@ -349,23 +363,37 @@ if (!empty($nights_error)) {
                             </div>
                         </div>
 
-                        <div class="form-group ">
+                        <div class="form-group">
                             <label for="guest_price_room" class="col-sm-2 control-label">Price :Room</label>
                             <div class="col-lg-2 col-sm-2">
                                 <input <?php echo $disabled; ?> readonly class=" form-control" id="guest_price_room" name="guest_price_room" value="<?php echo $price_room; ?>" type="number" />                              
                             </div>
 
-                            <label for="guest_price_extra" class="col-sm-2 control-label">Price: Extra</label>
+                            <label for="guest_price_extra" class="col-sm-1 control-label">Price: Extra</label>
                             <div class="col-sm-2">
                                 <input <?php echo $disabled; ?> <?php echo $readonly_field; ?> class=" form-control" id="guest_price_extra" name="guest_price_extra" value="<?php echo $price_extra; ?>" type="number" />
                             </div>
 
-                            <label for="guest_price_total" class="col-sm-2 control-label">Price: Total</label>
-                            <div class="col-sm-2">
-                                <input <?php echo $disabled; ?> readonly class=" form-control" id="guest_price_total" name="guest_price_total" value="<?php echo $price_total; ?>" type="number" />
-                            </div>                            
+                            <label for="guest_discount" class="col-sm-2 control-label">Discount</label>
+                            <div class="col-sm-2 col-lg-2">
+                                <input <?php echo $disabled; ?> <?php echo $cash_discount_allowed_readonly_field; ?> class=" form-control" id="guest_discount" name="guest_discount" value="<?php echo $discount; ?>" type="number" />
+                            </div>
+                            <button class="btn btn-default pull-left" data-toggle="button" onclick="showDiscountModal('guest');">
+                                <i class="fa fa-list"></i>
+                            </button>
+
+                                                      
 
                         </div>
+
+                        <div class="form-group">
+                        <label for="guest_price_total" class="col-sm-2 control-label">Price: Total</label>
+                            <div class="col-sm-2">
+                                <input <?php echo $disabled; ?> readonly class=" form-control" id="guest_price_total" name="guest_price_total" value="<?php echo $price_total; ?>" type="number" />
+                            </div>  
+                        </div>
+
+                        
 
                         <div class="form-group ">
                             <label for="guest_invoice" class="col-sm-1 control-label">Invoice</label>
@@ -584,6 +612,49 @@ if (!empty($nights_error)) {
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-danger" data-dismiss="modal">CANCEL</button>                
+            </div>
+        </div>
+    </div>
+</div>
+
+<div role="dialog" id="guest_discount_popup_modal" class="modal fade">
+    <div class="modal-dialog" style="width: 800px;">
+        <div class="modal-content">
+            <div class="modal-header panel-heading dark" >                
+                <h4 class="modal-title" style="text-align:center">DISCOUNTS</h4>
+            </div>
+            <div class="modal-body">                
+                <header class="panel-heading">
+                    <!--Discount-->
+                    <div>
+                        <div class="">
+                            <div class="form-group ">
+                                <div class="col-sm-12">
+                                    Discount should not be higher than <?php echo $maximum_discount_allowed;?> %
+                                </div>
+                            </div>
+                        </div>
+                        <div class="clearfix"></div>
+
+                    </div>
+                </header>
+
+
+                <div class="panel-body">
+                <div class="alert alert-danger" role="alert" id="guest_discount_error_msg" style="display:none;">
+                
+                </div>
+                    <div class="" id="guest_discount_popup_data">
+                        <label for="guest_discount_rate_inputed" class="col-sm-2 control-label">Percentage(%)</label>
+                            <div class="col-sm-4">
+                                <input class=" form-control" id="guest_discount_rate_inputed" name="guest_discount_rate_inputed" type="number" min="0" max="<?php echo $maximum_discount_allowed;?>"/>
+                            </div> 
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success" onclick="setDiscountValFromInputedPercentage('guest','<?php echo $maximum_discount_allowed;?>');" >OK</button>
+                <button type="button" class="btn btn-danger" data-dismiss="modal">CLOSE</button>                
             </div>
         </div>
     </div>
