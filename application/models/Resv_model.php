@@ -1170,9 +1170,11 @@ class Resv_model extends App_model {
             $results['room']=$res['resv_room_title'];
         }
 
-        $q = "SELECT ri.status as folio_status,rf.* FROM reservationitems as ri "
+        $q = "SELECT ri.status as folio_status,rf.*,rp.discount_type,rp.discount_ratio,rp.discount FROM reservationitems as ri "
                 . "left join reservationfolioitems as rf "
                 . "on (ri.reservation_id=rf.reservation_id) "
+                . "left join reservationpriceitems as rp "
+                . "on (ri.reservation_id=rp.reservation_id) "
                 . " WHERE rf.reservation_id='$reservation_id' "
                 . " $sort $limit";
 
@@ -1257,9 +1259,17 @@ class Resv_model extends App_model {
             $sort = " and sub_folio='$filter_val' order by ID ASC";
         }
 
-        $q = "SELECT ri.status as folio_status,rf.* FROM reservationitems as ri "
+        // $q = "SELECT ri.status as folio_status,rf.* FROM reservationitems as ri "
+        //         . "left join reservationfolioitems as rf "
+        //         . "on (ri.reservation_id=rf.reservation_id) "
+        //         . " WHERE rf.reservation_id='$reservation_id' "
+        //         . " $sort $limit";
+
+        $q = "SELECT ri.status as folio_status,rf.*,rp.discount_type,rp.discount_ratio,rp.discount FROM reservationitems as ri "
                 . "left join reservationfolioitems as rf "
                 . "on (ri.reservation_id=rf.reservation_id) "
+                . "left join reservationpriceitems as rp "
+                . "on (ri.reservation_id=rp.reservation_id) "
                 . " WHERE rf.reservation_id='$reservation_id' "
                 . " $sort $limit";
 
@@ -1438,12 +1448,16 @@ class Resv_model extends App_model {
         $results['data'] = array();
         $results['count'] = 0;
 
-        $q = "SELECT ro.title as folio_room_number,ri.client_name,rf.* FROM reservationitems as ri "
+        $q = "SELECT ro.title as folio_room_number,ri.client_name,rf.*,rp.discount FROM reservationitems as ri "
                 . "left join reservationfolioitems as rf "
                 . "on (ri.reservation_id=rf.reservation_id) "
+                . "left join reservationpriceitems as rp "
+                . "on (ri.reservation_id=rp.reservation_id) "
                 . "left join roomitems as ro on (ri.room_number = ro.ID) "
                 . " WHERE rf.reservation_id='$reservation_id' "
                 . " $sort";
+
+                // echo $q;exit;
 
         $query = $this->db->query($q);
         if ($query->num_rows() > 0) {

@@ -45,7 +45,7 @@ if (!empty($red_bal)) {
                         $content = "";
                         foreach ($collection as $row):
                             $active = $checked = $sale_account_title = "";
-                            $folio_active = $log_action="";
+                            $folio_active = $log_action=$discount="";
                             $folio_id = $row["ID"];
                             $folio_status = $row["folio_status"];
                             $date = date('d/m/Y', strtotime($row["date_created"]));
@@ -80,6 +80,10 @@ if (!empty($red_bal)) {
                                 $sale_account_title = getTitle($sale_accounts, $account_number, "title");
                             }
 
+                            if ($folio_action === "sale") {
+                                $discount=$row["discount"];
+                            }
+
                             //check for a row has been clicked before
                             if (isset($_SESSION['folio_active_row'])) {
                                 if (($_SESSION['folio_active_row'] == $folio_id)) {
@@ -106,6 +110,7 @@ if (!empty($red_bal)) {
                                     . "$date</td>";
                             $content.="<td class=\"folio_description\">$description</td>";
                             $content.="<td class=\"folio_incl_vat\">$incl_vat</td>";
+                            $content.="<td class=\"\">$discount</td>";
                             $content.="<td>$pak</td>";
                             $content.="<td>$sub_folio</td>";
                             $content.="<td>$links</td>";
@@ -220,6 +225,7 @@ if (!empty($red_bal)) {
                                 <th>Date</th>
                                 <th>Description</th>
                                 <th>INCL VAT</th>
+                                <th>DISCOUNT</th>
                                 <th>PAK</th>
                                 <th>Sub-Folio</th>
                                 <th>Links</th>

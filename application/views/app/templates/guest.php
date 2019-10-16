@@ -371,12 +371,12 @@ if (!empty($nights_error)) {
 
                             <label for="guest_price_extra" class="col-sm-1 control-label">Price: Extra</label>
                             <div class="col-sm-2">
-                                <input <?php echo $disabled; ?> <?php echo $readonly_field; ?> class=" form-control" id="guest_price_extra" name="guest_price_extra" value="<?php echo $price_extra; ?>" type="number" />
+                                <input  <?php echo $disabled; ?> <?php echo $readonly_field; ?> class=" form-control" id="guest_price_extra" name="guest_price_extra" value="<?php echo $price_extra; ?>" type="number" />
                             </div>
 
                             <label for="guest_discount" class="col-sm-2 control-label">Discount</label>
                             <div class="col-sm-2 col-lg-2">
-                                <input <?php echo $disabled; ?> <?php echo $cash_discount_allowed_readonly_field; ?> class=" form-control" id="guest_discount" name="guest_discount" value="<?php echo $discount; ?>" type="number" />
+                                <input <?php echo $disabled; ?> <?php echo $cash_discount_allowed_readonly_field; ?> class=" form-control" id="guest_discount" name="guest_discount" value="<?php echo $discount; ?>" type="number" onblur="setDiscountValFromInputtedVal('guest','<?php echo $maximum_discount_allowed;?>');" />
                             </div>
                             <button class="btn btn-default pull-left" data-toggle="button" onclick="showDiscountModal('guest');">
                                 <i class="fa fa-list"></i>
@@ -384,6 +384,12 @@ if (!empty($nights_error)) {
 
                                                       
 
+                        </div>
+
+                        <div class="form-group">
+                            <div class="alert alert-danger" role="alert" id="guest_discount_val_error_msg" style="display:none;">
+                
+                            </div>
                         </div>
 
                         <div class="form-group">
@@ -641,9 +647,9 @@ if (!empty($nights_error)) {
 
 
                 <div class="panel-body">
-                <div class="alert alert-danger" role="alert" id="guest_discount_error_msg" style="display:none;">
-                
-                </div>
+                    <div class="alert alert-danger" role="alert" id="guest_discount_error_msg" style="display:none;">
+                    
+                    </div>
                     <div class="" id="guest_discount_popup_data">
                         <label for="guest_discount_rate_inputed" class="col-sm-2 control-label">Percentage(%)</label>
                             <div class="col-sm-4">

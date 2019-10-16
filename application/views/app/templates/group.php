@@ -11,6 +11,17 @@ if ($access < 4) {//set readonly fields
     $readonly_field = "";
 }
 
+//chk if cash discount is allowed
+$is_cash_discount_allowed = $this->session->cash_discount_allowed;
+if ($is_cash_discount_allowed ==="0") {//set readonly fields
+    $cash_discount_allowed_readonly_field = "readonly";
+} else {
+    $cash_discount_allowed_readonly_field = "";
+}
+
+//get maximum percentage discount allowed
+$maximum_discount_allowed = $this->session->maximum_discount_allowed;
+
 $disabled = "";
 if ($action == "view") {
     $disabled = "disabled";
@@ -309,7 +320,7 @@ if (!empty($group_price_rate_error)) {
 
                             <label for="group_discount" class="col-sm-2 control-label">Discount</label>
                             <div class="col-sm-2 col-lg-2">
-                                <input <?php echo $disabled; ?> class=" form-control" id="group_discount" name="group_discount" value="<?php echo $discount; ?>" type="number" />
+                                <input <?php echo $disabled; ?> <?php echo $cash_discount_allowed_readonly_field; ?> class=" form-control" id="group_discount" name="group_discount" value="<?php echo $discount; ?>" type="number"  onblur="setDiscountValFromInputtedVal('group','<?php echo $maximum_discount_allowed;?>');"/>
                             </div>
                             <button class="btn btn-default pull-left" data-toggle="button" onclick="showDiscountModal('group');">
                                 <i class="fa fa-list"></i>
@@ -317,6 +328,12 @@ if (!empty($group_price_rate_error)) {
 
                                                        
 
+                        </div>
+
+                        <div class="form-group">
+                            <div class="alert alert-danger" role="alert" id="guest_discount_val_error_msg" style="display:none;">
+                
+                            </div>
                         </div>
 
                         <div class="form-group">
@@ -484,7 +501,7 @@ if (!empty($group_price_rate_error)) {
                         <div class="">
                             <div class="form-group ">
                                 <div class="col-sm-12">
-                                    Discount should not be higher than 10 %
+                                    Discount should not be higher than <?php echo $maximum_discount_allowed;?> %
                                 </div>
                             </div>
                         </div>
@@ -493,17 +510,21 @@ if (!empty($group_price_rate_error)) {
                     </div>
                 </header>
 
-
                 <div class="panel-body">
-                    <div class="" id="group_discount_popup_data">
-                    <div class="col-sm-4 col-lg-4">
-                        <input class=" form-control" id="discount_rate" name="discount_rate" type="number" min="0" max="100"/>%
+                    <div class="alert alert-danger" role="alert" id="group_discount_error_msg" style="display:none;">                  
                     </div>
+
+                    <div class="" id="group_discount_popup_data">
+                        <label for="group_discount_rate_inputed" class="col-sm-2 control-label">Percentage(%)</label>
+                            <div class="col-sm-4">
+                                <input class=" form-control" id="group_discount_rate_inputed" name="group_discount_rate_inputed" type="number" min="0" max="<?php echo $maximum_discount_allowed;?>"/>
+                            </div> 
                     </div>
                 </div>
+
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-success" onclick="setDiscountValFromInputedPercentage('group');" >OK</button>
+                <button type="button" class="btn btn-success" onclick="setDiscountValFromInputedPercentage('group','<?php echo $maximum_discount_allowed;?>');" >OK</button>
                 <button type="button" class="btn btn-danger" data-dismiss="modal">CLOSE</button>                
             </div>
         </div>

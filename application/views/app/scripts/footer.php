@@ -340,7 +340,6 @@
 
     function showDiscountModal(prefix){
         var modal = "#" + prefix + "_discount_popup_modal";
-        console.log('prefix modal'+modal )
         $(modal).modal({backdrop: false, keyboard: false});
     }
 
@@ -359,20 +358,45 @@
 
         //chk if inputted amt is valid
         if(discount_val > max_discount_allowed){
-            $(error_msg_id).text("Invalid Discount rate inputted!!");
+            $(error_msg_id).text("The inputted value exceeds your maximum percentage discount allowed, kindly review it!!");
             $(error_msg_id).show();
             return false;
         }
-        
+
         var discount_ratio=discount_val/100;
         discount_ratio = (discount_ratio > 0) ? (parseFloat(discount_ratio)) : (0);
         $(discount_ratio_id).val(discount_ratio);//set the discount ratio in hidden field
+
 
         var price_room=$(price_room_id).val();//get the current room price
         var discount = discount_ratio * (parseFloat(price_room));//calc d discount
         $(discount_id).val(discount);//set the discount val
 
         reservation.calcRoomPrice(prefix);
+    }
+
+    function setDiscountValFromInputtedVal(prefix,max_percent_discount_allowed){
+        var error_msg_id="#"+prefix + "_discount_val_error_msg";
+        $(error_msg_id).hide();
+
+        var price_room_id="#"+prefix + "_price_room";
+
+        var discount_amount_inputed_id="#"+prefix + "_discount";
+        var intended_discount_amount=$(discount_amount_inputed_id).val();
+
+        var max_discount_percent_allowed_ratio=parseFloat(max_percent_discount_allowed)/100;
+
+        var price_room=$(price_room_id).val();//get the current room price
+
+        var maximum_discount_val_allowed=max_discount_percent_allowed_ratio * price_room;
+
+        if(intended_discount_amount > maximum_discount_val_allowed){
+            $(error_msg_id).text("The inputted value exceeds your maximum discount allowed, kindly review it!!");
+            $(error_msg_id).show();
+            return false;
+        }else{
+            reservation.calcRoomPrice(prefix);
+        }
     }
 
     function closeWindow(mode, guest_type, page_number) {

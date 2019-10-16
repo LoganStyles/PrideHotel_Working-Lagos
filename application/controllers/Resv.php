@@ -913,6 +913,7 @@ class Resv extends App {
         }
 
 
+
         $limit = 10;
         $page = "folio";
         if ($bills_type !== "ALL") {
@@ -922,6 +923,7 @@ class Resv extends App {
         }
         
         $data["collection"] = $results['data'];
+        // print_r($data["collection"]);exit;
         $data["total"] = $results['count'];
         $data["resv_room_title"] = $results['room'];
         //totals

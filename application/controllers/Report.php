@@ -58,6 +58,7 @@ class Report extends App {
         $this->showPage($data, $page);
     }
 
+    
     public function printFolios($resv_id, $paper_type, $filter) {
         //prints folios
         $this->checkAccess($this->session->reports, 2);

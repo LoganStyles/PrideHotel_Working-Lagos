@@ -11,6 +11,7 @@
                             $content = $client_name = $room_number = $reservation_id = "";
                             $count = 1;
                             foreach ($collection as $row):
+                                $discount=(!empty($row["discount"])?($row["discount"]):0);
                                 $folio_id = $row["ID"];
                                 $reservation_id = $row["reservation_id"];
                                 $description = $row["description"];
@@ -31,6 +32,7 @@
                                 $content.="<td>$description</td>";
                                 $content.="<td>$debit</td>";
                                 $content.="<td>$credit</td>";
+                                $content.="<td>$discount</td>";
                                 $content.="</tr>";
 
                                 $count++;
@@ -55,6 +57,7 @@
                             <th>Description</th>
                             <th>Debit</th>
                             <th>Credit</th>
+                            <th>Discount</th>
                         </tr>
                     </thead>
                     <tbody>
