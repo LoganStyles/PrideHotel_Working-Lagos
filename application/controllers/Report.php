@@ -132,6 +132,7 @@ class Report extends App {
         //prints checkout details
         $this->checkAccess($this->session->reservation, 2);
 
+        
         $limit = FALSE;
         $page = "checkout";
 

@@ -1567,8 +1567,10 @@ class Resv_model extends App_model {
 
         //get resv & folio details
         $this->db->select('*');
-        $this->db->where('reservation_id', $reservation_id);
+        $this->db->join('reservationpriceitems', 'reservationpriceitems.reservation_id = reservationfolioitems.reservation_id');
+        $this->db->where('reservationfolioitems.reservation_id', $reservation_id);
         $query = $this->db->get('reservationfolioitems');
+
         if ($query->num_rows() > 0) {
             $results['data'] = $query->result_array();
         }
