@@ -86,6 +86,7 @@
 <div class="row" >
     <div style="margin-left: 30px;color: #000;font-weight: 700">
         <div>TOTAL SALES: &nbsp;&nbsp;N<?php echo $sale_total; ?></div>
+        <!-- <div>TOTAL VAT: &nbsp;&nbsp;N<?php echo $vat_total; ?></div> -->
         <div>AMOUNT RECEIVED: &nbsp;&nbsp;N<?php echo $payment_total; ?></div>
         <div>BALANCE DUE: &nbsp;&nbsp;N<?php echo $balance_left; ?></div>
     </div>

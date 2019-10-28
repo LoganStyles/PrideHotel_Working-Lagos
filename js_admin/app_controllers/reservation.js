@@ -23,14 +23,21 @@ function calcDateDiffWithSign(date1, date2) {
 function getModalSelection(prefix, type, modal, ID, value, weekday, weekend, holiday) {
     var output_field = "#" + prefix + "_" + type;
     var hidden_field = "#" + prefix + "_" + type + "_id";
-    console.log('output_field ' + output_field);
-    console.log('hidden_field ' + hidden_field);
+    // console.log('output_field ' + output_field);
+    // console.log('hidden_field ' + hidden_field);
     $(hidden_field).val(ID);
     $(output_field).val(value);
 
     var weekday_field = "#" + prefix + "_weekday";
     var weekend_field = "#" + prefix + "_weekend";
     var holiday_field = "#" + prefix + "_holiday";
+    var price_room_field = "#" + prefix + "_price_room";
+
+    var weekday_field_no_deductions = "#" + prefix + "_weekday_no_deductions";
+    var weekend_field_no_deductions = "#" + prefix + "_weekend_no_deductions";
+    var holiday_field_no_deductions = "#" + prefix + "_holiday_no_deductions";
+    var price_room_field_no_deductions = "#" + prefix + "_price_room_no_deductions";
+
     var room_number_field = "#" + prefix + "_room_number";
     var room_number_id_field = "#" + prefix + "_room_number_id";
     var price_rate_field = "#" + prefix + "_price_rate";
@@ -39,19 +46,28 @@ function getModalSelection(prefix, type, modal, ID, value, weekday, weekend, hol
     $(weekday_field).val(weekday);
     $(weekend_field).val(weekend);
     $(holiday_field).val(holiday);
+
+    $(weekday_field_no_deductions).val(weekday);
+    $(weekend_field_no_deductions).val(weekend);
+    $(holiday_field_no_deductions).val(holiday);
+
     if (type === "roomtype") {
         $(room_number_field).val("");
         $(room_number_id_field).val("");
         $(price_rate_field).val("");
         $(price_rate_id_field).val("");
-        console.log('weekday ' + weekday);
-        console.log('weekend ' + weekend);
-        console.log('holiday ' + holiday);
+        // console.log('weekday ' + weekday);
+        // console.log('weekend ' + weekend);
+        // console.log('holiday ' + holiday);
     }
 
     $(modal).modal('hide');
     reservation.calcRoomPrice(prefix);
 
+    //get room price after calculations
+    var price_room=$(price_room_field).val();
+    $(price_room_field_no_deductions).val((price_room > 0) ? (parseFloat(price_room)) : (0));
+    // console.log('price room after calcs '+price_room);
 }
 
 function closeResvModal(modal) {
@@ -215,14 +231,15 @@ var reservation = {
         var comp_visits_field = "#" + resv_type + "_comp_visits";
         var discount_field = "#" + resv_type + "_discount";
 
+        var weekday_no_deductions_field = "#" + resv_type + "_weekday_no_deductions";
+        var weekend_no_deductions_field = "#" + resv_type + "_weekend_no_deductions";
+
         var arrival_date = $(arrival_field).jqxDateTimeInput('getDate');
-        console.log('arrival_date is ' + arrival_date);
         var curr_night = arrival_date;
         var firstday = arrival_date;
         var departure_date = arrival_date;
-        console.log('curr_night is ' + curr_night);
-        console.log('firstday is ' + firstday);
 
+        //get values for night,weekday,weekend,holiday
         var nights = $(night_field).val();
         nights = (nights > 0) ? (parseInt(nights)) : (0);
         var weekday_rate = $(weekday_field).val();
@@ -232,48 +249,34 @@ var reservation = {
         var holiday_rate = $(holiday_field).val();
         holiday_rate = (holiday_rate > 0) ? (parseFloat(holiday_rate)) : (0);
 
+        var weekday_initial_rate = $(weekday_no_deductions_field).val();
+        weekday_initial_rate = (weekday_initial_rate > 0) ? (parseFloat(weekday_initial_rate)) : (0);
+
+        var weekend_initial_rate = $(weekend_no_deductions_field).val();
+        weekend_initial_rate = (weekend_initial_rate > 0) ? (parseFloat(weekend_initial_rate)) : (0);
+
+        //update departure date by adding number of nights
         departure_date.setDate(departure_date.getDate() + nights);
-        console.log('departure_date is ' + departure_date);
         $(departure_field).jqxDateTimeInput('setDate', departure_date);
 
-        //fnd weekends
+        //fnd number of weekends
         while (count < nights) {
             curr_night.setDate(firstday.getDate() + count);
             var curr_day = curr_night.getDay();//day of the week
-            console.log('count inside while is ' + count);
-            console.log('curr_night inside while is ' + curr_night);
-            console.log('current day of the week is ' + curr_day);
             if (curr_day === 0 || curr_day === 5 || curr_day === 6) {
                 //this is a weekend
                 weekend_count++;
-                console.log('weekend count is ' + weekend_count);
             }
-            console.log('count is ' + count);
             count++;
         }
 
-        console.log('nights is ' + nights);
-        console.log('weekend_count is ' + weekend_count);
-
+        //set number of week days
         week_days = nights - weekend_count;
-        console.log('working days count is ' + week_days);
-        console.log('final weekends count is ' + weekend_count);
         price_total = (weekday_rate * week_days) + (weekend_rate * weekend_count);
 
         price_extra = parseFloat($(price_extra_field).val());
 
         price_total_comp = price_total + price_extra;
-        console.log('price total before complimentary ' + price_total_comp);
-
-        //subtract discount if any
-        discount = $(discount_field).val();
-        discount = (discount > 0) ? (parseInt(discount)) : (0);
-        count = 0;
-        if(discount >0){
-            price_total_comp = price_total_comp - discount;
-        }
-       
-        console.log('price total after discount deduction ' + price_total_comp);
 
         //subtract complimentary nights if any
         comp_nights = $(comp_nights_field).val();
@@ -283,14 +286,11 @@ var reservation = {
             while (count < comp_nights) {
                 curr_night.setDate(firstday.getDate() + count);
                 var curr_day = curr_night.getDay();
-                console.log('complimentary current night is ' + curr_day);
                 if (curr_day === 0 || curr_day === 5 || curr_day === 6) {
                     //this is a weekend
-                    price_total_comp = price_total_comp - weekend_rate;
-                    console.log('current complimentary weekend price is ' + price_total_comp);
+                    price_total_comp = price_total_comp - weekend_initial_rate;
                 } else if (curr_day === 1 || curr_day === 2 || curr_day === 3 || curr_day === 4) {
-                    price_total_comp = price_total_comp - weekday_rate;
-                    console.log('current complimentary weekday price is ' + price_total_comp);
+                    price_total_comp = price_total_comp - weekday_initial_rate;
                 }
                 count++;
             }
@@ -298,15 +298,16 @@ var reservation = {
         } else {
             $(comp_visits_field).val('no');
         }
-        console.log('price total after complimentary ' + price_total_comp);
+        // console.log('price total after complimentary ' + price_total_comp);
         var chkpr = $(price_rate_field).val();
         if (chkpr !== "") {
-            $(weekday_field).val(weekday_rate);
-            $(weekend_field).val(weekend_rate);
-            $(holiday_field).val(holiday_rate);
+            $(weekday_field).val(parseFloat(weekday_rate).toFixed(2));
+            $(weekend_field).val(parseFloat(weekend_rate).toFixed(2));
+            $(holiday_field).val(parseFloat(holiday_rate).toFixed(2));
 
-            $(price_room_field).val(price_total);
-            $(price_total_field).val(price_total_comp);
+            // $(price_room_field).val(price_total);
+            $(price_room_field).val(parseFloat(price_total).toFixed(2));
+            $(price_total_field).val(parseFloat(price_total_comp).toFixed(2) );
         }
     }, 
     calcDuration: function (resv_type) {

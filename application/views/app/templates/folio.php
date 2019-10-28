@@ -50,7 +50,8 @@ if (!empty($red_bal)) {
                             $folio_status = $row["folio_status"];
                             $date = date('d/m/Y', strtotime($row["date_created"]));
                             $description = $row["description"];
-                            $incl_vat = ($row["debit"] > 0) ? ($row["debit"]) : ($row["credit"]);
+                            $amount = ($row["debit"] > 0) ? ($row["debit"]) : ($row["credit"]);
+                            $vat = ($row["vat"] > 0) ? ($row["vat"]) : (0);
                             $pak = $row["pak"];
                             $sub_folio = $row["sub_folio"];
                             $links = $row["links"];
@@ -80,9 +81,12 @@ if (!empty($red_bal)) {
                                 $sale_account_title = getTitle($sale_accounts, $account_number, "title");
                             }
 
-                            if ($folio_action === "sale") {
-                                $discount=$row["discount"];
-                            }
+                            // if ($folio_action === "sale"  && $price >0) {
+                            //     $discount=$row["discount_unit_charged"];
+                            // }else{
+                            //     $discount=0;
+                            // }
+                            $discount=$row["discount_unit_charged"];
 
                             //check for a row has been clicked before
                             if (isset($_SESSION['folio_active_row'])) {
@@ -109,7 +113,8 @@ if (!empty($red_bal)) {
                                     . "<input class=\"folio_hidden_sale_account_title\" type=\"hidden\" value=\"$sale_account_title\">"
                                     . "$date</td>";
                             $content.="<td class=\"folio_description\">$description</td>";
-                            $content.="<td class=\"folio_incl_vat\">$incl_vat</td>";
+                            $content.="<td class=\"\">$amount</td>";
+                            $content.="<td class=\"folio_incl_vat\">$vat</td>";
                             $content.="<td class=\"\">$discount</td>";
                             $content.="<td>$pak</td>";
                             $content.="<td>$sub_folio</td>";
@@ -224,7 +229,8 @@ if (!empty($red_bal)) {
                                 <th></th>
                                 <th>Date</th>
                                 <th>Description</th>
-                                <th>INCL VAT</th>
+                                <th>AMOUNT</th>
+                                <th>VAT</th>
                                 <th>DISCOUNT</th>
                                 <th>PAK</th>
                                 <th>Sub-Folio</th>

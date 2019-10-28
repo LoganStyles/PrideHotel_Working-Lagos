@@ -9,7 +9,7 @@ $duration = $arrival . " - " . $departure;
 
 $checkin = date("H:i:s", strtotime($actual_arrival));
 
-$vat = $price_total * 0.05;
+// $vat = $price_total * 0.05;
 ?>
 
 <div class="row">
@@ -93,7 +93,12 @@ $vat = $price_total * 0.05;
                         <div class="form-group ">
                             <label class="col-sm-2 control-label">VAT</label>
                             <div class="col-sm-2">
-                                <input readonly class=" form-control" type="text" value="<?php echo $vat; ?>" />
+                                <input readonly class=" form-control" type="text" value="<?php echo floatval($vat*$nights); ?>" />
+                            </div>
+
+                            <label class="col-sm-2 control-label">DISCOUNT</label>
+                            <div class="col-sm-2">
+                                <input readonly class=" form-control" type="text" value="<?php echo $discount; ?>" />
                             </div>
 
                            

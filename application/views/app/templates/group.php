@@ -90,6 +90,14 @@ if (!empty($group_price_rate_error)) {
                         <input type="hidden" name="group_discount_type" id="group_discount_type" value="<?php echo $discount_type; ?>">
                         <input type="hidden" name="group_discount_ratio" id="group_discount_ratio" value="<?php echo $discount_ratio; ?>">
 
+                        <!--hidden values but not submitted, used to hold values temporarily-->
+                        <input type="hidden" name="group_max_discount_value" id="group_max_discount_value" value="<?php echo $max_discount_value; ?>">
+                        <input type="hidden" name="group_weekday_no_deductions" id="group_weekday_no_deductions" value="<?php echo $weekday_no_deductions; ?>">
+                        <input type="hidden" name="group_weekend_no_deductions" id="group_weekend_no_deductions" value="<?php echo $weekend_no_deductions; ?>">
+                        <input type="hidden" name="group_holiday_no_deductions" id="group_holiday_no_deductions" value="<?php echo $holiday_no_deductions; ?>">
+                        <input type="hidden" name="group_price_room_no_deductions" id="group_price_room_no_deductions" value="<?php echo $price_room_no_deductions; ?>">
+                        <!--hidden values but not submitted, used to hold values temporarily-->
+
                         <div class="form-group ">
                             <label  for="group_arrival" class="col-sm-1 col-lg-1 control-label">Arrival</label>
                             <div class="col-sm-1 col-lg-1" name="group_arrival" id="group_arrival"></div>
@@ -331,7 +339,7 @@ if (!empty($group_price_rate_error)) {
                         </div>
 
                         <div class="form-group">
-                            <div class="alert alert-danger" role="alert" id="guest_discount_val_error_msg" style="display:none;">
+                            <div class="alert alert-danger" role="alert" id="group_discount_val_error_msg" style="display:none;">
                 
                             </div>
                         </div>
@@ -351,7 +359,7 @@ if (!empty($group_price_rate_error)) {
 
                             <label for="group_comp_visits" class="col-sm-1 control-label">Comp.Visits</label>
                             <div class="col-lg-2 col-sm-2">
-                                <select disabled  class="form-control " name="group_comp_visits" id="group_comp_visits">
+                                <select readonly  class="form-control " name="group_comp_visits" id="group_comp_visits">
                                     <option value="no" <?php
                                     if ($comp_visits === "no") {
                                         echo 'selected';

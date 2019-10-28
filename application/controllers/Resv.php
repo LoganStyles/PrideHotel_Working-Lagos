@@ -238,6 +238,11 @@ class Resv extends App {
         $item_discount_type = $type . "_discount_type";
         $item_discount = $type . "_discount";
         $item_discount_ratio = $type . "_discount_ratio";
+        $item_max_discount_value = $type . "_max_discount_value";
+        $item_weekday_no_deductions = $type . "_weekday_no_deductions";
+        $item_weekend_no_deductions = $type . "_weekend_no_deductions";
+        $item_holiday_no_deductions = $type . "_holiday_no_deductions";
+        $item_price_room_no_deductions = $type . "_price_room_no_deductions";
         $item_comp_nights = $type . "_comp_nights";
         $item_folio_room = $type . "_folio_room";
         $item_folio_extra = $type . "_folio_extra";
@@ -291,6 +296,11 @@ class Resv extends App {
             $data['received'][0]['discount_type'] = $this->input->post($item_discount_type);
             $data['received'][0]['discount'] = $this->input->post($item_discount);
             $data['received'][0]['discount_ratio'] = $this->input->post($item_discount_ratio);
+            $data['received'][0]['max_discount_value'] = $this->input->post($item_max_discount_value);
+            $data['received'][0]['weekday_no_deductions'] = $this->input->post($item_weekday_no_deductions);
+            $data['received'][0]['weekend_no_deductions'] = $this->input->post($item_weekend_no_deductions);
+            $data['received'][0]['holiday_no_deductions'] = $this->input->post($item_holiday_no_deductions);
+            $data['received'][0]['price_room_no_deductions'] = $this->input->post($item_price_room_no_deductions);
             $data['received'][0]['comp_nights'] = $this->input->post($item_comp_nights);
             $data['received'][0]['roomtype_id'] = $this->input->post($item_roomtype_id);
             $data['received'][0]['room_number_id'] = $this->input->post($item_room_number_id);
@@ -349,6 +359,11 @@ class Resv extends App {
             $data['received'][0]['discount_type'] = "none";
             $data['received'][0]['discount'] = "0";
             $data['received'][0]['discount_ratio'] = "0";
+            $data['received'][0]['max_discount_value'] = "0";
+            $data['received'][0]['weekday_no_deductions'] = "0";
+            $data['received'][0]['weekend_no_deductions'] = "0";
+            $data['received'][0]['holiday_no_deductions'] = "0";
+            $data['received'][0]['price_room_no_deductions'] = "0";
             $data['received'][0]['comp_nights'] = "0";
             $data['received'][0]['status'] = "confirmed";
             $data['received'][0]['folio_room'] = "BILL1";
@@ -777,8 +792,8 @@ class Resv extends App {
     
     
     public function confirmOperations() {
-//        $reason="yes";
-//        $type="charge";
+    //    $reason="yes";
+    //    $type="charge";
         $reason=$_POST['reason'];
         $type=$_POST['type'];
         

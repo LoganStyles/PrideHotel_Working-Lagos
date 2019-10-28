@@ -343,60 +343,225 @@
         $(modal).modal({backdrop: false, keyboard: false});
     }
 
+    function hideDiscountModal(prefix){
+        var modal = "#" + prefix + "_discount_popup_modal";
+        $(modal).modal('hide');
+    }
+
     function setDiscountValFromInputedPercentage(prefix,max_percent_discount_allowed){
+        //hide the error msg div
         var error_msg_id="#"+prefix + "_discount_error_msg";
         $(error_msg_id).hide();
 
+        //get ids for the fields for discount ratio, discount cash value (in reservation form),
+        //room price (reservation form), discount ratio (reservation form)
         var discount_rate_inputed_id="#"+prefix + "_discount_rate_inputed";
         var discount_id="#"+prefix + "_discount";
+
+        var weekday_id="#"+prefix + "_weekday";
+        var weekend_id="#"+prefix + "_weekend";
+        var holiday_id="#"+prefix + "_holiday";
+
+        var weekday_field_no_deductions = "#" + prefix + "_weekday_no_deductions";
+        var weekend_field_no_deductions = "#" + prefix + "_weekend_no_deductions";
+        var holiday_field_no_deductions = "#" + prefix + "_holiday_no_deductions";
+        var price_room_field_no_deductions = "#" + prefix + "_price_room_no_deductions";
+
         var price_room_id="#"+prefix + "_price_room";
         var discount_ratio_id="#"+prefix + "_discount_ratio";
+        var discount_type_id="#"+prefix + "_discount_type";
+        var max_discount_value_id="#"+prefix + "_max_discount_value";
         
         var max_discount_allowed=parseFloat(max_percent_discount_allowed);
 
-        var discount_val=$(discount_rate_inputed_id).val();
+        var discount_rate=$(discount_rate_inputed_id).val();
+        var discount_ratio=0;
+        var max_discount_ratio=0;
+        var max_discount_value=0;
+        var discount=0;
+        var price_room=0;
+        var weekday=0;
+        var weekend=0;
+        var holiday=0;
 
-        //chk if inputted amt is valid
-        if(discount_val > max_discount_allowed){
+        //chk if inputted ratio is valid
+        if(discount_rate > max_discount_allowed){
+
             $(error_msg_id).text("The inputted value exceeds your maximum percentage discount allowed, kindly review it!!");
             $(error_msg_id).show();
             return false;
+
+        }else{
+
+            //set the discount ratio in hidden field
+            if(discount_rate > 0){
+                discount_ratio=discount_rate/100;
+                discount_ratio = (discount_ratio > 0) ? (parseFloat(discount_ratio)) : (0);
+                $(discount_ratio_id).val(discount_ratio);
+
+                //update discount type
+                $(discount_type_id).val("ratio");
+            }
+
+            //set max discount ratio
+            max_discount_ratio=max_discount_allowed/100;
+            
+            //set the discount val & max discount val if room price has been set
+            price_room=parseFloat($(price_room_field_no_deductions).val());//get the initial room price
+            if(price_room > 0){
+                discount = discount_ratio * (parseFloat(price_room));//calc d discount
+                $(discount_id).val(discount);
+
+                max_discount_value = max_discount_ratio * (price_room);//calc d max discount for this room price
+                $(max_discount_value_id).val(max_discount_value);
+
+                $(price_room_id).val(price_room - discount);
+            }
+
+            //set the discounted weekday price val if weekday price has been set
+            weekday=parseFloat($(weekday_field_no_deductions).val());//get the initial weekday price
+            if(weekday > 0){
+                discount = discount_ratio * (weekday);//calc d discount
+                $(weekday_id).val(weekday-discount);
+            }
+
+            //set the discounted weekend price val if weekend price has been set
+            weekend=parseFloat($(weekend_field_no_deductions).val());//get the initial weekend price
+            if(weekend > 0){
+                discount = discount_ratio * (weekend);//calc d discount
+                $(weekend_id).val(weekend-discount);
+            }
+
+            //set the discounted holiday price val if holiday price has been set
+            holiday=parseFloat($(holiday_field_no_deductions).val());//get the initial holiday price
+            if(holiday > 0){
+                discount = discount_ratio * (holiday);//calc d discount
+                $(holiday_id).val(holiday-discount);
+            }
+            
+            hideDiscountModal(prefix);
+            reservation.calcRoomPrice(prefix);
+
+        }
+        
+    }
+
+    function updatePricesAfterInputtedAmountIsModified(prefix,discount_ratio_assigned,weekday,weekend,holiday){
+        var weekday_field = "#" + prefix + "_weekday";
+        var weekend_field = "#" + prefix + "_weekend";
+        var holiday_field = "#" + prefix + "_holiday";
+        var discount_ratio_id="#"+prefix + "_discount_ratio";
+        var discount_type_id="#"+prefix + "_discount_type";
+        var discount=0;
+        var weekday_final_amount = 0;
+        var weekend_final_amount = 0;
+        var holiday_final_amount = 0;
+
+        //set the discount ratio & type in hidden fields
+        if(discount_ratio_assigned > 0){
+                $(discount_ratio_id).val(discount_ratio_assigned);
+
+                //update discount type
+                $(discount_type_id).val("value");
+            }
+
+        if(weekday > 0){
+            discount = discount_ratio_assigned * (parseFloat(weekday));//calc d discount
+            weekday_final_amount=parseFloat(weekday - discount);
+            $(weekday_field).val(weekday_final_amount);
         }
 
-        var discount_ratio=discount_val/100;
-        discount_ratio = (discount_ratio > 0) ? (parseFloat(discount_ratio)) : (0);
-        $(discount_ratio_id).val(discount_ratio);//set the discount ratio in hidden field
+        //set the discounted weekend price val if weekend price has been set
+        if(weekend > 0){
+            discount = discount_ratio_assigned * (parseFloat(weekend));//calc d discount
+            weekend_final_amount=parseFloat(weekend - discount);
+            $(weekend_field).val(weekend_final_amount);
+        }
 
-
-        var price_room=$(price_room_id).val();//get the current room price
-        var discount = discount_ratio * (parseFloat(price_room));//calc d discount
-        $(discount_id).val(discount);//set the discount val
-
-        reservation.calcRoomPrice(prefix);
+        //set the discounted holiday price val if holiday price has been set
+        if(holiday > 0){
+            discount = discount_ratio_assigned * (parseFloat(holiday));//calc d discount
+            holiday_final_amount=parseFloat(holiday - discount);
+            $(holiday_field).val(holiday_final_amount);
+        }
     }
 
     function setDiscountValFromInputtedVal(prefix,max_percent_discount_allowed){
         var error_msg_id="#"+prefix + "_discount_val_error_msg";
         $(error_msg_id).hide();
 
-        var price_room_id="#"+prefix + "_price_room";
-
+        var error_message="The inputted value exceeds your maximum discount allowed, kindly review it!!";
         var discount_amount_inputed_id="#"+prefix + "_discount";
+
+        var weekday_field = "#" + prefix + "_weekday";
+        var weekend_field = "#" + prefix + "_weekend";
+        var holiday_field = "#" + prefix + "_holiday";
+
+        var weekday_field_no_deductions = "#" + prefix + "_weekday_no_deductions";
+        var weekend_field_no_deductions = "#" + prefix + "_weekend_no_deductions";
+        var holiday_field_no_deductions = "#" + prefix + "_holiday_no_deductions";
+        var price_room_field_no_deductions = "#" + prefix + "_price_room_no_deductions";
+
+        var weekday = parseFloat($(weekday_field_no_deductions).val());
+        var weekend = parseFloat($(weekend_field_no_deductions).val());
+        var holiday = parseFloat($(holiday_field_no_deductions).val());
+        var price_room = parseFloat($(price_room_field_no_deductions).val());
+
         var intended_discount_amount=$(discount_amount_inputed_id).val();
+        var discount_ratio_assigned=0;
+        var discount=0;
+        var max_percent_discount_allowed_ratio=max_percent_discount_allowed/100;
 
-        var max_discount_percent_allowed_ratio=parseFloat(max_percent_discount_allowed)/100;
+        //if discount val is empty reset prices to zero or initial undiscounted values
+        if(!intended_discount_amount || parseFloat(intended_discount_amount) <=0){
 
-        var price_room=$(price_room_id).val();//get the current room price
+            $(weekday_field).val((weekday > 0) ? (weekday) : (0));
+            $(weekend_field).val((weekend > 0) ? (weekend) : (0));
+            $(holiday_field).val((holiday > 0) ? (holiday) : (0));
 
-        var maximum_discount_val_allowed=max_discount_percent_allowed_ratio * price_room;
-
-        if(intended_discount_amount > maximum_discount_val_allowed){
-            $(error_msg_id).text("The inputted value exceeds your maximum discount allowed, kindly review it!!");
-            $(error_msg_id).show();
-            return false;
         }else{
-            reservation.calcRoomPrice(prefix);
+            
+            //if max discount value has been set previously, then chk if the intended value is valid- this means a ratio has been inputted previously
+            var max_discount_value_id="#"+prefix + "_max_discount_value";
+            var existing_max_discount_amount=$(max_discount_value_id).val();
+                   
+            if(existing_max_discount_amount){
+                if (existing_max_discount_amount >= intended_discount_amount){
+
+                    //calc ratio
+                    discount_ratio_assigned=(intended_discount_amount * max_percent_discount_allowed_ratio)/existing_max_discount_amount;
+
+                    //if values is valid calc discount ratio & use that to calc prices of weekday,weekend & holdiay,price room
+                    updatePricesAfterInputtedAmountIsModified(prefix,discount_ratio_assigned,weekday,weekend,holiday);
+
+                }else{
+                    $(error_msg_id).text(error_message);
+                    $(error_msg_id).show();
+                    return false;
+                }
+
+            }else{
+                 //else get the max discount val by calc with the room price & chk if its valid
+                var max_discount_percent_allowed_ratio=parseFloat(max_percent_discount_allowed)/100;
+                var maximum_discount_amount_allowed=max_discount_percent_allowed_ratio * price_room;
+
+                if (maximum_discount_amount_allowed >= intended_discount_amount){
+
+                        //calc ratio of discount given
+                        discount_ratio_assigned = (intended_discount_amount/price_room);
+
+                        //if values is valid calc discount ratio & use that to calc prices of weekday,weekend & holdiay,price room
+                        updatePricesAfterInputtedAmountIsModified(prefix,discount_ratio_assigned,weekday,weekend,holiday);
+
+                    }else{
+                        $(error_msg_id).text(error_message);
+                        $(error_msg_id).show();
+                        return false;
+                    }
+            }
         }
+
+        reservation.calcRoomPrice(prefix);
     }
 
     function closeWindow(mode, guest_type, page_number) {

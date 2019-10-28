@@ -204,12 +204,6 @@ class Resv_model extends App_model {
             $this->db->insert($table, $data);
             $insert_id = $this->db->insert_id();
             
-            //send to report api
-            $section=$table;
-            $action="insert_into_report";
-            $endpoint_type=$table;
-            $this->sendToReports("POST",$section,$action,$endpoint_type,$data);
-
             //log if account was already closed
             if ($log_action === "yes") {
                 $module = "folio";
@@ -247,15 +241,7 @@ class Resv_model extends App_model {
 
             $this->db->where('ID', $folio_ID);
             $this->db->update($table, $data);
-
-            //send to report api        
-            $section="reservation_folio_item";
-            $action="update_report";
-            $data_for_update=$data;
-            $endpoint_type = 'reservationfolioitems';
-
-            $this->getIDAndUpdateReports($section,$action,$data_for_update,$table,'ID',$folio_ID,$endpoint_type);
-            
+       
             
 
             //log if account was already closed
@@ -467,6 +453,12 @@ class Resv_model extends App_model {
         $discount = $this->input->post('guest_discount');
         $discount_type = $this->input->post('guest_discount_type');
         $discount_ratio = $this->input->post('guest_discount_ratio');
+        $max_discount_value = $this->input->post('guest_max_discount_value');
+        $weekday_no_deductions = $this->input->post('guest_weekday_no_deductions');
+        $weekend_no_deductions = $this->input->post('guest_weekend_no_deductions');
+        $holiday_no_deductions = $this->input->post('guest_holiday_no_deductions');
+        $price_room_no_deductions = $this->input->post('guest_price_room_no_deductions');
+
         $invoice = $this->input->post('guest_invoice');
         $comp_nights = $this->input->post('guest_comp_nights');
         $comp_visits = $this->input->post('guest_comp_visits');
@@ -513,6 +505,11 @@ class Resv_model extends App_model {
                 'discount' => $discount,
                 'discount_type'=>$discount_type,
                 'discount_ratio'=>$discount_ratio,
+                'max_discount_value'=>$max_discount_value,
+                'weekday_no_deductions'=>$weekday_no_deductions,
+                'weekend_no_deductions'=>$weekend_no_deductions,
+                'holiday_no_deductions'=>$holiday_no_deductions,
+                'price_room_no_deductions'=>$price_room_no_deductions,
                 'invoice' => $invoice,
                 'comp_nights' => $comp_nights,
                 'comp_visits' => $comp_visits,
@@ -560,13 +557,7 @@ class Resv_model extends App_model {
                 'signature_created' => $this->session->us_signature,
                 'date_created' => $curr_date
             );
-            $this->db->insert("reservationitems", $data);
-            
-            //send to report api
-            // $section="reservation_item";
-            // $action="insert_into_report";
-            // $this->sendToReports("POST",$section,$action,$data);
-            
+            $this->db->insert("reservationitems", $data);            
 
             //insert prices
             $data = array(
@@ -584,6 +575,11 @@ class Resv_model extends App_model {
                 'discount' => $discount,
                 'discount_type'=>$discount_type,
                 'discount_ratio'=>$discount_ratio,
+                'max_discount_value'=>$max_discount_value,
+                'weekday_no_deductions'=>$weekday_no_deductions,
+                'weekend_no_deductions'=>$weekend_no_deductions,
+                'holiday_no_deductions'=>$holiday_no_deductions,
+                'price_room_no_deductions'=>$price_room_no_deductions,
                 'invoice' => $invoice,
                 'comp_nights' => $comp_nights,
                 'comp_visits' => $comp_visits,
@@ -821,6 +817,12 @@ class Resv_model extends App_model {
         $discount = $this->input->post('group_discount');
         $discount_type = $this->input->post('group_discount_type');
         $discount_ratio = $this->input->post('group_discount_ratio');
+        $max_discount_value = $this->input->post('group_max_discount_value');
+        $weekday_no_deductions = $this->input->post('group_weekday_no_deductions');
+        $weekend_no_deductions = $this->input->post('group_weekend_no_deductions');
+        $holiday_no_deductions = $this->input->post('group_holiday_no_deductions');
+        $price_room_no_deductions = $this->input->post('group_price_room_no_deductions');
+
         $price_total = $this->input->post('group_price_total');
         $comp_nights = $this->input->post('group_comp_nights');
         $comp_visits = $this->input->post('group_comp_visits');
@@ -858,6 +860,11 @@ class Resv_model extends App_model {
                 'discount' => $discount,
                 'discount_type'=>$discount_type,
                 'discount_ratio'=>$discount_ratio,
+                'max_discount_value'=>$max_discount_value,
+                'weekday_no_deductions'=>$weekday_no_deductions,
+                'weekend_no_deductions'=>$weekend_no_deductions,
+                'holiday_no_deductions'=>$holiday_no_deductions,
+                'price_room_no_deductions'=>$price_room_no_deductions,
                 'comp_nights' => $comp_nights,
                 'comp_visits' => $comp_visits
             );
@@ -913,6 +920,11 @@ class Resv_model extends App_model {
                 'discount' => $discount,
                 'discount_type'=>$discount_type,
                 'discount_ratio'=>$discount_ratio,
+                'max_discount_value'=>$max_discount_value,
+                'weekday_no_deductions'=>$weekday_no_deductions,
+                'weekend_no_deductions'=>$weekend_no_deductions,
+                'holiday_no_deductions'=>$holiday_no_deductions,
+                'price_room_no_deductions'=>$price_room_no_deductions,
                 'comp_nights' => $comp_nights,
                 'comp_visits' => $comp_visits,
                 'block_pos' => 'no',
@@ -1170,7 +1182,8 @@ class Resv_model extends App_model {
             $results['room']=$res['resv_room_title'];
         }
 
-        $q = "SELECT ri.status as folio_status,rf.*,rp.discount_type,rp.discount_ratio,rp.discount FROM reservationitems as ri "
+        // $q = "SELECT ri.status as folio_status,rf.*,rp.discount_type,rp.discount_ratio,rp.discount FROM reservationitems as ri "
+        $q = "SELECT ri.status as folio_status,rf.*,rp.discount_type,rp.discount_ratio FROM reservationitems as ri "
                 . "left join reservationfolioitems as rf "
                 . "on (ri.reservation_id=rf.reservation_id) "
                 . "left join reservationpriceitems as rp "
@@ -1265,7 +1278,8 @@ class Resv_model extends App_model {
         //         . " WHERE rf.reservation_id='$reservation_id' "
         //         . " $sort $limit";
 
-        $q = "SELECT ri.status as folio_status,rf.*,rp.discount_type,rp.discount_ratio,rp.discount FROM reservationitems as ri "
+        // $q = "SELECT ri.status as folio_status,rf.*,rp.discount_type,rp.discount_ratio,rp.discount FROM reservationitems as ri "
+        $q = "SELECT ri.status as folio_status,rf.*,rp.discount_type,rp.discount_ratio FROM reservationitems as ri "
                 . "left join reservationfolioitems as rf "
                 . "on (ri.reservation_id=rf.reservation_id) "
                 . "left join reservationpriceitems as rp "
@@ -1438,7 +1452,7 @@ class Resv_model extends App_model {
 
     public function getFoliosForPrint($reservation_id, $filter_val = FALSE) {
 
-        $sale_total = $refund_total = $payment_total = 0;
+        $sale_total = $refund_total = $payment_total = $vat_total=0;
 
         $sort = "order by rf.ID ASC";
         if ($filter_val) {
@@ -1448,7 +1462,8 @@ class Resv_model extends App_model {
         $results['data'] = array();
         $results['count'] = 0;
 
-        $q = "SELECT ro.title as folio_room_number,ri.client_name,rf.*,rp.discount FROM reservationitems as ri "
+        // $q = "SELECT ro.title as folio_room_number,ri.client_name,rf.*,rp.discount FROM reservationitems as ri "
+        $q = "SELECT ro.title as folio_room_number,ri.client_name,rf.* FROM reservationitems as ri "
                 . "left join reservationfolioitems as rf "
                 . "on (ri.reservation_id=rf.reservation_id) "
                 . "left join reservationpriceitems as rp "
@@ -1474,6 +1489,16 @@ class Resv_model extends App_model {
             $sale_total = $result['SUM'];
         }
 
+        $q_vat_total = "SELECT SUM(rf.vat) AS SUM FROM reservationfolioitems as rf "
+                . "WHERE rf.action='sale' "
+                . "AND rf.reservation_id='$reservation_id' $sort";
+
+        $query_vat_total = $this->db->query($q_vat_total);
+        if ($query_vat_total->num_rows() > 0) {
+            $result = $query_vat_total->row_array();
+            $vat_total = $result['SUM'];
+        }
+
         $q_payment_total = "SELECT SUM(rf.debit) AS SUM FROM reservationfolioitems as rf "
                 . "WHERE rf.action='payment' AND rf.description<>'CASH REFUND' "
                 . "AND rf.reservation_id='$reservation_id' $sort";
@@ -1495,10 +1520,12 @@ class Resv_model extends App_model {
 
         $amount_received = floatval($payment_total - $refund_total);
         $folio_diff = floatval($amount_received - $sale_total);
+
         $totals = array(
             'SALE_TOTAL' => number_format($sale_total, 2),
             'PAYMENT_TOTAL' => number_format($amount_received, 2),
-            'FOLIO_DIFF' => number_format($folio_diff, 2)
+            'FOLIO_DIFF' => number_format($folio_diff, 2),
+            'VAT' => number_format($vat_total, 2)
         );
         $results['totals'] = $totals;
 
@@ -1929,13 +1956,16 @@ class Resv_model extends App_model {
             if (($last_rooms_charge <= $presentday) && ($last_rooms_charge <= $lastcloseday)) {
                 $day_type = date("D", strtotime($lastcloseday));
                 $target_day = "";
+                $no_deductions = "";
                 if ($day_type === "Fri" || $day_type === "Sat" || $day_type === "Sun") {
                     $target_day = "rp.weekend";
+                    $no_deductions="rp.weekend_no_deductions";
                 } else {
                     $target_day = "rp.weekday";
+                    $no_deductions="rp.weekday_no_deductions";
                 }
-                $q_charge = "SELECT ri.reservation_id,$target_day as price,ro.description,rp.folio_room,"
-                        . "ri.room_number,acct_sale.ID as acct_number from reservationitems as ri "
+                $q_charge = "SELECT ri.reservation_id,$target_day as price, $no_deductions as no_deductions,ro.description,rp.folio_room,rp.comp_nights,rp.comp_visits,rp.comp_nights_charged,rp.discount_ratio, "
+                        . "ri.room_number,acct_sale.ID as acct_number,acct_sale.vattype,acct_sale.vatpercent from reservationitems as ri "
                         . "left join reservationpriceitems as rp on (ri.reservation_id=rp.reservation_id)"
                         . "left join roomitems as ro on (ri.room_number=ro.ID) "
                         . "left join roomtypeitems as rt on (ro.roomtype=rt.ID) "
@@ -1946,52 +1976,91 @@ class Resv_model extends App_model {
                 $query = $this->db->query($q_charge);
                 if ($query->num_rows() > 0) {
                     $result = $query->row_array();
-                    $terminal = "001";
-                    $pak = "A:";
-                    $charge = "ROOM";
-                    $qty = $plu_group = $plu = 1;
+
+                    // $terminal = "001";
+                    $pak = "";
                     $now = $last_rooms_charge . " " . date('H:i:s');
-                    $curr_resv = $result['reservation_id'];
-                    $room_number = $result['room_number'];
+                    $this->roomCharges($result,$pak,$reason,$now);
+                    // $charge = "ROOM";
+                    // $qty = $plu_group = $plu = 1;
+                    // 
+                    // $curr_resv = $result['reservation_id'];
+                    // $room_number = $result['room_number'];
+                    // $vat=0;
+                    // $discount=0;
 
-                    $data = array(
-                        'reservation_id' => $curr_resv,
-                        'description' => $result['description'],
-                        'terminal' => $terminal,
-                        'credit' => $result['price'],
-                        'price' => $result['price'],
-                        'qty' => $qty,
-                        'action' => 'sale',
-                        'sub_folio' => $result['folio_room'],
-                        'account_number' => $result['acct_number'],
-                        'plu_group' => $plu_group,
-                        'plu' => $plu,
-                        'charge' => $charge,
-                        'pak' => $pak,
-                        'reason' => $reason,
-                        'signature_created' => $this->session->us_signature,
-                        'date_created' => $now
-                    );
-                    $this->db->insert('reservationfolioitems', $data);
-                    $insert_id = $this->db->insert_id();
-                    //update room_charge for this reservation
-                    $this->db->set('last_room_charge', $now);
-                    $this->db->where('reservation_id', $curr_resv);
-                    $this->db->update('reservationitems');
+                    // $uncharged_complementary_nights_exist=false;
+                    // $room_charge_price=0;
+                    // $comp_nights=$result['comp_nights'];
+                    // $comp_visits=$result['comp_visits'];
+                    // $comp_nights_charged=$result['comp_nights_charged'];
+                    // $description=$result['description'];
 
-                    //update reports
-                    $section="reservation_item";
-                    $action="update_report";
-                    $data_for_update=array('last_room_charge'=>$now);
-                    $endpoint_type='reservationitems';
-                    $this->getIDAndUpdateReports($section,$action,$data_for_update,'reservationitems','reservation_id',$curr_resv,$endpoint_type);
+                    // //VAT
+                    // $vattype=$result['vattype'];
+                    // $vatpercent=$result['vatpercent'];
+
+                    // //DISCOUNT
+                    // $discount_ratio=$result['discount_ratio'];
+                    // $discount_no_deductions=$result['discount_no_deductions'];
+
+                    // //chk for complementary nights
+                    // if($comp_visits=="yes" && ($comp_nights != $comp_nights_charged)){
+                    //     $uncharged_complementary_nights_exist=true;
+                    //     $description+=" [COMPLEMENTARY]";
+                    // }else{
+                    //     $room_charge_price=$result['price'];
+
+                    //     //chk for exclusive vat
+                    //     if($vattype=="excl" && ($vatpercent > 0)){
+                    //         $vat=floatval($room_charge_price) * floatval($vatpercent/100);
+                    //     }
+
+                    //     //calc discounts
+                    //     if($discount_ratio > 0){
+                    //         $discount=floatval($discount_ratio) * floatval($discount_no_deductions);
+                    //     }
+                    // }
+
+                    // $data = array(
+                    //     'reservation_id' => $curr_resv,
+                    //     'description' => $description,
+                    //     'terminal' => $terminal,
+                    //     'credit' => $room_charge_price,
+                    //     'price' => $room_charge_price,
+                    //     'qty' => $qty,
+                    //     'action' => 'sale',
+                    //     'sub_folio' => $result['folio_room'],
+                    //     'account_number' => $result['acct_number'],
+                    //     'plu_group' => $plu_group,
+                    //     'plu' => $plu,
+                    //     'charge' => $charge,
+                    //     'pak' => $pak,
+                    //     'reason' => $reason,
+                    //     'signature_created' => $this->session->us_signature,
+                    //     'date_created' => $now,
+                    //     'vat'=>$vat,
+                    //     'discount'=>$discount
+                    // );
+                    // $this->db->insert('reservationfolioitems', $data);
+                    // $insert_id = $this->db->insert_id();
+
+                    // if($uncharged_complementary_nights_exist){
+                    //     //update room_charge for this reservation
+                    //     $this->db->set('comp_nights_charged', $comp_nights_charged +1);
+                    //     $this->db->where('reservation_id', $curr_resv);
+                    //     $this->db->update('reservationpriceitems');
+                    // }
+
+                    // //update room_charge for this reservation
+                    // $this->db->set('last_room_charge', $now);
+                    // $this->db->where('reservation_id', $curr_resv);
+                    // $this->db->update('reservationitems');
                     
-
-                    
-                    //update room status
-                    $this->db->set('status', 4);
-                    $this->db->where('ID', $room_number);
-                    $this->db->update('roomitems');
+                    // //update room status
+                    // $this->db->set('status', 4);
+                    // $this->db->where('ID', $room_number);
+                    // $this->db->update('roomitems');
 
                     $res['response'] = "success";
                     $res['message'] = "Manual Room Charge Successful";
@@ -2001,7 +2070,95 @@ class Resv_model extends App_model {
         return json_encode($res);
     }
 
-    /* confrim valid charge date
+    private function roomCharges($result,$pak,$reason,$now){
+
+        $terminal = "001";
+        $pak = $pak;
+        $charge = "ROOM";
+        $qty = $plu_group = $plu = 1;
+        // $now = $last_rooms_charge . " " . date('H:i:s');
+        $vat=0;
+        $discount=0;
+        $uncharged_complementary_nights_exist=false;
+        $room_charge_price=0;
+        $curr_resv = $result['reservation_id'];
+        $room_number = $result['room_number'];
+        $comp_nights=$result['comp_nights'];
+        $comp_visits=$result['comp_visits'];
+        $comp_nights_charged=$result['comp_nights_charged'];
+        $description=$result['description'];
+
+        //VAT
+        $vattype=$result['vattype'];
+        $vatpercent=$result['vatpercent'];
+
+        //DISCOUNT
+        $discount_ratio=$result['discount_ratio'];
+        $discount_no_deductions=$result['no_deductions'];
+
+        //chk for complementary nights
+        if($comp_visits=="yes" && ($comp_nights != $comp_nights_charged)){
+            $uncharged_complementary_nights_exist=true;
+            $description+=" [COMPLEMENTARY]";
+
+        }else{
+            $room_charge_price=$result['price'];
+
+            //chk for exclusive vat
+            if($vattype=="excl" && ($vatpercent > 0)){
+                $vat=floatval($room_charge_price) * floatval($vatpercent/100);
+                $room_charge_price+=$vat;
+            }
+
+            //calc discounts
+            if($discount_ratio > 0){
+                $discount=floatval($discount_ratio) * floatval($discount_no_deductions);
+            }
+        }
+
+        $data = array(
+            'reservation_id' => $curr_resv,
+            'description' => $description,
+            'terminal' => $terminal,
+            'credit' => $room_charge_price,
+            'price' => $room_charge_price,
+            'qty' => $qty,
+            'action' => 'sale',
+            'sub_folio' => $result['folio_room'],
+            'account_number' => $result['acct_number'],
+            'plu_group' => $plu_group,
+            'plu' => $plu,
+            'charge' => $charge,
+            'pak' => $pak,
+            'reason' => $reason,
+            'signature_created' => $this->session->us_signature,
+            'date_created' => $now,
+            'vat'=>$vat,
+            'discount_unit_charged'=>$discount
+        );
+        $this->db->insert('reservationfolioitems', $data);
+        $insert_id = $this->db->insert_id();
+
+        if($uncharged_complementary_nights_exist){
+            //update room_charge for this reservation
+            $this->db->set('comp_nights_charged', $comp_nights_charged +1);
+            $this->db->where('reservation_id', $curr_resv);
+            $this->db->update('reservationpriceitems');
+        }
+
+        //update room_charge for this reservation
+        $this->db->set('last_room_charge', $now);
+        $this->db->where('reservation_id', $curr_resv);
+        $this->db->update('reservationitems');
+        
+        //update room status
+        $this->db->set('status', 4);
+        $this->db->where('ID', $room_number);
+        $this->db->update('roomitems');
+
+    }
+
+        /* confrim valid charge date
          * get the day of the week so as to determine price of room
          * select price,room_type,resv etc for each reservation
          * insert into folio,update last_room_charge for each resv
@@ -2014,6 +2171,7 @@ class Resv_model extends App_model {
         $this->db->select('last_rooms_charge,last_close_account');
         $query = $this->db->get('maintenance');
         if ($query->num_rows() > 0) {
+
             $result = $query->row_array();
             $last_rooms_charge = date("Y-m-d", strtotime($result['last_rooms_charge']));
             $lastcloseday = date("Y-m-d", strtotime($result['last_close_account']));
@@ -2023,13 +2181,17 @@ class Resv_model extends App_model {
             if (($last_rooms_charge <= $presentday) && ($last_rooms_charge <= $lastcloseday)) {
                 $day_type = date("D", strtotime($lastcloseday));
                 $target_day = "";
+                $no_deductions = "";
+
                 if ($day_type === "Fri" || $day_type === "Sat" || $day_type === "Sun") {
                     $target_day = "rp.weekend";
+                    $no_deductions="rp.weekend_no_deductions";
                 } else {
                     $target_day = "rp.weekday";
+                    $no_deductions="rp.weekday_no_deductions";
                 }
-                $q_charge = "SELECT ri.reservation_id,$target_day as price,ro.description,rp.folio_room,"
-                        . "ri.room_number,acct_sale.ID as acct_number from reservationitems as ri "
+                $q_charge = "SELECT ri.reservation_id,$target_day as price,$no_deductions as no_deductions,ro.description,rp.folio_room,rp.comp_nights,rp.comp_visits,rp.comp_nights_charged,rp.discount_ratio, "
+                        . "ri.room_number,acct_sale.ID as acct_number,acct_sale.vattype,acct_sale.vatpercent from reservationitems as ri "
                         . "left join reservationpriceitems as rp on (ri.reservation_id=rp.reservation_id)"
                         . "left join roomitems as ro on (ri.room_number=ro.ID) "
                         . "left join roomtypeitems as rt on (ro.roomtype=rt.ID) "
@@ -2037,62 +2199,93 @@ class Resv_model extends App_model {
                         . "where ri.status='staying' and ri.actual_arrival < '$today' AND rp.charge_from_date < '$today' "
                         . "AND ri.last_room_charge < '$last_rooms_charge' AND ri.account_type='ROOM'";
 
-               //echo $q_charge;exit;
+            //    echo $q_charge;exit;
 
                 $query = $this->db->query($q_charge);
                 if ($query->num_rows() > 0) {
                     $results = $query->result_array();
-                    $charge_count = 0;
-			$terminal = "001";
-                        $pak = "A:";
-                        $charge = "ROOM";
-                        $qty = $plu_group = $plu = 1;
-                        $reason = "";
-			$time=date("H:i:s");
-                        $now = $last_rooms_charge . " " .$time ;
-                    foreach ($results as $result):                        
-                        $curr_resv = $result['reservation_id'];
-                        $room_number = $result['room_number'];
 
-                        $data = array(
-                            'reservation_id' => $curr_resv,
-                            'description' => $result['description'],
-                            'terminal' => $terminal,
-                            'credit' => $result['price'],
-                            'price' => $result['price'],
-                            'qty' => $qty,
-                            'action' => 'sale',
-                            'sub_folio' => $result['folio_room'],
-                            'account_number' => $result['acct_number'],
-                            'plu_group' => $plu_group,
-                            'plu' => $plu,
-                            'charge' => $charge,
-                            'pak' => $pak,
-                            'reason' => $reason,
-                            'signature_created' => $this->session->us_signature,
-                            'date_created' => $now
-                        );
+                    $charge_count = 0;
+			        // $terminal = "001";
+                    $pak = "A:";
+                    // $charge = "ROOM";
+                    // $qty = $plu_group = $plu = 1;
+                    $reason = "";
+                    $time=date("H:i:s");
+                    $now = $last_rooms_charge . " " .$time ;
+                    
+
+                    // $uncharged_complementary_nights_exist=false;
+
+                    foreach ($results as $result):   
+                        $this->roomCharges($result,$pak,$reason,$now);
+
+                        // $curr_resv = $result['reservation_id'];
+                        // $room_number = $result['room_number'];
+                        // $room_charge_price=0;
+                        // $comp_nights=$result['comp_nights'];
+                        // $comp_visits=$result['comp_visits'];
+                        // $comp_nights_charged=$result['comp_nights_charged'];
+                        // $description=$result['description'];
+                        // $vat=0;
+                        // $vattype=$result['vattype'];
+                        // $vatpercent=$result['vatpercent'];
+
+                        //chk for complementary nights
+                        // if($comp_visits=="yes" && ($comp_nights != $comp_nights_charged)){
+                        //     $uncharged_complementary_nights_exist=true;
+                        //     $description.=" [COMPLEMENTARY]";
+
+                        // }else{
+                        //     $room_charge_price=$result['price'];
+
+                        //     //chk for exclusive vat
+                        //     if($vattype=="excl" && ($vatpercent >0)){
+                        //         $vat=floatval($room_charge_price) * floatval($vatpercent/100);
+                        //     }
+                        // }
+
+                        // $data = array(
+                        //     'reservation_id' => $curr_resv,
+                        //     'description' => $description,
+                        //     'terminal' => $terminal,
+                        //     'credit' => $room_charge_price,
+                        //     'price' => $room_charge_price,
+                        //     'qty' => $qty,
+                        //     'action' => 'sale',
+                        //     'sub_folio' => $result['folio_room'],
+                        //     'account_number' => $result['acct_number'],
+                        //     'plu_group' => $plu_group,
+                        //     'plu' => $plu,
+                        //     'charge' => $charge,
+                        //     'pak' => $pak,
+                        //     'reason' => $reason,
+                        //     'signature_created' => $this->session->us_signature,
+                        //     'date_created' => $now,
+                        //     'vat'=>$vat
+                        // );
                         
-                        $this->db->insert('reservationfolioitems', $data);
-                        $insert_id = $this->db->insert_id();
+                        // $this->db->insert('reservationfolioitems', $data);
+                        // $insert_id = $this->db->insert_id();
+
+                        // if($uncharged_complementary_nights_exist){
+                        //     //update room_charge for this reservation
+                        //     $this->db->set('comp_nights_charged', $comp_nights_charged +1);
+                        //     $this->db->where('reservation_id', $curr_resv);
+                        //     $this->db->update('reservationpriceitems');
+                        // }
+                        
 
                         //update room_charge for this reservation
-                        $this->db->set('last_room_charge', $now);
-                        $this->db->where('reservation_id', $curr_resv);
-                        $this->db->update('reservationitems');
+                        // $this->db->set('last_room_charge', $now);
+                        // $this->db->where('reservation_id', $curr_resv);
+                        // $this->db->update('reservationitems');
 
-                        //update reports
-                        $section="reservation_item";
-                        $action="update_report";
-                        $data_for_update=array('last_room_charge'=>$now);
-                        $endpoint_type='reservationitems';
-                        $this->getIDAndUpdateReports($section,$action,$data_for_update,'reservationitems','reservation_id',$curr_resv,$endpoint_type);
-                       
 
                         //update room status
-                        $this->db->set('status', 4);
-                        $this->db->where('ID', $room_number);
-                        $this->db->update('roomitems');
+                        // $this->db->set('status', 4);
+                        // $this->db->where('ID', $room_number);
+                        // $this->db->update('roomitems');
                         $charge_count++;
                     endforeach;
 
@@ -2165,12 +2358,6 @@ class Resv_model extends App_model {
                         $this->db->where('reservation_id',$reservation_id);
                         $this->db->update('reservationitems');
 
-                        //update reports
-                        $section="reservation_item";
-                        $action="update_report";
-                        $data_for_update=array('last_account_close'=>$nextcloseday);
-                        $endpoint_type='reservationitems';
-                        $this->getIDAndUpdateReports($section,$action,$data_for_update,'reservationitems','reservation_id',$reservation_id,$endpoint_type);
                         
                     endforeach;
 
@@ -2356,11 +2543,14 @@ class Resv_model extends App_model {
             //get current time
             $charge_day=$app_day = date("Y-m-d", strtotime($this->getAppInfo()));
             
-            if($comp_nights > 0){
-                $date=date_create($charge_day);
-                date_add($date,date_interval_create_from_date_string($comp_nights." days"));
-                $charge_day=date_format($date,"Y-m-d");
-            }
+            /** modifying this process - rather than skip the complementary day, we will charge that day with zero amount
+             * this is done in the room charge method
+             */
+            // if($comp_nights > 0){
+            //     $date=date_create($charge_day);
+            //     date_add($date,date_interval_create_from_date_string($comp_nights." days"));
+            //     $charge_day=date_format($date,"Y-m-d");
+            // }
             $now = $app_day . " " . date('H:i:s');
             $zeros = "0000-00-00 00:00:00";
 
@@ -2781,8 +2971,8 @@ class Resv_model extends App_model {
         }else if ($type == "reservation") {
             $q = "SELECT DISTINCT ri.ID,ri.arrival,ri.nights,ri.departure,ri.client_name,ri.remarks,ri.adults,"
                     . "ri.signature_created,ri.signature_modified,ri.status,ri.actual_arrival,ri.actual_departure,"
-                    . "rp.price_room,rp.price_total,p.description as price_r,rp.comp_nights,rp.block_pos,ro.title as room_title,"
-                    . "rt.title as roomtype, rp.weekday,rp.weekend"
+                    . "rp.price_room,rp.price_total,rp.discount,p.description as price_r,rp.comp_nights,rp.block_pos,ro.title as room_title,"
+                    . "rt.title as roomtype, rp.weekday,rp.weekend,rf.vat"
                     . " from reservationitems as "
                     . "ri left join reservationpriceitems as rp on (ri.reservation_id=rp.reservation_id)"
                     . " left join priceitems as p on (rp.price_rate = p.ID) "

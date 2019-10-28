@@ -83,6 +83,7 @@ class Report extends App {
         $data['sale_total'] = $totals['SALE_TOTAL'];
         $data['payment_total'] = $totals['PAYMENT_TOTAL'];
         $data['balance_left'] = $totals['FOLIO_DIFF'];
+        $data['vat_total'] = $totals['VAT'];
 
         $page_nav = $this->page_nav;
         $page_nav["base_url"] = base_url() . 'report/printFolios/' . $resv_id . '/' . $paper_type;
@@ -185,7 +186,7 @@ class Report extends App {
         $this->checkAccess($this->session->reservation, 2);
         $results = $this->resv_model->getReports('reservation',$resv_id);
         $results2 = $this->resv_model->getReports('resev_payments',$resv_id);
-                
+
         $page = "reservation_details_vat";
         
         $data = $this->data;

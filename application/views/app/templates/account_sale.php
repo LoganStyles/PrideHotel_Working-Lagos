@@ -160,7 +160,7 @@ if ($form_error) {
                             
                             <label class="col-sm-3 control-label col-lg-3" for="account_sale_vatpercent">VAT (%)</label>
                             <div class="col-lg-3 col-sm-3">
-                                <input class=" form-control" id="account_sale_vatpercent" value="<?php echo $vatpercent; ?>" name="account_sale_vatpercent" type="text" />                            
+                                <input class=" form-control" id="account_sale_vatpercent" value="<?php echo $vatpercent; ?>" name="account_sale_vatpercent" type="number" min="0" max="10" />                            
                             </div> 
                         </div>
                         

@@ -96,6 +96,14 @@ if (!empty($nights_error)) {
                         <input type="hidden" name="guest_price_rate_id" id="guest_price_rate_id" value="<?php echo $price_rate_id; ?>">
                         <input type="hidden" name="guest_discount_type" id="guest_discount_type" value="<?php echo $discount_type; ?>">
                         <input type="hidden" name="guest_discount_ratio" id="guest_discount_ratio" value="<?php echo $discount_ratio; ?>">
+                        
+                        <!--hidden values but not submitted, used to hold values temporarily-->
+                        <input type="hidden" name="guest_max_discount_value" id="guest_max_discount_value" value="<?php echo $max_discount_value; ?>">
+                        <input type="hidden" name="guest_weekday_no_deductions" id="guest_weekday_no_deductions" value="<?php echo $weekday_no_deductions; ?>">
+                        <input type="hidden" name="guest_weekend_no_deductions" id="guest_weekend_no_deductions" value="<?php echo $weekend_no_deductions; ?>">
+                        <input type="hidden" name="guest_holiday_no_deductions" id="guest_holiday_no_deductions" value="<?php echo $holiday_no_deductions; ?>">
+                        <input type="hidden" name="guest_price_room_no_deductions" id="guest_price_room_no_deductions" value="<?php echo $price_room_no_deductions; ?>">
+                        <!--hidden values but not submitted, used to hold values temporarily-->
 
                         <div class="form-group ">
                             <label for="guest_arrival" class="col-sm-1 col-lg-1 control-label">Arrival</label>
@@ -431,7 +439,7 @@ if (!empty($nights_error)) {
 
                             <label for="guest_comp_visits" class="col-sm-1 control-label">Comp.Visits</label>
                             <div class="col-lg-2 col-sm-2">
-                                <select disabled  class="form-control " name="guest_comp_visits" id="guest_comp_visits">
+                                <select readonly  class="form-control " name="guest_comp_visits" id="guest_comp_visits">
                                     <option value="no" <?php
                                     if ($comp_visits === "no") {
                                         echo 'selected';

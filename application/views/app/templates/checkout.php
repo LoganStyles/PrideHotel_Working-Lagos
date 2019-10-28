@@ -102,7 +102,9 @@ if ($bill1 == 0 && $bill2 == 0 && $bill3 == 0 && $bill4 == 0 && $inv == 0) {
                             <label for="checkout_bill3" class="col-sm-2 col-lg-2 control-label">INV</label>
                             <div class="col-sm-2 col-lg-2">
                                 <input readonly class=" form-control" id="checkout_bill3" name="checkout_bill3" value="<?php echo $inv; ?>" type="number" />
-                            </div>                                                      
+                            </div> 
+
+                                                                                 
                         </div> 
 
                     </div>
