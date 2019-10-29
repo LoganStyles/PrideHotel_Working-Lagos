@@ -802,7 +802,7 @@ class Resv extends App {
     
     public function confirmOperations() {
     //    $reason="yes";
-    //    $type="charge";
+    //    $type="backup";
         $reason=$_POST['reason'];
         $type=$_POST['type'];
         
