@@ -1452,7 +1452,7 @@ class Resv_model extends App_model {
 
     public function getFoliosForPrint($reservation_id, $filter_val = FALSE) {
 
-        $sale_total = $refund_total = $payment_total = $vat_total=0;
+        $sale_total = $refund_total = $payment_total = $vat_total=$service_charge_total=$sub_total=0;
 
         $sort = "order by rf.ID ASC";
         if ($filter_val) {
@@ -1462,7 +1462,6 @@ class Resv_model extends App_model {
         $results['data'] = array();
         $results['count'] = 0;
 
-        // $q = "SELECT ro.title as folio_room_number,ri.client_name,rf.*,rp.discount FROM reservationitems as ri "
         $q = "SELECT ro.title as folio_room_number,ri.client_name,rf.* FROM reservationitems as ri "
                 . "left join reservationfolioitems as rf "
                 . "on (ri.reservation_id=rf.reservation_id) "
@@ -1487,6 +1486,16 @@ class Resv_model extends App_model {
         if ($query_sale_total->num_rows() > 0) {
             $result = $query_sale_total->row_array();
             $sale_total = $result['SUM'];
+        }
+
+        $q_service_charge = "SELECT SUM(rf.credit) AS SUM FROM reservationfolioitems as rf "
+                . "WHERE rf.action='sale' "
+                . "and rf.description ='SERVICE CHARGE' AND rf.reservation_id='$reservation_id' $sort";
+
+        $query_service_charge = $this->db->query($q_service_charge);
+        if ($query_service_charge->num_rows() > 0) {
+            $result = $query_service_charge->row_array();
+            $service_charge_total = $result['SUM'];
         }
 
         $q_vat_total = "SELECT SUM(rf.vat) AS SUM FROM reservationfolioitems as rf "
@@ -1519,13 +1528,16 @@ class Resv_model extends App_model {
         }
 
         $amount_received = floatval($payment_total - $refund_total);
-        $folio_diff = floatval($amount_received - $sale_total);
+        $sub_total=$sale_total + $vat_total + $service_charge_total;
+        $folio_diff = floatval($amount_received - $sub_total);
 
         $totals = array(
             'SALE_TOTAL' => number_format($sale_total, 2),
             'PAYMENT_TOTAL' => number_format($amount_received, 2),
             'FOLIO_DIFF' => number_format($folio_diff, 2),
-            'VAT' => number_format($vat_total, 2)
+            'VAT' => number_format($vat_total, 2),
+            'SERVICE_CHARGE' => number_format($service_charge_total, 2),
+            'SUB_TOTAL' => number_format($sub_total, 2)
         );
         $results['totals'] = $totals;
 
@@ -1540,7 +1552,8 @@ class Resv_model extends App_model {
          */
     public function checkout($reservation_id, $modifier = FALSE) {
 
-        $sale_total = $refund_total = $payment_total = 0;
+        $sale_total = $refund_total = $payment_total = $service_charge_total=$sub_total=0;
+
         $app_day = date("Y-m-d", strtotime($this->getAppInfo())) . " " . date("H:i:s");
         if (!empty($modifier)) {
             $resv_status = $folio_status = "ledger";
@@ -1620,6 +1633,16 @@ class Resv_model extends App_model {
             $sale_total = $result['SUM'];
         }
 
+        $q_service_charge = "SELECT SUM(rf.credit) AS SUM FROM reservationfolioitems as rf "
+                . "WHERE rf.action='sale' "
+                . "and rf.description ='SERVICE CHARGE' AND rf.reservation_id='$reservation_id' $sort";
+
+        $query_service_charge = $this->db->query($q_service_charge);
+        if ($query_service_charge->num_rows() > 0) {
+            $result = $query_service_charge->row_array();
+            $service_charge_total = $result['SUM'];
+        }
+
         $q_vat_total = "SELECT SUM(rf.vat) AS SUM FROM reservationfolioitems as rf "
                 . "WHERE rf.action='sale' "
                 . "AND rf.reservation_id='$reservation_id' $sort";
@@ -1650,13 +1673,27 @@ class Resv_model extends App_model {
         }
 
         $amount_received = floatval($payment_total - $refund_total);
-        $folio_diff = floatval($amount_received - $sale_total);
+        $sub_total=$sale_total + $vat_total + $service_charge_total;
+        $folio_diff = floatval($amount_received - $sub_total);
+
         $totals = array(
             'SALE_TOTAL' => number_format($sale_total, 2),
             'PAYMENT_TOTAL' => number_format($amount_received, 2),
             'FOLIO_DIFF' => number_format($folio_diff, 2),
-            'VAT' => number_format($vat_total, 2)
+            'VAT' => number_format($vat_total, 2),
+            'SERVICE_CHARGE' => number_format($service_charge_total, 2),
+            'SUB_TOTAL' => number_format($sub_total, 2)
         );
+
+        // $amount_received = floatval($payment_total - $refund_total);
+        // $folio_diff = floatval($amount_received - $sale_total);
+
+        // $totals = array(
+        //     'SALE_TOTAL' => number_format($sale_total, 2),
+        //     'PAYMENT_TOTAL' => number_format($amount_received, 2),
+        //     'FOLIO_DIFF' => number_format($folio_diff, 2),
+        //     'VAT' => number_format($vat_total, 2)
+        // );
         $results['totals'] = $totals;
 
         return $results;
@@ -2221,7 +2258,7 @@ class Resv_model extends App_model {
             //chk for exclusive vat
             if($vattype=="excl" && ($vatpercent > 0)){
                 $vat=floatval($room_charge_price) * floatval($vatpercent/100);
-                $room_charge_price+=$vat;
+                // $room_charge_price+=$vat;
             }
 
             //calc discounts

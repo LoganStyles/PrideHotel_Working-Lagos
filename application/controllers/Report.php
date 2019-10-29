@@ -84,6 +84,8 @@ class Report extends App {
         $data['payment_total'] = $totals['PAYMENT_TOTAL'];
         $data['balance_left'] = $totals['FOLIO_DIFF'];
         $data['vat_total'] = $totals['VAT'];
+        $data['service_charge'] = $totals['SERVICE_CHARGE'];
+        $data['sub_total'] = $totals['SUB_TOTAL'];
 
         $page_nav = $this->page_nav;
         $page_nav["base_url"] = base_url() . 'report/printFolios/' . $resv_id . '/' . $paper_type;
@@ -149,6 +151,8 @@ class Report extends App {
         $data['payment_total'] = $totals['PAYMENT_TOTAL'];
         $data['balance_left'] = $totals['FOLIO_DIFF'];
         $data['vat_total'] = $totals['VAT'];
+        $data['service_charge'] = $totals['SERVICE_CHARGE'];
+        $data['sub_total'] = $totals['SUB_TOTAL'];
 
         $personal = $results['personal'];
         $data['client_name'] = $personal['client_name'];
