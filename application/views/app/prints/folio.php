@@ -11,7 +11,8 @@
                             $content = $client_name = $room_number = $reservation_id = "";
                             $count = 1;
                             foreach ($collection as $row):
-                                $vat=(!empty($row["vat"])?($row["vat"]):0);
+                                // $vat=(!empty($row["vat"])?($row["vat"]):0);
+                                $vat=(!empty($row["vatpercent"])?($row["vatpercent"]):0);
                                 $discount=(!empty($row["discount_unit_charged"])?($row["discount_unit_charged"]):0);
                                 $folio_id = $row["ID"];
                                 $reservation_id = $row["reservation_id"];
@@ -60,7 +61,7 @@
                             <th>Debit</th>
                             <th>Credit</th>
                             <th>Discount</th>
-                            <th>VAT</th>
+                            <th>VAT (%)</th>
                         </tr>
                     </thead>
                     <tbody>

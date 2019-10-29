@@ -789,6 +789,15 @@ class Resv extends App {
         $res = $this->resv_model->manualRoomCharge($reservation,$reason);
         echo $res;
     }
+
+    public function serviceCharge() {
+        $reason=$_POST['service_charge_reason'];
+        $reservation=$_POST['service_charge_reservation']; 
+        // $reason="yes";
+        // $reservation="000000000020";
+        $res = $this->resv_model->serviceCharge($reservation,$reason);
+        echo $res;
+    }
     
     
     public function confirmOperations() {

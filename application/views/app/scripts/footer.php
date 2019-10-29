@@ -1682,6 +1682,47 @@
             });
         });
 
+         //service charge submission
+         $('#folio_service_charge_modal').submit(function (e) {
+            e.preventDefault();
+            
+            $('#folio_service_charge_error').removeClass('alert alert-danger error');
+            $('#folio_service_charge_error').text('');
+
+            var service_charge_reason = $('#folio_service_charge_reason').val();
+            if (service_charge_reason === "") {//confirm that service_charge reason exists
+                showErrorResponse('#folio_service_charge_error', 'Provide a reason');
+                return false;
+            }
+            var curr_resv = $('#folio_service_charge_resv').val();
+            console.log('service_charge_reason ' + service_charge_reason);
+            console.log('curr_resv ' + curr_resv);
+
+            $.ajax({
+                url: "<?php echo site_url('resv/serviceCharge'); ?>",
+                type: "POST",
+                dataType: "json",
+                data: {
+                    "service_charge_reason": service_charge_reason,
+                    "service_charge_reservation": curr_resv
+                },
+                success: function (data) {
+                    if (data.response === "success") {
+                        $('#folio_service_charge_error').removeClass('alert alert-danger error');
+                        $('#folio_service_charge_error').text('');
+                        location.reload();
+                    } else {
+                        console.log(data.message);
+                        showErrorResponse('#folio_service_charge_error', data.message);
+                    }
+                },
+                error: function () {
+                    console.log('service charge failed ');
+                    showErrorResponse('#folio_service_charge_error', 'service charge failed');
+                }
+            });
+        });
+
         //confirm
         $('#confirm_modal').submit(function (e) {
             e.preventDefault();

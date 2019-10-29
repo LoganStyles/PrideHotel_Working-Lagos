@@ -1620,6 +1620,16 @@ class Resv_model extends App_model {
             $sale_total = $result['SUM'];
         }
 
+        $q_vat_total = "SELECT SUM(rf.vat) AS SUM FROM reservationfolioitems as rf "
+                . "WHERE rf.action='sale' "
+                . "AND rf.reservation_id='$reservation_id' $sort";
+
+        $query_vat_total = $this->db->query($q_vat_total);
+        if ($query_vat_total->num_rows() > 0) {
+            $result = $query_vat_total->row_array();
+            $vat_total = $result['SUM'];
+        }
+
         $q_payment_total = "SELECT SUM(rf.debit) AS SUM FROM reservationfolioitems as rf "
                 . "WHERE rf.action='payment' AND rf.description<>'CASH REFUND' "
                 . "AND rf.reservation_id='$reservation_id' $sort";
@@ -1644,7 +1654,8 @@ class Resv_model extends App_model {
         $totals = array(
             'SALE_TOTAL' => number_format($sale_total, 2),
             'PAYMENT_TOTAL' => number_format($amount_received, 2),
-            'FOLIO_DIFF' => number_format($folio_diff, 2)
+            'FOLIO_DIFF' => number_format($folio_diff, 2),
+            'VAT' => number_format($vat_total, 2)
         );
         $results['totals'] = $totals;
 
@@ -1872,13 +1883,7 @@ class Resv_model extends App_model {
                     $this->db->where('ID', $return_ID);
                     $this->db->update('reservationfolioitems', $data);
 
-                    //send to report api        
-                    $section="reservationfolioitems";
-                    $action="update_report";
-                    $endpoint_type = 'reservationfolioitems';
-                    $data_for_update=$data;
-
-                    $this->getIDAndUpdateReports($section,$action,$data_for_update,'reservationfolioitems','ID',$return_ID,$endpoint_type);
+                    
                 }
             endforeach;
 
@@ -1918,12 +1923,6 @@ class Resv_model extends App_model {
                 $this->db->where('reservation_id', $reservation_id);
                 $this->db->update('reservationitems', $data);
 
-                //update reports
-                $section="reservation_item";
-                $action="update_report";
-                $data_for_update=$data;
-                $endpoint_type='reservationitems';
-                $this->getIDAndUpdateReports($section,$action,$data_for_update,'reservationitems','reservation_id',$reservation_id,$endpoint_type);
                 
 
             endforeach;
@@ -1931,6 +1930,121 @@ class Resv_model extends App_model {
             $res['response'] = "success";
             $res['message'] = "Update Overdue Successful";
         }
+        return json_encode($res);
+    }
+
+    public function serviceCharge($reservation_id,$reason = ""){
+
+        $res['response'] = "error";
+        $res['message'] = "service charge failed";
+
+        $this->db->select('last_rooms_charge');
+        $query = $this->db->get('maintenance');
+
+        $service_charge_ratio=0;
+        $service_charge_account_number=0;
+        $folio_credit_total=0;
+        $service_charge_amount=0;
+        $description=$now="";
+        $existing_ID=0;
+        $folio_room="";
+
+        if ($query->num_rows() > 0) {
+            $result = $query->row_array();
+            $last_rooms_charge = date("Y-m-d", strtotime($result['last_rooms_charge']));
+            $now = $last_rooms_charge . " " . date('H:i:s');
+
+                //get value of service charge from acct_sales table
+                $this->db->select('*');
+                $this->db->where('title', 'SC');
+                $query = $this->db->get('account_saleitems');
+
+                if ($query->num_rows() >= 0) {
+                    $row = $query->row_array();
+
+                    $service_charge_ratio =floatval($row["default_price"])/100;
+                    $service_charge_account_number=$row["ID"];
+                    $description=$row["description"];
+                    
+                }
+
+                //find existing service charge
+                $this->db->select('ID');
+                $this->db->where('reservation_id', $reservation_id);
+                $this->db->where('account_number', $service_charge_account_number);
+                $query = $this->db->get('reservationfolioitems');
+
+                if ($query->num_rows() >= 0) {
+                    $row = $query->row_array();
+
+                    $existing_ID=$row["ID"];
+                }
+
+                //select sum of all sales that r not service charges where reserv_id is $reservation_id
+                $q_totals = "SELECT SUM(credit) as folio_credit_sum"
+                . " from reservationfolioitems as fo "
+                . " where reservation_id = '$reservation_id' "
+                . " and action='sale' AND account_number <> '$service_charge_account_number'";
+
+                // print_r($q_totals);exit;
+                // echo $service_charge_ratio;exit;
+
+                $query = $this->db->query($q_totals);
+                if ($query->num_rows() > 0) {
+                    $row = $query->row_array();
+                    $folio_credit_total=$row["folio_credit_sum"];
+                    $service_charge_amount=floatval($folio_credit_total * $service_charge_ratio);
+                }
+
+                $q_charge = "SELECT folio_room "
+                        . "from reservationpriceitems "
+                        . "where reservation_id='$reservation_id' ";
+
+                $query = $this->db->query($q_charge);
+                if ($query->num_rows() > 0) {
+                    $row = $query->row_array();
+                    $folio_room=$row["folio_room"];
+                }
+
+                //create array of values including acct_number & others
+                
+                $data = array(
+                    'reservation_id' => $reservation_id,
+                    'description' => $description,
+                    'terminal' =>"001",
+                    'credit' => $service_charge_amount,
+                    'price' => $service_charge_amount,
+                    'qty' => 1,
+                    'action' => 'sale',
+                    'sub_folio' => $folio_room,
+                    'account_number' => $service_charge_account_number,
+                    'plu_group' => 1,
+                    'plu' => 1,
+                    'charge' => 'SC',
+                    'pak' => '',
+                    'reason' => $reason,
+                    'signature_created' => $this->session->us_signature,
+                    'date_created' => $now
+                    // 'vat'=>$vat,
+                    // 'discount_unit_charged'=>$discount
+                );
+
+                //if ID is not null perform update else insert
+                if($existing_ID >0){
+                    $this->db->where('ID', $existing_ID);
+                    $this->db->update('reservationfolioitems',$data);
+
+                }else{
+                    $this->db->insert('reservationfolioitems', $data);
+                    $insert_id = $this->db->insert_id();
+                }
+                
+                //return response
+                $res['response'] = "success";
+                $res['message'] = "Service Charge Successful";
+
+        }
+
         return json_encode($res);
     }
 
@@ -2134,6 +2248,7 @@ class Resv_model extends App_model {
             'signature_created' => $this->session->us_signature,
             'date_created' => $now,
             'vat'=>$vat,
+            'vatpercent'=>$vatpercent,
             'discount_unit_charged'=>$discount
         );
         $this->db->insert('reservationfolioitems', $data);

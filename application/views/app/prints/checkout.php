@@ -11,7 +11,8 @@
                             $content = $reservation_id = "";
                             $count = 1;
                             foreach ($collection as $row):
-                                $discount=(!empty($row["discount"])?($row["discount"]):0);
+                                $discount=(!empty($row["discount_unit_charged"])?($row["discount_unit_charged"]):0);
+                                $vat=(!empty($row["vatpercent"])?($row["vatpercent"]):0);
                                 $folio_id = $row["ID"];
                                 $reservation_id = $row["reservation_id"];
                                 $description = $row["description"];
@@ -31,6 +32,7 @@
                                 $content.="<td>$debit</td>";
                                 $content.="<td>$credit</td>";
                                 $content.="<td>$discount</td>";
+                                $content.="<td>$vat</td>";
                                 $content.="</tr>";
 
                                 $count++;
@@ -63,6 +65,7 @@
                             <th>Debit</th>
                             <th>Credit</th>
                             <th>Discount</th>
+                            <th>VAT (%)</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -86,7 +89,7 @@
 <div class="row" >
     <div style="margin-left: 30px;color: #000;font-weight: 700">
         <div>TOTAL SALES: &nbsp;&nbsp;N<?php echo $sale_total; ?></div>
-        <!-- <div>TOTAL VAT: &nbsp;&nbsp;N<?php echo $vat_total; ?></div> -->
+        <div>TOTAL VAT: &nbsp;&nbsp;N<?php echo $vat_total; ?></div>
         <div>AMOUNT RECEIVED: &nbsp;&nbsp;N<?php echo $payment_total; ?></div>
         <div>BALANCE DUE: &nbsp;&nbsp;N<?php echo $balance_left; ?></div>
     </div>

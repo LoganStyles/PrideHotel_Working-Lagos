@@ -148,6 +148,7 @@ class Report extends App {
         $data['sale_total'] = $totals['SALE_TOTAL'];
         $data['payment_total'] = $totals['PAYMENT_TOTAL'];
         $data['balance_left'] = $totals['FOLIO_DIFF'];
+        $data['vat_total'] = $totals['VAT'];
 
         $personal = $results['personal'];
         $data['client_name'] = $personal['client_name'];

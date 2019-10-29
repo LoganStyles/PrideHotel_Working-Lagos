@@ -93,6 +93,7 @@ $route['resv/updateOverdueDepartures'] = 'resv/updateOverdueDepartures';
 $route['resv/viewOverdueDepartures/(:any)'] = 'resv/viewOverdueDepartures/$1';
 $route['resv/confirmMoveFolioRoom'] = 'resv/confirmMoveFolioRoom';
 $route['resv/manualRoomCharge'] = 'resv/manualRoomCharge';
+$route['resv/serviceCharge'] = 'resv/serviceCharge';
 $route['resv/nightAudit'] = 'resv/nightAudit';
 $route['resv/ledger/(:any)'] = 'resv/showLedger/$1';
 $route['resv/reports'] = 'resv/showReports';

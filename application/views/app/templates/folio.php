@@ -51,7 +51,8 @@ if (!empty($red_bal)) {
                             $date = date('d/m/Y', strtotime($row["date_created"]));
                             $description = $row["description"];
                             $amount = ($row["debit"] > 0) ? ($row["debit"]) : ($row["credit"]);
-                            $vat = ($row["vat"] > 0) ? ($row["vat"]) : (0);
+                            $vat = ($row["vatpercent"] > 0) ? ($row["vatpercent"]) : (0);
+                            // $vat = ($row["vat"] > 0) ? ($row["vat"]) : (0);
                             $pak = $row["pak"];
                             $sub_folio = $row["sub_folio"];
                             $links = $row["links"];
@@ -230,7 +231,7 @@ if (!empty($red_bal)) {
                                 <th>Date</th>
                                 <th>Description</th>
                                 <th>AMOUNT</th>
-                                <th>VAT</th>
+                                <th>VAT (%)</th>
                                 <th>DISCOUNT</th>
                                 <th>PAK</th>
                                 <th>Sub-Folio</th>
@@ -348,6 +349,7 @@ if (!empty($red_bal)) {
                                 $buttons.="<a onclick=\"showDialog('#folio_move_modal','#folio_move_error');\" type=\"button\" class=\"btn btn-default \"><i class=\"fa fa-external-link\"></i>&nbsp;Move</a>&nbsp;";
                                 $buttons.="<a onclick=\"showSingleDialog('confirm','return');\" type=\"button\" class=\"btn btn-default \"><i class=\"fa fa-undo\"></i>&nbsp;Return</a>&nbsp;";
                                 $buttons.="<a onclick=\"showDialog('#folio_manual_charge_modal','#folio_manual_charge_error');\" type=\"button\" class=\"btn btn-default \"><i class=\"fa fa-square-o\"></i>&nbsp;Room Charge</a>&nbsp;";
+                                $buttons.="<a onclick=\"showDialog('#folio_service_charge_modal','#folio_service_charge_error');\" type=\"button\" class=\"btn btn-default \"><i class=\"fa fa-square-o\"></i>&nbsp;Service Charge</a>&nbsp;";
                                 $buttons.="<a onclick=\"checkout(".$checkout_params.");\" type=\"button\" class=\"btn btn-default \"><i class=\"fa fa-road\"></i>&nbsp;Check-out</a>&nbsp;";
                                 }
                                 echo $buttons;
@@ -639,6 +641,37 @@ if (!empty($red_bal)) {
                                 <label for="folio_manual_charge_reason" class="col-sm-2 control-label">Reason</label>
                                 <div class="col-sm-10">
                                     <input  class=" form-control" id="folio_manual_charge_reason" name="folio_manual_charge_reason" type="text" />                                
+                                </div>                                                      
+                            </div>
+                        </div>
+                    </div>                
+            </div>
+            <div class="modal-footer">
+                <input class="btn btn-success btn-sm" type="submit" name="submit" value="OK" />
+                <button type="button" class="btn btn-default" data-dismiss="modal">CANCEL</button>
+            </div>
+            </form> 
+        </div>
+    </div>
+</div>
+
+<div role="dialog" id="folio_service_charge_modal" class="modal fade">
+    <div class="modal-dialog" style="width: 600px;">
+        <div class="modal-content">
+            <div class="modal-header panel-heading dark" >                
+                <h4 class="modal-title" style="text-align:center">SERVICE CHARGE CONFIRMATION</h4>
+            </div>
+            <div class="modal-body">
+                <h5><strong>Confirm Service Charge for <?php echo ucwords($client_name);?></strong></h5>
+                <form class="cmxform form-horizontal adminex-form" id="folio_service_charge_form" action="">
+                    <input type="hidden" name="folio_service_charge_resv"  id="folio_service_charge_resv" value="<?php echo $client_reservation_id; ?>">
+                    <div id="folio_service_charge_error"></div>
+                    <div class="panel-body">
+                        <div class="form">                            
+                            <div class="form-group ">
+                                <label for="folio_service_charge_reason" class="col-sm-2 control-label">Reason</label>
+                                <div class="col-sm-10">
+                                    <input  class=" form-control" id="folio_service_charge_reason" name="folio_service_charge_reason" type="text" />                                
                                 </div>                                                      
                             </div>
                         </div>
