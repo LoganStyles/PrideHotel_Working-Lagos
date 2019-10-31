@@ -871,7 +871,7 @@ class Resv extends App {
         $this->showPage($data, $page, 0); 
     }
 
-    public function viewFolios($resv_ID,$master_id, $page_number, $mode, $client_name, $bills_type, $folio_room,$room_number, $offset = 0) {
+    public function viewFolios($resv_ID,$master_id, $page_number, $mode, $client_name, $bills_type, $folio_room,$room_number=0, $offset = 0) {
         /* displays paginised list of folios items,
          * stores mode & resv ID,client name,folio_room bill
          * gets folios from all bills or specific ones */

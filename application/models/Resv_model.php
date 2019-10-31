@@ -2571,136 +2571,87 @@ class Resv_model extends App_model {
         return $results;
     }
 
-    // public function backup(){
+    public function backup(){
 
-    //     $res['response'] = "error";
-    //     $message = "Backups Failed/Incomplete ";
-
-    //     //backup locally
-    //     $app_day = date("Y-m-d", strtotime($this->getAppInfo()));
-    //     $host = $this->config->item('host');
-    //     $user = $this->config->item('username');
-    //     $pass = $this->config->item('password');
-    //     $dbname = $this->config->item('database');
-
-    //     $file_name = str_replace("-", "_", $app_day);
-    //     $local_backup_dir = 'backups/';
-    //     $backupFile = $local_backup_dir . $file_name . ".sql";
-    //     $tableName="reservationfolioitems";
-
-    //     $q_backup="SELECT * INTO OUTFILE '$backupFile' FROM $tableName";
-    //     $query = $this->db->query($q_backup);
-
-    // }
-
-    // public function backup(){
-
-    //     $res['response'] = "error";
-    //     $message = "Backups Failed/Incomplete ";
-
-    //     //backup locally
-    //     $app_day = date("Y-m-d", strtotime($this->getAppInfo()));
-    //     $host = $this->config->item('host');
-    //     $user = $this->config->item('username');
-    //     $pass = $this->config->item('password');
-    //     $dbname = $this->config->item('database');
-
-    //     $file_name = str_replace("-", "_", $app_day);
-    //     $local_backup_dir = 'backups/';
-    //     $backup_name = $local_backup_dir . $file_name . ".sql";
-
-    //     // Info required for cPanel access
-    //     $cpuser = "webmobil"; // Username used to login to CPanel
-    //     $cppass = "}&e6ZLDZ~Pkr"; // Password used to login to CPanel
-    //     $domain = "webmobiles.com.ng"; // Domain name where CPanel is run
-    //     $skin = "paper_lantern"; // Set to cPanel skin you use (script won't work if it doesn't match)
-
-    //     // Info required for FTP host
-    //     $ftpuser = ""; // Username for FTP account
-    //     $ftppass = ""; // Password for FTP account
-    //     $ftphost = "t"; // Full hostname or IP address for FTP host
-    //     $ftpmode = "passiveftp"; // FTP mode ("ftp" for active, "passiveftp" for passive)
-    //     $ftpport = "21"; // FTP port, usually 21
-    //     $ftpdir = "/backups"; // Path to folder where backups should be stored off of FTP root. Folder must exist.
-
-    //     // Notification information
-    //     $notifyemail = "support@webmobiles.com.ng"; // Email address to send results
-
-    //     // Secure or non-secure mode
-    //     $secure = 1; // Set to 1 for SSL (requires SSL support), otherwise will use standard HTTP
-
-    //     // Set to 1 to have web page result appear in your cron log
-    //     $debug = 1;
-
-        
-    // // *********** Don't Touch!! *********
-
-    // if ($secure) {
-    //     $url = "ssl://".$domain;
-    //     $port = 2083;
-    // } else {
-    //     $url = $domain;
-    //     $port = 2082;
-    // }
-    
-    // $socket = fsockopen($url,$port);
-    // if (!$socket) { echo "Failed to open socket connection... Bailing out!\n"; exit; }
-    
-    // // Encode authentication string
-    // $authstr = $cpuser.":".$cppass;
-    // $pass = base64_encode($authstr);
-    
-    // $params = "dest=$ftpmode&email=$notifyemail&server=$ftphost&user=$ftpuser&pass=$ftppass&port=$ftpport&rdir=$ftpdir&submit=Generate Backup";
-    
-    // // Make POST to cPanel
-    // fputs($socket,"POST /frontend/".$skin."/backup/dofullbackup.html?".$params." HTTP/1.0\r\n");
-    // fputs($socket,"Host: $domain\r\n");
-    // fputs($socket,"Authorization: Basic $pass\r\n");
-    // fputs($socket,"Connection: Close\r\n");
-    // fputs($socket,"\r\n");
-    
-    // // Grab response even if we don't do anything with it.
-    // while (!feof($socket)) {
-    // $response = fgets($socket,4096);
-    // if ($debug) echo $response;
-    // }
-    
-    // fclose($socket);
-
-    // $res['message'] = $message;
-    //     return $res;
-
-
-
-    // }
-    
-
-    public function backup() {
         $res['response'] = "error";
         $message = "Backups Failed/Incomplete ";
-        //backup locally
+
         $app_day = date("Y-m-d", strtotime($this->getAppInfo()));
-        $host = $this->config->item('host');
-        $user = $this->config->item('username');
-        $pass = $this->config->item('password');
         $dbname = $this->config->item('database');
-        
+
         $file_name = str_replace("-", "_", $app_day);
         $local_backup_dir = 'backups/';
-        $backup_name = $local_backup_dir . $file_name . ".sql";
 
+        $tables = array();
+        $q_show="SHOW TABLES";
+        $num_fields=0;
+        $return="";
+        $query = $this->db->query($q_show);
+
+        if ($query->num_rows() > 0){
+            $results = $query->result_array();
+
+            foreach($results as $result){
+                $identifier="Tables_in_".$dbname;
+                $tables[] = $result[$identifier];
+            }
+            
+            //cycle through
+            foreach($tables as $table){
+
+                $q_select="SELECT * FROM ".$table;
+                $query_select = $this->db->query($q_select);
+                $num_fields=$query_select->num_fields();
+
+                $return.= 'DROP TABLE IF EXISTS '.$table.';';
+
+                $q_create="SHOW CREATE TABLE ".$table;
+                $query = $this->db->query($q_create);
+                $row2 = $query->row_array();
+
+                $values_query =  $this->db->query($q_select);
+                $table_rows = $values_query->result_array();
+                $num_rows=$values_query->num_rows();
+
+                $return.= "\n\n".$row2['Create Table'].";\n\n";
+
+                    foreach ($table_rows as $row):
+                        $return.='INSERT INTO '.$table.' VALUES(';
+                        $field_count = 0;
+
+                        foreach($row as $key=>$value){
+
+                            $value = addslashes($row[$key]);
+                            $row[$key] = preg_replace("/\n/","/\\n/",$value);
+                            if (isset($row[$key])) { $return.= '"'.$row[$key].'"' ; } else { $return.= '""'; }
+                            if ($field_count < ($num_fields-1)) { $return.= ','; }
+                            $field_count++;
+                         }
+                         $return.= ");\n";
+                    endforeach;
+
+                    $return.="\n\n\n";
+            }
+
+            //save file
+            $handle = fopen($local_backup_dir .'db-backup-'.$file_name.'-'.(md5(implode(',',$tables))).'.sql','w+');
+            fwrite($handle,$return);
+            fclose($handle);
+
+                 if (!empty($return)) {
+                        $res['response'] = "success";
+                        $message="Backup Successful";
+                    }
         
-        $backup = $this->config->item('backup') . $backup_name;
-        exec($backup, $output, $return);
-        if (!$return) {
-            $message = "";
-            $res['response'] = "success";
-            $message.="Backup1 Successful";
+                
         }
-        
+
         $res['message'] = $message;
         return $res;
+
     }
+
+  
 
     /* get last_acct_close,actual_departure
          * chk if actual_departue > last_acct_close
@@ -2739,15 +2690,6 @@ class Resv_model extends App_model {
                 );
                 $this->db->where('reservation_id', $resv_id);
                 $this->db->update('reservationitems', $data);
-
-                //update reports
-                $section="reservation_item";
-                $action="update_report";
-                $data_for_update=$data;
-                $endpoint_type='reservationitems';
-                $this->getIDAndUpdateReports($section,$action,$data_for_update,'reservationitems','reservation_id',$resv_id,$endpoint_type);
-                
-
 
                 //update folio as well
                 $this->db->set('status', 'active');

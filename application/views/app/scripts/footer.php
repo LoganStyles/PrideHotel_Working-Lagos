@@ -835,7 +835,7 @@
         master_id = (master_id) ? (master_id) : ("0");
         var client_name = $('.booking_radio.active .booking_hidden_client').text();
         client_name = client_name.replace(/[^A-Za-z.\s?]/g, "");
-        console.log('master_id is ' + master_id);
+        // console.log('master_id is ' + master_id);
 
         var redirect = BASE_URL + "resv/viewFolios/" + resv_id + "/" + master_id + "/" + page_number + "/" + mode + "/" + client_name + "/" + bill_type + "/" + folio_room + "/" + room_number;
         window.location = redirect;
