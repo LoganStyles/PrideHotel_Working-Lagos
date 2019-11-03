@@ -341,6 +341,11 @@ if (!empty($red_bal)) {
                                 <?php
                                 $checkout_params="'$client_reservation_id','$client_name','$room_number','$departure'";
                                 $buttons = "";
+
+                                if($folio_status==="confirmed"){
+                                    $buttons.="<a onclick=\"showDialog('#folio_receipt_modal','#folio_receipt_error');\" type=\"button\" class=\"btn btn-default \"><i class=\"fa fa-print\"></i>&nbsp;Print Receipt</a>&nbsp;";
+                                }
+                                
                                 if($folio_status==="staying" ){
                                     if(!empty($master_id)){
                                         $buttons.="<a onclick=\"showSingleDialog('confirm','master');\" type=\"button\" class=\"btn btn-default \"><i class=\"fa fa-sitemap\"></i>&nbsp;Master</a>&nbsp;";
@@ -352,6 +357,8 @@ if (!empty($red_bal)) {
                                 $buttons.="<a onclick=\"showDialog('#folio_service_charge_modal','#folio_service_charge_error');\" type=\"button\" class=\"btn btn-default \"><i class=\"fa fa-square-o\"></i>&nbsp;Service Charge</a>&nbsp;";
                                 $buttons.="<a onclick=\"checkout(".$checkout_params.");\" type=\"button\" class=\"btn btn-default \"><i class=\"fa fa-road\"></i>&nbsp;Check-out</a>&nbsp;";
                                 }
+
+                                
                                 echo $buttons;
                                 ?>
                             </div>

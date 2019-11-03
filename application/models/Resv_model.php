@@ -237,7 +237,6 @@ class Resv_model extends App_model {
                 'status' => $status
             );
 
-            // print_r($data);exit;
 
             $this->db->where('ID', $folio_ID);
             $this->db->update($table, $data);
@@ -1182,7 +1181,6 @@ class Resv_model extends App_model {
             $results['room']=$res['resv_room_title'];
         }
 
-        // $q = "SELECT ri.status as folio_status,rf.*,rp.discount_type,rp.discount_ratio,rp.discount FROM reservationitems as ri "
         $q = "SELECT ri.status as folio_status,rf.*,rp.discount_type,rp.discount_ratio FROM reservationitems as ri "
                 . "left join reservationfolioitems as rf "
                 . "on (ri.reservation_id=rf.reservation_id) "
@@ -1264,6 +1262,7 @@ class Resv_model extends App_model {
         $sort = "order by ID ASC";
         $results['data'] = array();
         $results['count'] = 0;
+        $results['room'] = "";
 
         if ($limit_val) {
             $limit = "LIMIT $offset,$limit_val";
@@ -1272,13 +1271,16 @@ class Resv_model extends App_model {
             $sort = " and sub_folio='$filter_val' order by ID ASC";
         }
 
-        // $q = "SELECT ri.status as folio_status,rf.* FROM reservationitems as ri "
-        //         . "left join reservationfolioitems as rf "
-        //         . "on (ri.reservation_id=rf.reservation_id) "
-        //         . " WHERE rf.reservation_id='$reservation_id' "
-        //         . " $sort $limit";
+        $q_room="SELECT ro.title as resv_room_title FROM reservationitems as ri "
+                . "left join roomitems as ro on (ri.room_number =ro.ID) "
+                . "WHERE ri.reservation_id='$reservation_id'";
+        
+        $query_room=  $this->db->query($q_room);
+        if($query_room->num_rows() > 0){
+            $res=$query_room->row_array();
+            $results['room']=$res['resv_room_title'];
+        }
 
-        // $q = "SELECT ri.status as folio_status,rf.*,rp.discount_type,rp.discount_ratio,rp.discount FROM reservationitems as ri "
         $q = "SELECT ri.status as folio_status,rf.*,rp.discount_type,rp.discount_ratio FROM reservationitems as ri "
                 . "left join reservationfolioitems as rf "
                 . "on (ri.reservation_id=rf.reservation_id) "
@@ -1406,14 +1408,15 @@ class Resv_model extends App_model {
             );
         $res['payment_total']=array('debit'=>0);
 
-        //confirm reservation exists as a staying guest
+        //confirm reservation exists as a staying or confirmed guest
         $receiver_resvation_id = $this->security->xss_clean($receiver_resv);
         $this->db->select('ID');
         $this->db->where('reservation_id', $receiver_resvation_id);
         $this->db->where('status', 'staying');
+        $this->db->or_where('status', 'confirmed');
         $query = $this->db->get('reservationitems');
         if ($query->num_rows() <= 0) {
-            $res['message'] = "Account is not a staying guest";
+            $res['message'] = "Account owner is not a staying or confirmed guest";
             return $res;
         }
 
@@ -1847,6 +1850,7 @@ class Resv_model extends App_model {
         $res['response'] = "error";
         $res['message'] = "Move failed";
         $curr_date = date('Y-m-d', strtotime($this->getAppInfo())) . " " . date('H:i:s');
+        
         //confirm receiver reservation exists
         $receiver_resvation_id = $this->security->xss_clean($receiver_resv);
         $this->db->select('ID');
@@ -2023,8 +2027,6 @@ class Resv_model extends App_model {
                 . " where reservation_id = '$reservation_id' "
                 . " and action='sale' AND account_number <> '$service_charge_account_number'";
 
-                // print_r($q_totals);exit;
-                // echo $service_charge_ratio;exit;
 
                 $query = $this->db->query($q_totals);
                 if ($query->num_rows() > 0) {

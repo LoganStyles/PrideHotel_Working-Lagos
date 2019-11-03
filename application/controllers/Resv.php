@@ -865,7 +865,6 @@ class Resv extends App {
         $data["type"] = "reports";
         $data["received"][0]["type"] = "report";     
         $data["collection"] = $this->resv_model->getUsers();
-//        print_r($data["collection"]);exit;
         $page="report";
         //show page
         $this->showPage($data, $page, 0); 
@@ -938,7 +937,7 @@ class Resv extends App {
 
 
 
-        $limit = 10;
+        $limit = 30;
         $page = "folio";
         if ($bills_type !== "ALL") {
             $results = $this->resv_model->getFoliosForBILL($resv_ID, $offset, $limit, $bills_type);
@@ -947,7 +946,6 @@ class Resv extends App {
         }
         
         $data["collection"] = $results['data'];
-        // print_r($data["collection"]);exit;
         $data["total"] = $results['count'];
         $data["resv_room_title"] = $results['room'];
         //totals
