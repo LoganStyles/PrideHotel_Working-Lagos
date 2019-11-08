@@ -3056,6 +3056,7 @@ class Resv_model extends App_model {
     public function getReports($type,$resv_id=NULL) {
         
         $app_date = date('Y-m-d', strtotime($this->getAppInfo()));
+        $where="";
 
         $report_user = $this->input->post('report_user');
         if($report_user=="all"){
@@ -3094,8 +3095,12 @@ class Resv_model extends App_model {
                         . " ORDER BY ri.departure ASC";
                 break;
             case "staying guests":
-                $where = " and ri.account_type ='ROOM' and DATE(ri.actual_arrival) <= '$from' "
-                        . "AND (DATE(ri.actual_departure) >='$to' or ri.actual_departure='0000-00-00 00:00:00') "
+                // $where = " and ri.account_type ='ROOM' and DATE(ri.actual_arrival) <= '$from' "
+                //         . "AND (DATE(ri.actual_departure) >='$to' or ri.actual_departure='0000-00-00 00:00:00') "
+                //         . "$and_user ORDER BY ri.actual_arrival ASC";
+                //modified this on 08/11/19
+
+                $where = " and ri.account_type ='ROOM' and ri.status='staying' and DATE(ri.actual_arrival) <= '$from' "
                         . "$and_user ORDER BY ri.actual_arrival ASC";
                 break;
             case "reservation":
@@ -3190,7 +3195,7 @@ class Resv_model extends App_model {
                     . "on(ri.roomtype =rt.ID) where 1=1 $where";
         }
 
-        // echo $q;exit;
+        echo $q;exit;
 
         $query = $this->db->query($q);
         if ($query->num_rows() > 0) {

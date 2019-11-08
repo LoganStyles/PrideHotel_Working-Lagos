@@ -74,10 +74,10 @@ $active_group = 'default';
 $query_builder = TRUE;
 
 $db['default'] = array(
-    'dsn'	=> 'mysql:host=localhost;dbname=pridehotel_ikeja_03_11_19',
-	'username' => 'pridehotel_ikeja_03_11_19',
-	'password' => 'pridehotel_ikeja_03_11_19',
-	'database' => 'pridehotel_ikeja_03_11_19',
+    'dsn'	=> 'mysql:host=localhost;dbname=pridehotel_vi_08_11_19',
+	'username' => 'pridehotel_vi_08_11_19',
+	'password' => 'pridehotel_vi_08_11_19',
+	'database' => 'pridehotel_vi_08_11_19',
 	// 'dsn'	=> 'mysql:host=localhost;dbname=pridehotel_290819_copy',
 	// 'username' => 'pridehotel_290819_copy',
 	// 'password' => 'pridehotel_290819_copy',
