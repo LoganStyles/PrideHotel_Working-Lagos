@@ -3195,7 +3195,7 @@ class Resv_model extends App_model {
                     . "on(ri.roomtype =rt.ID) where 1=1 $where";
         }
 
-        echo $q;exit;
+        // echo $q;exit;
 
         $query = $this->db->query($q);
         if ($query->num_rows() > 0) {
