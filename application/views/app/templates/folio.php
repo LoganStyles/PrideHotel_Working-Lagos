@@ -297,11 +297,27 @@ if (!empty($red_bal)) {
                                     <input  class=" form-control" id="folio_payment_total" name="folio_payment_total" value="<?php echo $payment_total; ?>" type="text" readonly="true"/>                                
                                 </div>
 
+                                <label for="folio_vat" class="col-sm-1 control-label">VAT</label>
+                                <div class="col-sm-2">
+                                    <input  class=" form-control" id="folio_vat" name="folio_vat" value="<?php echo $vat_total; ?>" type="text" readonly="true"/>                                
+                                </div>                         
+
+                            </div>
+
+                            <div>
+                             
+
+                                <label for="folio_service_charge" class="col-sm-1 control-label">SERVICE CHARGE</label>
+                                <div class="col-sm-2">
+                                    <input  class=" form-control" id="folio_service_charge" name="folio_service_charge" value="<?php echo $service_charge_total; ?>" type="text" readonly="true"/>                                
+                                </div> 
+                            
+
                                 <label for="folio_diff" class="col-sm-1 control-label">BALANCE</label>
                                 <div class="col-sm-2">
                                     <input style="<?php echo $red_balance; ?>" class=" form-control" id="folio_diff" name="folio_diff" value="<?php echo $folio_diff; ?>" type="text" readonly="true"/>                                
-                                </div>                               
-
+                                </div>
+                            
                             </div>
                         </div>
                     </div>
@@ -374,6 +390,7 @@ if (!empty($red_bal)) {
                             </div>
                         </div>
                         <div class="clearfix"></div> 
+                        <br><br><br><br>
                     </div>
 
                 </div>
@@ -426,7 +443,7 @@ if (!empty($red_bal)) {
 
                             <label for="folio_payment_amount" class="col-sm-2 control-label">Amount</label>
                             <div class="col-sm-4">
-                                <input  class=" form-control" id="folio_payment_amount" name="folio_payment_amount" value="<?php echo $amount; ?>" type="number" />                                
+                                <input  class=" form-control" id="folio_payment_amount" name="folio_payment_amount" step="0.01" value="<?php echo $amount; ?>" type="number" />                                
                             </div>
                         </div>
 
@@ -499,7 +516,7 @@ if (!empty($red_bal)) {
 
                             <label for="folio_sale_price" class="col-sm-2 control-label">Price</label>
                             <div class="col-sm-4">
-                                <input  class=" form-control" id="folio_sale_price" name="folio_sale_price" value="<?php echo $sale_price; ?>" type="number" />                                
+                                <input  class=" form-control" id="folio_sale_price" name="folio_sale_price" value="<?php echo $sale_price; ?>" type="number" step="0.01" />                                
                             </div>                                                       
                         </div>
 
@@ -511,7 +528,7 @@ if (!empty($red_bal)) {
 
                             <label for="folio_sale_amount" class="col-sm-2 control-label">Amount</label>
                             <div class="col-sm-4">
-                                <input  class=" form-control" id="folio_sale_amount" name="folio_sale_amount" value="<?php echo $sale_amount; ?>" type="number" readonly="true" />                                
+                                <input  class=" form-control" id="folio_sale_amount" name="folio_sale_amount" value="<?php echo $sale_amount; ?>" type="number" step="0.01" readonly="true" />                                
                             </div>
                         </div>
 

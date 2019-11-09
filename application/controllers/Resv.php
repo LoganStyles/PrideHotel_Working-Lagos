@@ -936,7 +936,6 @@ class Resv extends App {
         }
 
 
-
         $limit = 30;
         $page = "folio";
         if ($bills_type !== "ALL") {
@@ -952,6 +951,9 @@ class Resv extends App {
         $totals = $results['totals'];
         $data["sale_total"] = $totals['SALE_TOTAL'];
         $data["payment_total"] = $totals['PAYMENT_TOTAL'];
+        $data["vat_total"] = $totals['VAT_TOTAL'];
+        $data["service_charge_total"] = $totals['SERVICE_CHARGE_TOTAL'];
+        $data["sub_total"] = $totals['SUB_TOTAL'];
         $data["folio_diff"] = $totals['FOLIO_DIFF'];
         $data["red_bal"] = $totals['RED_BAL'];
         //bill totals deductions
@@ -995,6 +997,7 @@ class Resv extends App {
         $data["bill4"] = (isset($deductions['BILL4'])) ? ($deductions['BILL4']) : (0);
         $data["inv"] = (isset($deductions['INV'])) ? ($deductions['INV']) : (0);
         //show page
+        
         $this->showPage($data, $page, 0);
     }
 

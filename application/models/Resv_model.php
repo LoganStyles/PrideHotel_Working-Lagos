@@ -1084,6 +1084,8 @@ class Resv_model extends App_model {
 
     public function getFolioDeductions($reservation_id) {
         $total_sale_bill1 = $total_sale_bill2 = $total_sale_bill3 = $total_sale_bill4 = $total_sale_inv = 0;
+        $total_vat_bill1 = $total_vat_bill2 = $total_vat_bill3 = $total_vat_bill4 = $total_vat_inv = 0;
+        $total_service_charge_bill1 = $total_service_charge_bill2 = $total_service_charge_bill3 = $total_service_charge_bill4 = $total_service_charge_inv = 0;
         $total_payment_bill1 = $total_payment_bill2 = $total_payment_bill3 = $total_payment_bill4 = $total_payment_inv = 0;
         $total_refund_bill1 = $total_refund_bill2 = $total_refund_bill3 = $total_refund_bill4 = $total_refund_inv = 0;
 
@@ -1103,7 +1105,48 @@ class Resv_model extends App_model {
             $total_sale_bill3 = $result['BILL3'];
             $total_sale_bill4 = $result['BILL4'];
             $total_sale_inv = $result['INV'];
-        }
+            }
+
+
+            $q_vat = "SELECT SUM(CASE WHEN sub_folio='BILL1' THEN vat END)AS BILL1,
+                    SUM(CASE WHEN sub_folio='BILL2' THEN vat END)AS BILL2,
+                    SUM(CASE WHEN sub_folio='BILL3' THEN vat END)AS BILL3,
+                    SUM(CASE WHEN sub_folio='BILL4' THEN vat END)AS BILL4,
+                    SUM(CASE WHEN sub_folio='INV' THEN vat END)AS INV
+                    FROM reservationfolioitems WHERE reservation_id='$reservation_id' "
+                . "AND (action='sale' AND status<>'closed' AND description<>'CASH REFUND')";
+
+
+                $query_vat_bills = $this->db->query($q_vat);
+                if ($query_vat_bills->num_rows() > 0) {
+                        $result = $query_vat_bills->row_array();
+                        $total_vat_bill1 = $result['BILL1'];
+                        $total_vat_bill2 = $result['BILL2'];
+                        $total_vat_bill3 = $result['BILL3'];
+                        $total_vat_bill4 = $result['BILL4'];
+                        $total_vat_inv = $result['INV'];
+                    }
+
+
+            $q_service_charge = "SELECT SUM(CASE WHEN sub_folio='BILL1' THEN credit END)AS BILL1,
+                    SUM(CASE WHEN sub_folio='BILL2' THEN credit END)AS BILL2,
+                    SUM(CASE WHEN sub_folio='BILL3' THEN credit END)AS BILL3,
+                    SUM(CASE WHEN sub_folio='BILL4' THEN credit END)AS BILL4,
+                    SUM(CASE WHEN sub_folio='INV' THEN credit END)AS INV
+                    FROM reservationfolioitems WHERE reservation_id='$reservation_id' "
+                . "AND (action='sale' AND status<>'closed' AND description ='SERVICE CHARGE')";
+
+
+                $query_service_charge_bills = $this->db->query($q_service_charge);
+                if ($query_service_charge_bills->num_rows() > 0) {
+                        $result = $query_service_charge_bills->row_array();
+                        $total_service_charge_bill1 = $result['BILL1'];
+                        $total_service_charge_bill2 = $result['BILL2'];
+                        $total_service_charge_bill3 = $result['BILL3'];
+                        $total_service_charge_bill4 = $result['BILL4'];
+                        $total_service_charge_inv = $result['INV'];
+
+                    }
 
         $q_payment = "SELECT SUM(CASE WHEN sub_folio='BILL1' THEN debit END)AS BILL1,
                     SUM(CASE WHEN sub_folio='BILL2' THEN debit END)AS BILL2,
@@ -1121,6 +1164,7 @@ class Resv_model extends App_model {
             $total_payment_bill3 = $result['BILL3'];
             $total_payment_bill4 = $result['BILL4'];
             $total_payment_inv = $result['INV'];
+            
         }
 
         $q_refund = "SELECT SUM(CASE WHEN sub_folio='BILL1' THEN credit END)AS BILL1,
@@ -1142,11 +1186,23 @@ class Resv_model extends App_model {
         }
 
         /* make deductions */
-        $bill1_diff = $total_sale_bill1 - ($total_payment_bill1 - $total_refund_bill1);
-        $bill2_diff = $total_sale_bill2 - ($total_payment_bill2 - $total_refund_bill2);
-        $bill3_diff = $total_sale_bill3 - ($total_payment_bill3 - $total_refund_bill3);
-        $bill4_diff = $total_sale_bill4 - ($total_payment_bill4 - $total_refund_bill4);
-        $inv_diff = $total_sale_inv - ($total_payment_inv - $total_refund_inv);
+        $amount_received_bill1 =  ($total_payment_bill1 - $total_refund_bill1);
+        $amount_received_bill2 =  ($total_payment_bill2 - $total_refund_bill2);
+        $amount_received_bill3 =  ($total_payment_bill3 - $total_refund_bill3);
+        $amount_received_bill4 =  ($total_payment_bill4 - $total_refund_bill4);
+        $amount_received_inv   =  ($total_payment_inv - $total_refund_inv);
+
+        $sub_total_bill1 = $total_sale_bill1 + $total_vat_bill1 + $total_service_charge_bill1;
+        $sub_total_bill2 = $total_sale_bill2 + $total_vat_bill2 + $total_service_charge_bill2;
+        $sub_total_bill3 = $total_sale_bill3 + $total_vat_bill3 + $total_service_charge_bill3;
+        $sub_total_bill4 = $total_sale_bill4 + $total_vat_bill4 + $total_service_charge_bill4;
+        $sub_total_inv = $total_sale_inv + $total_vat_inv + $total_service_charge_inv;
+
+        $bill1_diff = $amount_received_bill1 - $sub_total_bill1;
+        $bill2_diff = $amount_received_bill2 - $sub_total_bill2;
+        $bill3_diff = $amount_received_bill3 - $sub_total_bill3;
+        $bill4_diff = $amount_received_bill4 - $sub_total_bill4;
+        $inv_diff = $amount_received_inv - $sub_total_inv;
 
         $deductions = array(
             'BILL1' => $bill1_diff,
@@ -1159,7 +1215,7 @@ class Resv_model extends App_model {
     }
 
     public function getFolios($reservation_id, $offset = 0, $limit_val = FALSE) {
-        $sale_total = $refund_total = $payment_total = 0;
+        $sale_total = $refund_total = $payment_total = $vat_total = $service_charge_total =$sub_total= 0;
 
         $limit = "";
         $sort = "order by ID ASC";
@@ -1217,6 +1273,24 @@ class Resv_model extends App_model {
             $sale_total = $result['SUM'];
         }
 
+        $q_vat_total = "SELECT SUM(vat) AS SUM FROM reservationfolioitems WHERE (action='sale') "
+                . "AND reservation_id='$reservation_id' ";
+
+        $query_vat_total = $this->db->query($q_vat_total);
+        if ($query_vat_total->num_rows() > 0) {
+            $result = $query_vat_total->row_array();
+            $vat_total = $result['SUM'];
+        }
+
+        $q_service_charge_total = "SELECT SUM(credit) AS SUM FROM reservationfolioitems WHERE (action='sale') "
+                . "AND reservation_id='$reservation_id' and reservationfolioitems.description ='SERVICE CHARGE'";
+
+        $query_service_charge_total = $this->db->query($q_service_charge_total);
+        if ($query_service_charge_total->num_rows() > 0) {
+            $result = $query_service_charge_total->row_array();
+            $service_charge_total = $result['SUM'];
+        }
+
         $q_payment_total = "SELECT SUM(debit) AS SUM FROM reservationfolioitems "
                 . "WHERE action='payment' AND description<>'CASH REFUND' "
                 . "AND reservation_id='$reservation_id' ";
@@ -1238,12 +1312,17 @@ class Resv_model extends App_model {
         }
 
         $amount_received = floatval($payment_total - $refund_total);
-        $folio_diff = floatval($amount_received - $sale_total);
-        $red_bal = ($sale_total > $amount_received) ? ("red") : ("");
+        $sub_total=$sale_total + $vat_total + $service_charge_total;
+        $folio_diff = floatval($sub_total -$amount_received);
+        $red_bal = ($folio_diff > 0) ? ("red") : ("");
+
         $totals = array(
             'SALE_TOTAL' => number_format($sale_total, 2),
             'PAYMENT_TOTAL' => number_format($amount_received, 2),
+            'VAT_TOTAL' => number_format($vat_total, 2),
+            'SERVICE_CHARGE_TOTAL' => number_format($service_charge_total, 2),
             'FOLIO_DIFF' => number_format($folio_diff, 2),
+            'SUB_TOTAL' => number_format($sub_total, 2),
             'RED_BAL' => $red_bal
         );
         $results['totals'] = $totals;
@@ -1256,7 +1335,9 @@ class Resv_model extends App_model {
         $total_sale_bill = 0;
         $total_payment_bill = 0;
         $total_refund_bill = 0;
-        $sale_total = $refund_total = $payment_total = 0;
+        $total_vat_bill=0;
+        $total_service_charge_bill=0;
+        $sale_total = $refund_total = $payment_total = $vat_total = $service_charge_total = $sub_total= 0;
 
         $limit = "";
         $sort = "order by ID ASC";
@@ -1315,6 +1396,26 @@ class Resv_model extends App_model {
             $total_sale_bill = $result[$filter_val];
         }
 
+        $q_vat = "SELECT SUM(CASE WHEN sub_folio='$filter_val' THEN vat END)AS $filter_val"
+                . " FROM reservationfolioitems WHERE reservation_id='$reservation_id' "
+                . "AND (action='sale'  AND description<>'CASH REFUND')";
+
+        $query_vat_bills = $this->db->query($q_vat);
+        if ($query_vat_bills->num_rows() > 0) {
+            $result = $query_vat_bills->row_array();
+            $total_vat_bill = $result[$filter_val];
+        }
+
+        $q_service_charge = "SELECT SUM(CASE WHEN sub_folio='$filter_val' THEN credit END)AS $filter_val"
+                . " FROM reservationfolioitems WHERE reservation_id='$reservation_id' "
+                . "AND (action='sale'  AND description ='SERVICE CHARGE')";
+
+        $query_service_charge_bills = $this->db->query($q_service_charge);
+        if ($query_service_charge_bills->num_rows() > 0) {
+            $result = $query_service_charge_bills->row_array();
+            $total_service_charge_bill = $result[$filter_val];
+        }
+
         $q_payment = "SELECT SUM(CASE WHEN sub_folio='$filter_val' THEN debit END)AS $filter_val"
                 . " FROM reservationfolioitems WHERE reservation_id='$reservation_id' "
                 . "AND action='payment' ";
@@ -1336,8 +1437,10 @@ class Resv_model extends App_model {
         }
 
         /* make deductions */
-        $bill_diff = $total_sale_bill - ($total_payment_bill - $total_refund_bill);
-
+        $amount_received_bill = floatval($total_payment_bill - $total_refund_bill);
+        $sub_total_bill=$total_sale_bill + $total_vat_bill + $total_service_charge_bill;
+        $bill_diff = floatval($sub_total_bill -$amount_received_bill);
+        
         $deductions = array(
             $filter_val => $bill_diff
         );
@@ -1350,6 +1453,24 @@ class Resv_model extends App_model {
         if ($query_sale_total->num_rows() > 0) {
             $result = $query_sale_total->row_array();
             $sale_total = $result['SUM'];
+        }
+
+        $q_vat_total = "SELECT SUM(vat) AS SUM FROM reservationfolioitems WHERE (action='sale') "
+                . "AND reservation_id='$reservation_id'  $sort";
+
+        $query_vat_total = $this->db->query($q_vat_total);
+        if ($query_vat_total->num_rows() > 0) {
+            $result = $query_vat_total->row_array();
+            $vat_total = $result['SUM'];
+        }
+
+        $q_service_charge_total = "SELECT SUM(credit) AS SUM FROM reservationfolioitems WHERE (action='sale') "
+                . "AND reservation_id='$reservation_id' AND description ='SERVICE CHARGE'  $sort";
+
+        $query_service_charge_total = $this->db->query($q_service_charge_total);
+        if ($query_service_charge_total->num_rows() > 0) {
+            $result = $query_service_charge_total->row_array();
+            $service_charge_total = $result['SUM'];
         }
 
         $q_payment_total = "SELECT SUM(debit) AS SUM FROM reservationfolioitems "
@@ -1373,14 +1494,20 @@ class Resv_model extends App_model {
         }
 
         $amount_received = floatval($payment_total - $refund_total);
-        $folio_diff = floatval($amount_received - $sale_total);
-        $red_bal = ($sale_total > $amount_received) ? ("red") : ("");
+        $sub_total=$sale_total + $vat_total + $service_charge_total;
+        $folio_diff = floatval($sub_total -$amount_received);
+        $red_bal = ($folio_diff > 0) ? ("red") : ("");
+
         $totals = array(
             'SALE_TOTAL' => number_format($sale_total, 2),
             'PAYMENT_TOTAL' => number_format($amount_received, 2),
+            'VAT_TOTAL' => number_format($vat_total, 2),
+            'SERVICE_CHARGE_TOTAL' => number_format($service_charge_total, 2),
             'FOLIO_DIFF' => number_format($folio_diff, 2),
+            'SUB_TOTAL' => number_format($sub_total, 2),
             'RED_BAL' => $red_bal
         );
+
         $results['totals'] = $totals;
 
         return $results;
@@ -1474,7 +1601,6 @@ class Resv_model extends App_model {
                 . " WHERE rf.reservation_id='$reservation_id' "
                 . " $sort";
 
-                // echo $q;exit;
 
         $query = $this->db->query($q);
         if ($query->num_rows() > 0) {
@@ -2905,151 +3031,151 @@ class Resv_model extends App_model {
     }
 
     /*gets reports for api*/
-    public function getReportsApi($type,$report_from,$report_to, $resv_id=NULL){
+    // public function getReportsApi($type,$report_from,$report_to, $resv_id=NULL){
 
-        $app_date = date('Y-m-d', strtotime($this->getAppInfo()));
-        $report_user="all";
-        $and_user="";
-        $fo_and_user="";
+    //     $app_date = date('Y-m-d', strtotime($this->getAppInfo()));
+    //     $report_user="all";
+    //     $and_user="";
+    //     $fo_and_user="";
 
-        //convert report_from
-        $temp_date = str_replace('/', '-', $report_from);
-        $from_date=new DateTime($temp_date);
-        $from_date->setTime(0,0,0);
-        $from= $from_date->format('Y-m-d H:i:s');
+    //     //convert report_from
+    //     $temp_date = str_replace('/', '-', $report_from);
+    //     $from_date=new DateTime($temp_date);
+    //     $from_date->setTime(0,0,0);
+    //     $from= $from_date->format('Y-m-d H:i:s');
 
-        //convert report_to
-        $temp_date = str_replace('/', '-', $report_to);
-        $to_date=new DateTime($temp_date);
-        $to_date->setTime(23,59,59);
-        $to= $to_date->format('Y-m-d H:i:s');
+    //     //convert report_to
+    //     $temp_date = str_replace('/', '-', $report_to);
+    //     $to_date=new DateTime($temp_date);
+    //     $to_date->setTime(23,59,59);
+    //     $to= $to_date->format('Y-m-d H:i:s');
 
-        $results['data'] = array();
-        $results['count'] = 0;
-        $results['totals'] = [];
+    //     $results['data'] = array();
+    //     $results['count'] = 0;
+    //     $results['totals'] = [];
 
 
-        switch ($type) {
-            /*get only guests arriving in this duration:confirmed*/
-            case "arrivals":
-                $where = "and ri.arrival between '$from' AND '$to' $and_user "
-                        . "and ri.status='confirmed' ORDER BY ri.arrival ASC";
-                break;
-            case "departures":
-                $where = "and ri.departure between '$from' AND '$to' $and_user "
-                        . " ORDER BY ri.departure ASC";
-                break;
-            case "staying guests":
-                $where = " and ri.account_type ='ROOM' and DATE(ri.actual_arrival) <= '$from' "
-                        . "AND (DATE(ri.actual_departure) >='$to' or ri.actual_departure='0000-00-00 00:00:00') "
-                        . "$and_user ORDER BY ri.actual_arrival ASC";
-                break;
-            case "reservation":
-            case "resev_payments":
-                if($resv_id){
-                   $where = " and ri.reservation_id ='$resv_id'  "; 
-                }                
-                break;
-            default:
-                break;
-        }
+    //     switch ($type) {
+    //         /*get only guests arriving in this duration:confirmed*/
+    //         case "arrivals":
+    //             $where = "and ri.arrival between '$from' AND '$to' $and_user "
+    //                     . "and ri.status='confirmed' ORDER BY ri.arrival ASC";
+    //             break;
+    //         case "departures":
+    //             $where = "and ri.departure between '$from' AND '$to' $and_user "
+    //                     . " ORDER BY ri.departure ASC";
+    //             break;
+    //         case "staying guests":
+    //             $where = " and ri.account_type ='ROOM' and DATE(ri.actual_arrival) <= '$from' "
+    //                     . "AND (DATE(ri.actual_departure) >='$to' or ri.actual_departure='0000-00-00 00:00:00') "
+    //                     . "$and_user ORDER BY ri.actual_arrival ASC";
+    //             break;
+    //         case "reservation":
+    //         case "resev_payments":
+    //             if($resv_id){
+    //                $where = " and ri.reservation_id ='$resv_id'  "; 
+    //             }                
+    //             break;
+    //         default:
+    //             break;
+    //     }
 
-        if ($type == "sales summary") {
-            $q = "SELECT fo.*,ro.title as room_title,ri.client_name from "
-                    . "reservationfolioitems as fo left join "
-                    . "reservationitems as ri on(fo.reservation_id =ri.reservation_id) "
-                    . "left join roomitems as ro on(ri.room_number=ro.ID)"
-                    . "where fo.date_created between '$from' and '$to' "
-                    . "and fo.action='sale' $fo_and_user order by fo.date_created,fo.signature_created";
+    //     if ($type == "sales summary") {
+    //         $q = "SELECT fo.*,ro.title as room_title,ri.client_name from "
+    //                 . "reservationfolioitems as fo left join "
+    //                 . "reservationitems as ri on(fo.reservation_id =ri.reservation_id) "
+    //                 . "left join roomitems as ro on(ri.room_number=ro.ID)"
+    //                 . "where fo.date_created between '$from' and '$to' "
+    //                 . "and fo.action='sale' $fo_and_user order by fo.date_created,fo.signature_created";
 
-            $q_totals = "SELECT *,SUM(credit) as folio_credit,sum(debit) as folio_debit,"
-                    . "count(description) as transactions from reservationfolioitems as fo "
-                    . "where date_created between '$from' and '$to' "
-                    . "and action='sale' $fo_and_user group by account_number";
+    //         $q_totals = "SELECT *,SUM(credit) as folio_credit,sum(debit) as folio_debit,"
+    //                 . "count(description) as transactions from reservationfolioitems as fo "
+    //                 . "where date_created between '$from' and '$to' "
+    //                 . "and action='sale' $fo_and_user group by account_number";
             
-        }else if ($type == "sales_fnb_summary") {
-            $q = "SELECT fo.*,ro.title as room_title,ri.client_name from "
-                    . "reservationfolioitems as fo left join "
-                    . "reservationitems as ri on(fo.reservation_id =ri.reservation_id) "
-                    . "left join roomitems as ro on(ri.room_number=ro.ID)"
-                    . "where fo.date_created between '$from' and '$to' "
-                    . "and fo.source_app = 'fnb'"
-                    . "and fo.action='sale' $fo_and_user order by fo.date_created,fo.signature_created";
+    //     }else if ($type == "sales_fnb_summary") {
+    //         $q = "SELECT fo.*,ro.title as room_title,ri.client_name from "
+    //                 . "reservationfolioitems as fo left join "
+    //                 . "reservationitems as ri on(fo.reservation_id =ri.reservation_id) "
+    //                 . "left join roomitems as ro on(ri.room_number=ro.ID)"
+    //                 . "where fo.date_created between '$from' and '$to' "
+    //                 . "and fo.source_app = 'fnb'"
+    //                 . "and fo.action='sale' $fo_and_user order by fo.date_created,fo.signature_created";
 
-            $q_totals = "SELECT *,SUM(credit) as folio_credit,sum(debit) as folio_debit,"
-                    . "count(description) as transactions from reservationfolioitems as fo "
-                    . "where date_created between '$from' and '$to' "
-                    . "and fo.source_app = 'fnb'"
-                    . "and action='sale' $fo_and_user group by account_number";
+    //         $q_totals = "SELECT *,SUM(credit) as folio_credit,sum(debit) as folio_debit,"
+    //                 . "count(description) as transactions from reservationfolioitems as fo "
+    //                 . "where date_created between '$from' and '$to' "
+    //                 . "and fo.source_app = 'fnb'"
+    //                 . "and action='sale' $fo_and_user group by account_number";
             
-        } else if ($type == "cashier summary") {
-            $q = "SELECT fo.*,ro.title as room_title,ri.client_name from "
-                    . "reservationfolioitems as fo left join "
-                    . "reservationitems as ri on(fo.reservation_id =ri.reservation_id) "
-                    . "left join roomitems as ro on(ri.room_number=ro.ID) "
-                    . "where fo.date_created between '$from' and '$to' "
-                    . "and fo.action='payment' $fo_and_user order by fo.date_created,fo.signature_created";
+    //     } else if ($type == "cashier summary") {
+    //         $q = "SELECT fo.*,ro.title as room_title,ri.client_name from "
+    //                 . "reservationfolioitems as fo left join "
+    //                 . "reservationitems as ri on(fo.reservation_id =ri.reservation_id) "
+    //                 . "left join roomitems as ro on(ri.room_number=ro.ID) "
+    //                 . "where fo.date_created between '$from' and '$to' "
+    //                 . "and fo.action='payment' $fo_and_user order by fo.date_created,fo.signature_created";
 
-            $q_totals = "SELECT *,SUM(credit) as folio_credit,sum(debit) as folio_debit,"
-                    . "count(description) as transactions from reservationfolioitems "
-                    . "where date_created between '$from' and '$to' "
-                    . "and action='payment' $fo_and_user group by account_number";					
+    //         $q_totals = "SELECT *,SUM(credit) as folio_credit,sum(debit) as folio_debit,"
+    //                 . "count(description) as transactions from reservationfolioitems "
+    //                 . "where date_created between '$from' and '$to' "
+    //                 . "and action='payment' $fo_and_user group by account_number";					
 					 
-        } else if ($type == "audit trail") {
-            $q = "SELECT log.*, user.title as user_title from logitems as log "
-                    . "left join useritems as user on(log.signature_created=user.signature) "
-                    . "where log.date_created between '$from' and '$to' order by log.date_created";
-        } else if ($type == "police") {
-            $q = "SELECT distinct ri.*,ro.title as room_title,(CASE WHEN p.sex='m' THEN 'Male' WHEN p.sex='f' THEN 'Female' ELSE '' END) as gender,"
-                    . "co.title as nationality,p.occupation,p.street,p.passport_no from reservationitems as ri "
-                    . "left join personitems as p on (ri.client_name = p.title) "
-                    . "left join ref_countryitems as co on(p.country = co.ID) "
-                    . "left join roomitems as ro on(ri.room_number=ro.ID) "
-                    . "where ri.account_type ='ROOM' AND DATE(ri.actual_arrival) >= '$from' "
-                    . "AND '$to' >= DATE(ri.actual_arrival) $and_user  ORDER BY ri.reservation_id";
-        } else if ($type == "client history") {
-            $q = "SELECT distinct p.*,(CASE WHEN p.sex='m' THEN 'Male' WHEN p.sex='f' THEN 'Female' ELSE '' END) as gender,"
-                    . "co.title as nationality,p.occupation,p.street,p.passport_no from reservationitems as ri "
-                    . "left join personitems as p on (ri.client_name = p.title) "
-                    . "left join ref_countryitems as co on(p.country = co.ID) "
-                    . "where p.title <>'' AND DATE(ri.actual_arrival) >= '$from' AND '$to' >= DATE(ri.actual_arrival) ORDER BY p.title ";
-        }else if ($type == "reservation") {
-            $q = "SELECT DISTINCT ri.ID,ri.arrival,ri.nights,ri.departure,ri.client_name,ri.remarks,ri.adults,"
-                    . "ri.signature_created,ri.signature_modified,ri.status,ri.actual_arrival,ri.actual_departure,"
-                    . "rp.price_room,rp.price_total,p.description as price_r,rp.comp_nights,rp.block_pos,ro.title as room_title,"
-                    . "rt.title as roomtype, rp.weekday,rp.weekend"
-                    . " from reservationitems as "
-                    . "ri left join reservationpriceitems as rp on (ri.reservation_id=rp.reservation_id)"
-                    . " left join priceitems as p on (rp.price_rate = p.ID) "
-                    . "left join reservationfolioitems as rf on (ri.reservation_id=rf.reservation_id)"
-                    . "left join roomitems as ro on(ri.room_number=ro.ID)"
-                    . "left join roomtypeitems as rt on(ri.roomtype =rt.ID)"
-                    . " where 1=1 $where";
-        } else if ($type =="resev_payments"){
-            $q="SELECT rf.description,rf.debit,rf.credit,rf.date_created FROM reservationfolioitems as rf "
-                    . "left join reservationitems as ri on(rf.reservation_id=ri.reservation_id) where 1=1 "
-                    . "and rf.action='payment' $where ";
-        }else {
-            $q = "SELECT ri.*,ro.title as room_title,rt.title as roomtype FROM "
-                    . "reservationitems as ri left join roomitems as ro "
-                    . "on(ri.room_number=ro.ID) left join roomtypeitems as rt "
-                    . "on(ri.roomtype =rt.ID) where 1=1 $where";
-        }
+    //     } else if ($type == "audit trail") {
+    //         $q = "SELECT log.*, user.title as user_title from logitems as log "
+    //                 . "left join useritems as user on(log.signature_created=user.signature) "
+    //                 . "where log.date_created between '$from' and '$to' order by log.date_created";
+    //     } else if ($type == "police") {
+    //         $q = "SELECT distinct ri.*,ro.title as room_title,(CASE WHEN p.sex='m' THEN 'Male' WHEN p.sex='f' THEN 'Female' ELSE '' END) as gender,"
+    //                 . "co.title as nationality,p.occupation,p.street,p.passport_no from reservationitems as ri "
+    //                 . "left join personitems as p on (ri.client_name = p.title) "
+    //                 . "left join ref_countryitems as co on(p.country = co.ID) "
+    //                 . "left join roomitems as ro on(ri.room_number=ro.ID) "
+    //                 . "where ri.account_type ='ROOM' AND DATE(ri.actual_arrival) >= '$from' "
+    //                 . "AND '$to' >= DATE(ri.actual_arrival) $and_user  ORDER BY ri.reservation_id";
+    //     } else if ($type == "client history") {
+    //         $q = "SELECT distinct p.*,(CASE WHEN p.sex='m' THEN 'Male' WHEN p.sex='f' THEN 'Female' ELSE '' END) as gender,"
+    //                 . "co.title as nationality,p.occupation,p.street,p.passport_no from reservationitems as ri "
+    //                 . "left join personitems as p on (ri.client_name = p.title) "
+    //                 . "left join ref_countryitems as co on(p.country = co.ID) "
+    //                 . "where p.title <>'' AND DATE(ri.actual_arrival) >= '$from' AND '$to' >= DATE(ri.actual_arrival) ORDER BY p.title ";
+    //     }else if ($type == "reservation") {
+    //         $q = "SELECT DISTINCT ri.ID,ri.arrival,ri.nights,ri.departure,ri.client_name,ri.remarks,ri.adults,"
+    //                 . "ri.signature_created,ri.signature_modified,ri.status,ri.actual_arrival,ri.actual_departure,"
+    //                 . "rp.price_room,rp.price_total,p.description as price_r,rp.comp_nights,rp.block_pos,ro.title as room_title,"
+    //                 . "rt.title as roomtype, rp.weekday,rp.weekend"
+    //                 . " from reservationitems as "
+    //                 . "ri left join reservationpriceitems as rp on (ri.reservation_id=rp.reservation_id)"
+    //                 . " left join priceitems as p on (rp.price_rate = p.ID) "
+    //                 . "left join reservationfolioitems as rf on (ri.reservation_id=rf.reservation_id)"
+    //                 . "left join roomitems as ro on(ri.room_number=ro.ID)"
+    //                 . "left join roomtypeitems as rt on(ri.roomtype =rt.ID)"
+    //                 . " where 1=1 $where";
+    //     } else if ($type =="resev_payments"){
+    //         $q="SELECT rf.description,rf.debit,rf.credit,rf.date_created FROM reservationfolioitems as rf "
+    //                 . "left join reservationitems as ri on(rf.reservation_id=ri.reservation_id) where 1=1 "
+    //                 . "and rf.action='payment' $where ";
+    //     }else {
+    //         $q = "SELECT ri.*,ro.title as room_title,rt.title as roomtype FROM "
+    //                 . "reservationitems as ri left join roomitems as ro "
+    //                 . "on(ri.room_number=ro.ID) left join roomtypeitems as rt "
+    //                 . "on(ri.roomtype =rt.ID) where 1=1 $where";
+    //     }
 
-        $query = $this->db->query($q);
-        if ($query->num_rows() > 0) {
-            $results['count'] = $query->num_rows();
-            $results['data'] = $query->result_array();
-        }
-        if ($type == "sales summary" || $type == "cashier summary" || $type == "sales_fnb_summary") {
-            $query = $this->db->query($q_totals);
-            if ($query->num_rows() > 0) {
-                $results['totals'] = $query->result_array();
-            }
-        }
+    //     $query = $this->db->query($q);
+    //     if ($query->num_rows() > 0) {
+    //         $results['count'] = $query->num_rows();
+    //         $results['data'] = $query->result_array();
+    //     }
+    //     if ($type == "sales summary" || $type == "cashier summary" || $type == "sales_fnb_summary") {
+    //         $query = $this->db->query($q_totals);
+    //         if ($query->num_rows() > 0) {
+    //             $results['totals'] = $query->result_array();
+    //         }
+    //     }
 
-        return $results;
-    }
+    //     return $results;
+    // }
 
     /* gets all fields for a reservation
          * ::used for reports etc */
