@@ -2486,86 +2486,13 @@ class Resv_model extends App_model {
                     $results = $query->result_array();
 
                     $charge_count = 0;
-			        // $terminal = "001";
                     $pak = "A:";
-                    // $charge = "ROOM";
-                    // $qty = $plu_group = $plu = 1;
                     $reason = "";
                     $time=date("H:i:s");
                     $now = $last_rooms_charge . " " .$time ;
                     
-
-                    // $uncharged_complementary_nights_exist=false;
-
                     foreach ($results as $result):   
                         $this->roomCharges($result,$pak,$reason,$now);
-
-                        // $curr_resv = $result['reservation_id'];
-                        // $room_number = $result['room_number'];
-                        // $room_charge_price=0;
-                        // $comp_nights=$result['comp_nights'];
-                        // $comp_visits=$result['comp_visits'];
-                        // $comp_nights_charged=$result['comp_nights_charged'];
-                        // $description=$result['description'];
-                        // $vat=0;
-                        // $vattype=$result['vattype'];
-                        // $vatpercent=$result['vatpercent'];
-
-                        //chk for complementary nights
-                        // if($comp_visits=="yes" && ($comp_nights != $comp_nights_charged)){
-                        //     $uncharged_complementary_nights_exist=true;
-                        //     $description.=" [COMPLEMENTARY]";
-
-                        // }else{
-                        //     $room_charge_price=$result['price'];
-
-                        //     //chk for exclusive vat
-                        //     if($vattype=="excl" && ($vatpercent >0)){
-                        //         $vat=floatval($room_charge_price) * floatval($vatpercent/100);
-                        //     }
-                        // }
-
-                        // $data = array(
-                        //     'reservation_id' => $curr_resv,
-                        //     'description' => $description,
-                        //     'terminal' => $terminal,
-                        //     'credit' => $room_charge_price,
-                        //     'price' => $room_charge_price,
-                        //     'qty' => $qty,
-                        //     'action' => 'sale',
-                        //     'sub_folio' => $result['folio_room'],
-                        //     'account_number' => $result['acct_number'],
-                        //     'plu_group' => $plu_group,
-                        //     'plu' => $plu,
-                        //     'charge' => $charge,
-                        //     'pak' => $pak,
-                        //     'reason' => $reason,
-                        //     'signature_created' => $this->session->us_signature,
-                        //     'date_created' => $now,
-                        //     'vat'=>$vat
-                        // );
-                        
-                        // $this->db->insert('reservationfolioitems', $data);
-                        // $insert_id = $this->db->insert_id();
-
-                        // if($uncharged_complementary_nights_exist){
-                        //     //update room_charge for this reservation
-                        //     $this->db->set('comp_nights_charged', $comp_nights_charged +1);
-                        //     $this->db->where('reservation_id', $curr_resv);
-                        //     $this->db->update('reservationpriceitems');
-                        // }
-                        
-
-                        //update room_charge for this reservation
-                        // $this->db->set('last_room_charge', $now);
-                        // $this->db->where('reservation_id', $curr_resv);
-                        // $this->db->update('reservationitems');
-
-
-                        //update room status
-                        // $this->db->set('status', 4);
-                        // $this->db->where('ID', $room_number);
-                        // $this->db->update('roomitems');
                         $charge_count++;
                     endforeach;
 
@@ -3197,12 +3124,14 @@ class Resv_model extends App_model {
         $from_date=new DateTime($temp_date);
         $from_date->setTime(0,0,0);
         $from= $from_date->format('Y-m-d H:i:s');
+        $from_date_only= $from_date->format('Y-m-d');
 
         $report_to = $this->input->post('report_to');
         $temp_date = str_replace('/', '-', $report_to);
         $to_date=new DateTime($temp_date);
         $to_date->setTime(23,59,59);
         $to= $to_date->format('Y-m-d H:i:s');
+        $to_date_only= $to_date->format('Y-m-d');
 
         // echo 'to '.$to.' from '.$from;exit;
 
@@ -3226,9 +3155,27 @@ class Resv_model extends App_model {
                 //         . "$and_user ORDER BY ri.actual_arrival ASC";
                 //modified this on 08/11/19
 
-                $where = " and ri.account_type ='ROOM' and ri.status='staying' and DATE(ri.actual_arrival) <= '$from' "
-                        . "$and_user ORDER BY ri.actual_arrival ASC";
+                // $where = " and ri.account_type ='ROOM' and ri.status='staying' and DATE(ri.actual_arrival) <= '$from' "
+                //         . "$and_user ORDER BY ri.actual_arrival ASC";
+                //modified this on 30/11/19
+
+                //acct type is for guests,status is not cancelled, confirmed and is not null
+                //arrival date is <= from date and is valid date
+                //guest has not departed or departed before or on to_date 
+
+                // $where = " and ri.account_type ='ROOM' and ri.status not in ('cancelled','confirmed','') and ri.status is not null "
+                // . "and DATE(ri.actual_arrival) <='$from_date_only' "
+                // ."and DATE(ri.actual_arrival) <>'0000-00-00' "
+                // ."and (DATE(ri.actual_departure)='0000-00-00' or DATE(ri.actual_departure)>='$to_date_only') "
+                // . "$and_user ORDER BY ri.actual_arrival ASC";
+                //arrival date is <= from_date and to_date_only is >= last_room_charge..04/12/19
+                $where = " and ri.account_type ='ROOM' and ri.status not in ('cancelled','confirmed','') and ri.status is not null "
+                . "and DATE(ri.actual_arrival) <='$from_date_only' "
+                ."and DATE(ri.actual_arrival) <>'0000-00-00' "
+                ."and (DATE(ri.last_room_charge)>='$to_date_only') "
+                . "$and_user ORDER BY ri.actual_arrival ASC";
                 break;
+                
             case "reservation":
             case "resev_payments":
                 if($resv_id){
@@ -3321,7 +3268,7 @@ class Resv_model extends App_model {
                     . "on(ri.roomtype =rt.ID) where 1=1 $where";
         }
 
-        // echo $q;exit;
+        //  echo $q;exit;
 
         $query = $this->db->query($q);
         if ($query->num_rows() > 0) {

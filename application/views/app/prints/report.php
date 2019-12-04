@@ -15,16 +15,20 @@
                                 $userid = $row["ID"];
                                 $reservation_id = $row["reservation_id"];
                                 $actual_arrival = date('d/m/Y', strtotime($row["actual_arrival"]));
-                                $departure = (strtotime($row["actual_departure"]) > strtotime($row["departure"])) ? (date('d/m/Y', strtotime($row["actual_departure"]))) : (date('d/m/Y', strtotime($row["departure"])));
+                                // $departure = (strtotime($row["actual_departure"]) > strtotime($row["departure"])) ? (date('d/m/Y', strtotime($row["actual_departure"]))) : (date('d/m/Y', strtotime($row["departure"])));
+                                $departure = (strtotime($row["actual_departure"]) > strtotime($row["departure"])) ? (date('d/m/Y', strtotime($row["actual_departure"]))) : ('N/A');
                                 $duration = $actual_arrival . " - " . $departure;
                                 $client_name = $row["client_name"];
                                 $status = $row["status"];
+                                $remarks = $row["remarks"];
                                 $room_title = $row["room_title"];
                                 $roomtype = $row["roomtype"];
                                 $adults = $row["adults"];
                                 $checkin = date("H:i:s", strtotime($row["actual_arrival"]));
+                                $checkout = date("H:i:s", strtotime($row["actual_departure"]));
 
                                 $content.="<tr class=\"booking_radio\">";
+                                $content.="<td>$count</td>";
                                 $content.="<td><input class=\"booking_hidden_id\" type=\"hidden\" value=\"$userid\">"
                                         . "$client_name</td>";
                                 $content.="<td>$room_title</td>";
@@ -32,8 +36,10 @@
                                 $content.="<td>$reservation_id</td>";
                                 $content.="<td>$adults</td>";
                                 $content.="<td>$status</td>";
+                                $content.="<td>$remarks</td>";
                                 $content.="<td>$duration</td>";
                                 $content.="<td>$checkin</td>";
+                                $content.="<td>$checkout</td>";
                                 $content.="</tr>";
 
                                 $count++;
@@ -51,14 +57,17 @@
                 <table class="table  table-hover general-table table-bordered table-condensed">
                     <thead>
                         <tr>                   
+                            <th>S/N</th>
                             <th>Client Name</th>
                             <th>Room</th>
                             <th>Room Type</th>
                             <th>Resv#</th>
                             <th>Adults</th>
-                            <th>Status</th>
+                            <th>Current Status</th>
+                            <th>Remarks</th>
                             <th>Duration</th>
                             <th>Checkin</th>
+                            <th>Checkout</th>
                         </tr>
                     </thead>
                     <tbody>
