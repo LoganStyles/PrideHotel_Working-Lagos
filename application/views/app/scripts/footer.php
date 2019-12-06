@@ -876,6 +876,7 @@
                 var folio_account_number = $('.folio_row.active .folio_hidden_account_number').val();
                 var folio_description = $('.folio_row.active .folio_description').text();
                 var folio_incl_vat = $('.folio_row.active .folio_incl_vat').text();
+                var folio_amount = $('.folio_row.active .folio_amount').text();
 
                 account_ID = "#folio_" + folio_action + "_ID";
                 account_field = "#folio_" + folio_action + "_account";
@@ -900,7 +901,8 @@
                 $(account_ID).val(folio_id);
                 $(account_field).val(folio_account_number);
                 $(description_field).val(folio_description);
-                $(amount_field).val(folio_incl_vat);
+                $(amount_field).val(folio_amount);
+                // $(amount_field).val(folio_incl_vat);
                 if (folio_active === "") {
                     allforminputs = form + " :input";
                     $(allforminputs).attr('readonly', 'readonly');

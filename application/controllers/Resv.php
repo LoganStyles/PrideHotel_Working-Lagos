@@ -493,7 +493,7 @@ class Resv extends App {
         $room_number = $this->input->post('folio_payment_room_number');
         $master_id = $this->input->post('folio_payment_master_id');
 
-        $this->form_validation->set_rules('folio_payment_amount', 'Amount', 'greater_than[0]|required');
+        $this->form_validation->set_rules('folio_payment_amount', 'Amount', 'greater_than[-1]|required');
 
         if ($this->form_validation->run() == FALSE) {
             $this->session->set_flashdata('folio_payment_error_message', validation_errors());

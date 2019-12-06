@@ -114,7 +114,7 @@ if (!empty($red_bal)) {
                                     . "<input class=\"folio_hidden_sale_account_title\" type=\"hidden\" value=\"$sale_account_title\">"
                                     . "$date</td>";
                             $content.="<td class=\"folio_description\">$description</td>";
-                            $content.="<td class=\"\">$amount</td>";
+                            $content.="<td class=\"folio_amount\">$amount</td>";
                             $content.="<td class=\"folio_incl_vat\">$vat</td>";
                             $content.="<td class=\"\">$discount</td>";
                             $content.="<td>$pak</td>";
