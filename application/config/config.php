@@ -517,9 +517,9 @@ $config['proxy_ips'] = '';
 /*
  * added config files
  */
-$config['username']='pridehotel_290819_copy';
-$config['password']='pridehotel_290819_copy';
-$config['database']='pridehotel_290819_copy';
+$config['username']='pridehotel_ikeja_05_12_19';
+$config['password']='pridehotel_ikeja_05_12_19';
+$config['database']='pridehotel_ikeja_05_12_19';
 $config['host']='localhost';
 $config['backup'] = "C:\\wamp64\\bin\\mysql\\mysql5.7.19\\bin\\mysqldump.exe --opt --host=" . $config['host'] . " --user=" . $config['username'] . " --password=" . $config['password'] . " " . $config['database'] . " > ";
 
@@ -535,9 +535,19 @@ $config['backup'] = "C:\\wamp64\\bin\\mysql\\mysql5.7.19\\bin\\mysqldump.exe --o
   |--------------------------------------------------------------------------
   |
  */
-
-function __autoload($class) {
+//deprecated with php 7.2 - switch to spl_autoload_register
+// function __autoload($class) {
     
+//     if (substr($class, 0, 3) !== 'CI_') {
+//         if (file_exists($file = APPPATH . 'core/' . $class . '.php')) {
+//             include $file;
+//         }elseif (file_exists($file = APPPATH . 'controllers/' . $class . '.php')){
+//             include $file;
+//         }
+//     }
+// }
+
+spl_autoload_register(function($class) {
     if (substr($class, 0, 3) !== 'CI_') {
         if (file_exists($file = APPPATH . 'core/' . $class . '.php')) {
             include $file;
@@ -545,4 +555,4 @@ function __autoload($class) {
             include $file;
         }
     }
-}
+});

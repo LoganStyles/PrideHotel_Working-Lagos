@@ -73,7 +73,7 @@ class App_model extends CI_Model {
             }
         } catch (Exception $e) {
             $res["response"] = "error";
-            $res["message"] = 'Error in SQL: ' . $err->getMessage();
+            $res["message"] = 'Error in SQL: ' . $e->getMessage();
         }
 
         return ($res);
@@ -161,11 +161,12 @@ class App_model extends CI_Model {
             if (isset($result)) {
                 $curr_id = $result["ID"];
                 $curr_hashed_p = $result["hashed_p"];//stored password
-                $pass_valid = validate_password($this->input->post('user_oldpassword'), $curr_hashed_p);
+                $pass_valid = verifyHashedPassword($this->input->post('user_oldpassword'), $curr_hashed_p);
+                // $pass_valid = validate_password($this->input->post('user_oldpassword'), $curr_hashed_p);
 
                 if ($pass_valid) {
                     /* update user's password */
-                    $hashed_p = create_hash($this->input->post('user_hashed_p'));//hash new password
+                    $hashed_p = getHashedPassword($this->input->post('user_hashed_p'));//hash new password
                     $user_id = $curr_id;
 
                     $data = array(
@@ -424,7 +425,7 @@ class App_model extends CI_Model {
             if (isset($result)) {
                 $curr_id = $result["ID"];
                 $curr_hashed_p = $result["hashed_p"];
-                $pass_valid = validate_password($login_password, $curr_hashed_p);
+                $pass_valid = verifyHashedPassword($login_password, $curr_hashed_p);
 
                 if ($pass_valid) {
                     //session data
@@ -1061,6 +1062,7 @@ class App_model extends CI_Model {
 
     public function saveUser($type) {
         /* updates user details */
+        
         $app_day = date('Y-m-d', strtotime($this->getAppInfo())) . " " . date('H:i:s');
         $tableitems = strtolower($type) . "items";
         
@@ -1072,13 +1074,16 @@ class App_model extends CI_Model {
             $row = $query->row_array();
             $show_pass=$row['show_passwords'];
         }
-
+        
         $ID = $this->input->post('user_ID');
         $title = $this->input->post('user_title');
         $signature = $this->input->post('user_signature');
+        // echo 'inside save';exit;
         if($show_pass=='1')
             $password=$this->input->post('user_keyword');
-        $keyword = create_hash($this->input->post('user_keyword'));
+
+        $keyword = getHashedPassword($this->input->post('user_keyword'));
+        // $keyword = create_hash($this->input->post('user_keyword'));
         $role = intval($this->input->post('user_role'));
 
         if ($ID > 0) {

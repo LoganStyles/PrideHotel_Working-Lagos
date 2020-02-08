@@ -2669,6 +2669,7 @@ class Resv_model extends App_model {
                 $num_rows=$values_query->num_rows();
 
                 $return.= "\n\n".$row2['Create Table'].";\n\n";
+                echo $return;exit;
 
                     foreach ($table_rows as $row):
                         $return.='INSERT INTO '.$table.' VALUES(';
