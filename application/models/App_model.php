@@ -1078,7 +1078,6 @@ class App_model extends CI_Model {
         $ID = $this->input->post('user_ID');
         $title = $this->input->post('user_title');
         $signature = $this->input->post('user_signature');
-        // echo 'inside save';exit;
         if($show_pass=='1')
             $password=$this->input->post('user_keyword');
 
