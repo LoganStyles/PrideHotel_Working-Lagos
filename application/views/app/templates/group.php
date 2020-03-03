@@ -349,6 +349,7 @@ if (!empty($group_price_rate_error)) {
                             <div class="col-sm-2">
                                 <input <?php echo $disabled; ?> readonly class=" form-control" id="group_price_total" name="group_price_total" value="<?php echo $price_total; ?>" type="number" />
                             </div>   
+
                         </div>
                        
                         <div class="form-group ">

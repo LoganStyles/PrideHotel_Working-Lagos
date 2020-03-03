@@ -6,7 +6,7 @@ $price_rate = getTitle($roomtypes, $price_title); //price title
 
 
 $access = $this->session->reservation;
-if ($access < 4) {//set readonly fields
+if ($access < 4) { //set readonly fields
     $readonly_field = "readonly";
 } else {
     $readonly_field = "";
@@ -14,7 +14,7 @@ if ($access < 4) {//set readonly fields
 
 //chk if cash discount is allowed
 $is_cash_discount_allowed = $this->session->cash_discount_allowed;
-if ($is_cash_discount_allowed ==="0") {//set readonly fields
+if ($is_cash_discount_allowed === "0") { //set readonly fields
     $cash_discount_allowed_readonly_field = "readonly";
 } else {
     $cash_discount_allowed_readonly_field = "";
@@ -33,24 +33,24 @@ $client_name_class = $roomtype_class = $price_rate_class = "";
 //chk for specific errors
 if (!empty($client_name_error)) {
     $client_name_class = "brightyellow";
-    $form_error.="**".$client_name_error."<br>";
+    $form_error .= "**" . $client_name_error . "<br>";
 }
 if (!empty($roomtype_error)) {
     $roomtype_class = "brightyellow";
-    $form_error.="**".$roomtype_error."<br>";
+    $form_error .= "**" . $roomtype_error . "<br>";
 }
 if (!empty($price_rate_error)) {
     $price_rate_class = "brightyellow";
-    $form_error.="**".$price_rate_error."<br>";
+    $form_error .= "**" . $price_rate_error . "<br>";
 }
 if (!empty($nights_error)) {
-//    $nights_class = "brightyellow";
-    $form_error.="**".$nights_error."<br>";
+    //    $nights_class = "brightyellow";
+    $form_error .= "**" . $nights_error . "<br>";
 }
 ?>
 
 <!--body wrapper start-->
-<div class="wrapper">    
+<div class="wrapper">
     <div class="row">
         <div class="col-lg-12">
             <section class="panel">
@@ -73,7 +73,7 @@ if (!empty($nights_error)) {
                 } else {
                     $danger_style = "";
                 }
-               
+
                 $attributes = array('class' => 'cmxform form-horizontal adminex-form', 'id' => 'guest_form');
                 echo '<div id="error_div" class="' . $form_danger_style . '">' . $form_error . '</div>';
                 echo '<div id="error_div" class="' . $danger_style . '">' . $arrival_error . '</div>';
@@ -85,8 +85,8 @@ if (!empty($nights_error)) {
                 ?>
 
                 <div class="panel-body">
-                    <div class="form">                        
-                        <input type="hidden" name="guest_ID"  id="guest_ID" value="<?php echo $ID; ?>">
+                    <div class="form">
+                        <input type="hidden" name="guest_ID" id="guest_ID" value="<?php echo $ID; ?>">
                         <input type="hidden" name="guest_type" id="guest_type" value="<?php echo $type; ?>">
                         <input type="hidden" name="guest_action" id="guest_action" value="<?php echo $action; ?>">
                         <input type="hidden" name="guest_mode" id="guest_mode" value="<?php echo $mode; ?>">
@@ -96,7 +96,7 @@ if (!empty($nights_error)) {
                         <input type="hidden" name="guest_price_rate_id" id="guest_price_rate_id" value="<?php echo $price_rate_id; ?>">
                         <input type="hidden" name="guest_discount_type" id="guest_discount_type" value="<?php echo $discount_type; ?>">
                         <input type="hidden" name="guest_discount_ratio" id="guest_discount_ratio" value="<?php echo $discount_ratio; ?>">
-                        
+
                         <!--hidden values but not submitted, used to hold values temporarily-->
                         <input type="hidden" name="guest_max_discount_value" id="guest_max_discount_value" value="<?php echo $max_discount_value; ?>">
                         <input type="hidden" name="guest_weekday_no_deductions" id="guest_weekday_no_deductions" value="<?php echo $weekday_no_deductions; ?>">
@@ -111,40 +111,40 @@ if (!empty($nights_error)) {
 
                             <label for="guest_nights" class="col-sm-1 col-lg-1 control-label">Nights</label>
                             <div class="col-sm-2 col-lg-2">
-                                <input  <?php echo $disabled; ?> class="form-control" id="guest_nights" name="guest_nights" value="<?php echo $nights; ?>" type="number" />
+                                <input <?php echo $disabled; ?> class="form-control" id="guest_nights" name="guest_nights" value="<?php echo $nights; ?>" type="number" />
                             </div>
 
-                            <label  for="guest_departure" class="col-sm-1 col-lg-1 control-label">Departure</label>
+                            <label for="guest_departure" class="col-sm-1 col-lg-1 control-label">Departure</label>
                             <div class="col-sm-1 col-lg-1" name="guest_departure" id="guest_departure"></div>
 
                             <label for="guest_client_type" class="col-sm-2 control-label">Client Type</label>
                             <div class="col-lg-2 col-sm-2">
                                 <select <?php echo $disabled; ?> <?php echo $readonly_field; ?> class="form-control " name="guest_client_type" id="guest_client_type">
                                     <option value="person" <?php
-                                    if ($client_type === "person") {
-                                        echo 'selected';
-                                    }
-                                    ?>>PERSON</option>
+                                                            if ($client_type === "person") {
+                                                                echo 'selected';
+                                                            }
+                                                            ?>>PERSON</option>
                                     <option value="group" <?php
-                                    if ($client_type === "group") {
-                                        echo 'selected';
-                                    }
-                                    ?>>GROUP</option>
-                                </select>                                
+                                                            if ($client_type === "group") {
+                                                                echo 'selected';
+                                                            }
+                                                            ?>>GROUP</option>
+                                </select>
                             </div>
-                        </div> 
+                        </div>
 
                         <div class="form-group ">
                             <label for="guest_client_name" class="col-sm-2 control-label">Client Name</label>
                             <div class="col-sm-2">
-                                <input <?php echo $disabled; ?> class="<?php echo $client_name_class; ?> form-control" id="guest_client_name" name="guest_client_name" type="text" value="<?php echo $client_name; ?>" />                                
-                            </div>  
+                                <input <?php echo $disabled; ?> class="<?php echo $client_name_class; ?> form-control" id="guest_client_name" name="guest_client_name" type="text" value="<?php echo $client_name; ?>" />
+                            </div>
 
                             <label for="guest_agency_name" class="col-sm-2 control-label">Agency Name</label>
                             <div class="col-sm-2">
                                 <input <?php echo $disabled; ?> class=" form-control" id="guest_agency_name" name="guest_agency_name" type="text" value="<?php echo $agency_name; ?>" />
                             </div>
-                            
+
                             <label for="guest_remarks" class="col-sm-2 control-label">Remarks</label>
                             <div class="col-sm-2">
                                 <input <?php echo $disabled; ?> class=" form-control" id="guest_remarks" name="guest_remarks" type="text" value="<?php echo $remarks; ?>" />
@@ -177,7 +177,7 @@ if (!empty($nights_error)) {
                             <div class="col-sm-2">
                                 <input readonly class=" form-control" id="guest_master_id" name="guest_master_id" type="text" value="<?php echo $master_id; ?>" />
                             </div>
-                            <div class="clearfix"></div>                           
+                            <div class="clearfix"></div>
 
                         </div>
 
@@ -196,7 +196,7 @@ if (!empty($nights_error)) {
                             <div class="col-sm-2 col-lg-2">
                                 <input <?php echo $disabled; ?> class=" form-control" id="guest_children" name="guest_children" value="<?php echo $children; ?>" type="number" />
                             </div>
-                            <div class="clearfix"></div>                           
+                            <div class="clearfix"></div>
 
                         </div>
 
@@ -204,7 +204,7 @@ if (!empty($nights_error)) {
                             <label for="guest_roomtype" class="col-sm-2 control-label">Room Type</label>
                             <div class="col-sm-2">
                                 <input <?php echo $disabled; ?> class="<?php echo $roomtype_class; ?> form-control" id="guest_roomtype" name="guest_roomtype" value="<?php echo $roomtype; ?>" type="text" />
-                            </div> 
+                            </div>
                             <button class="btn btn-default pull-left" data-toggle="button" onclick="fetchModalGridData('guest','roomtype');">
                                 <i class="fa fa-list"></i>
                             </button>
@@ -224,7 +224,7 @@ if (!empty($nights_error)) {
                             <button class="btn btn-default pull-left" data-toggle="button" onclick="fetchModalGridData('guest','price_rate');">
                                 <i class="fa fa-list"></i>
                             </button>
-                            <div class="clearfix"></div>                           
+                            <div class="clearfix"></div>
 
                         </div>
 
@@ -233,127 +233,127 @@ if (!empty($nights_error)) {
                             <div class="col-lg-2 col-sm-2">
                                 <select class="form-control " name="guest_status" id="guest_status" disabled>
                                     <option value="confirmed" <?php
-                                    if ($status === "confirmed") {
-                                        echo 'selected';
-                                    }
-                                    ?>>CONFIRMED</option>
+                                                                if ($status === "confirmed") {
+                                                                    echo 'selected';
+                                                                }
+                                                                ?>>CONFIRMED</option>
                                     <option value="staying" <?php
-                                    if ($status === "staying") {
-                                        echo 'selected';
-                                    }
-                                    ?>>STAYING</option>
+                                                            if ($status === "staying") {
+                                                                echo 'selected';
+                                                            }
+                                                            ?>>STAYING</option>
                                     <option value="departed" <?php
-                                    if ($status === "departed") {
-                                        echo 'selected';
-                                    }
-                                    ?>>DEPARTED</option>
+                                                                if ($status === "departed") {
+                                                                    echo 'selected';
+                                                                }
+                                                                ?>>DEPARTED</option>
                                     <option value="cancelled" <?php
-                                    if ($status === "cancelled") {
-                                        echo 'selected';
-                                    }
-                                    ?>>CANCELLED</option>
+                                                                if ($status === "cancelled") {
+                                                                    echo 'selected';
+                                                                }
+                                                                ?>>CANCELLED</option>
                                     <option value="provisional" <?php
-                                    if ($status === "provisional") {
-                                        echo 'selected';
-                                    }
-                                    ?>>PROVISIONAL</option>
+                                                                if ($status === "provisional") {
+                                                                    echo 'selected';
+                                                                }
+                                                                ?>>PROVISIONAL</option>
                                     <option value="ledger" <?php
-                                    if ($status === "ledger") {
-                                        echo 'selected';
-                                    }
-                                    ?>>LEDGER</option>
-                                </select>                                
-                            </div>                            
+                                                            if ($status === "ledger") {
+                                                                echo 'selected';
+                                                            }
+                                                            ?>>LEDGER</option>
+                                </select>
+                            </div>
 
                             <label for="guest_folio_room" class="col-sm-1 control-label">Folio:Room</label>
                             <div class="col-lg-2 col-sm-2">
                                 <select <?php echo $disabled; ?> class="form-control " name="guest_folio_room" id="guest_folio_room">
                                     <option value="BILL1" <?php
-                                    if ($folio_room === "BILL1") {
-                                        echo 'selected';
-                                    }
-                                    ?>>BILL1</option>
+                                                            if ($folio_room === "BILL1") {
+                                                                echo 'selected';
+                                                            }
+                                                            ?>>BILL1</option>
                                     <option value="BILL2" <?php
-                                    if ($folio_room === "BILL2") {
-                                        echo 'selected';
-                                    }
-                                    ?>>BILL2</option>
+                                                            if ($folio_room === "BILL2") {
+                                                                echo 'selected';
+                                                            }
+                                                            ?>>BILL2</option>
                                     <option value="BILL3" <?php
-                                    if ($folio_room === "BILL3") {
-                                        echo 'selected';
-                                    }
-                                    ?>>BILL3</option>
+                                                            if ($folio_room === "BILL3") {
+                                                                echo 'selected';
+                                                            }
+                                                            ?>>BILL3</option>
                                     <option value="BILL4" <?php
-                                    if ($folio_room === "BILL4") {
-                                        echo 'selected';
-                                    }
-                                    ?>>BILL4</option>
-<!--                                    <option value="INV" <?php
-                                    if ($folio_room === "INV") {
-                                        echo 'selected';
-                                    }
-                                    ?>>INV</option>-->
-                                </select>                                
+                                                            if ($folio_room === "BILL4") {
+                                                                echo 'selected';
+                                                            }
+                                                            ?>>BILL4</option>
+                                    <!--                                    <option value="INV" <?php
+                                                                                                if ($folio_room === "INV") {
+                                                                                                    echo 'selected';
+                                                                                                }
+                                                                                                ?>>INV</option>-->
+                                </select>
                             </div>
 
                             <label for="guest_folio_extra" class="col-sm-1 control-label">Folio:Extra</label>
                             <div class="col-lg-2 col-sm-2">
                                 <select <?php echo $disabled; ?> class="form-control " name="guest_folio_extra" id="guest_folio_extra">
                                     <option value="BILL1" <?php
-                                    if ($folio_extra === "BILL1") {
-                                        echo 'selected';
-                                    }
-                                    ?>>BILL1</option>
+                                                            if ($folio_extra === "BILL1") {
+                                                                echo 'selected';
+                                                            }
+                                                            ?>>BILL1</option>
                                     <option value="BILL2" <?php
-                                    if ($folio_extra === "BILL2") {
-                                        echo 'selected';
-                                    }
-                                    ?>>BILL2</option>
+                                                            if ($folio_extra === "BILL2") {
+                                                                echo 'selected';
+                                                            }
+                                                            ?>>BILL2</option>
                                     <option value="BILL3" <?php
-                                    if ($folio_extra === "BILL3") {
-                                        echo 'selected';
-                                    }
-                                    ?>>BILL3</option>
+                                                            if ($folio_extra === "BILL3") {
+                                                                echo 'selected';
+                                                            }
+                                                            ?>>BILL3</option>
                                     <option value="BILL4" <?php
-                                    if ($folio_extra === "BILL4") {
-                                        echo 'selected';
-                                    }
-                                    ?>>BILL4</option>
-                                </select>                                
-                            </div>    
+                                                            if ($folio_extra === "BILL4") {
+                                                                echo 'selected';
+                                                            }
+                                                            ?>>BILL4</option>
+                                </select>
+                            </div>
 
                             <label for="guest_folio_other" class="col-sm-1 control-label">Folio:Other</label>
                             <div class="col-lg-2 col-sm-2">
                                 <select <?php echo $disabled; ?> class="form-control " name="guest_folio_other" id="guest_folio_other">
                                     <option value="BILL1" <?php
-                                    if ($folio_other === "BILL1") {
-                                        echo 'selected';
-                                    }
-                                    ?>>BILL1</option>
+                                                            if ($folio_other === "BILL1") {
+                                                                echo 'selected';
+                                                            }
+                                                            ?>>BILL1</option>
                                     <option value="BILL2" <?php
-                                    if ($folio_other === "BILL2") {
-                                        echo 'selected';
-                                    }
-                                    ?>>BILL2</option>
+                                                            if ($folio_other === "BILL2") {
+                                                                echo 'selected';
+                                                            }
+                                                            ?>>BILL2</option>
                                     <option value="BILL3" <?php
-                                    if ($folio_other === "BILL3") {
-                                        echo 'selected';
-                                    }
-                                    ?>>BILL3</option>
+                                                            if ($folio_other === "BILL3") {
+                                                                echo 'selected';
+                                                            }
+                                                            ?>>BILL3</option>
                                     <option value="BILL4" <?php
-                                    if ($folio_other === "BILL4") {
-                                        echo 'selected';
-                                    }
-                                    ?>>BILL4</option>
-                                </select>                                
+                                                            if ($folio_other === "BILL4") {
+                                                                echo 'selected';
+                                                            }
+                                                            ?>>BILL4</option>
+                                </select>
                             </div>
 
-                            <div class="clearfix"></div>                           
+                            <div class="clearfix"></div>
 
                         </div>
 
 
-                        <div class="form-group ">                            
+                        <div class="form-group ">
 
                             <label for="guest_weekday" class="col-sm-2 control-label">WEEKDAY</label>
                             <div class="col-sm-2">
@@ -374,62 +374,78 @@ if (!empty($nights_error)) {
                         <div class="form-group">
                             <label for="guest_price_room" class="col-sm-2 control-label">Price :Room</label>
                             <div class="col-lg-2 col-sm-2">
-                                <input <?php echo $disabled; ?> readonly class=" form-control" id="guest_price_room" name="guest_price_room" value="<?php echo $price_room; ?>" type="number" />                              
+                                <input <?php echo $disabled; ?> readonly class=" form-control" id="guest_price_room" name="guest_price_room" value="<?php echo $price_room; ?>" type="number" />
                             </div>
 
                             <label for="guest_price_extra" class="col-sm-1 control-label">Price: Extra</label>
                             <div class="col-sm-2">
-                                <input  <?php echo $disabled; ?> <?php echo $readonly_field; ?> class=" form-control" id="guest_price_extra" name="guest_price_extra" value="<?php echo $price_extra; ?>" type="number" />
+                                <input <?php echo $disabled; ?> <?php echo $readonly_field; ?> class=" form-control" id="guest_price_extra" name="guest_price_extra" value="<?php echo $price_extra; ?>" type="number" />
                             </div>
 
                             <label for="guest_discount" class="col-sm-2 control-label">Discount</label>
                             <div class="col-sm-2 col-lg-2">
-                                <input <?php echo $disabled; ?> <?php echo $cash_discount_allowed_readonly_field; ?> class=" form-control" id="guest_discount" name="guest_discount" value="<?php echo $discount; ?>" type="number" onblur="setDiscountValFromInputtedVal('guest','<?php echo $maximum_discount_allowed;?>');" />
+                                <input <?php echo $disabled; ?> <?php echo $cash_discount_allowed_readonly_field; ?> class=" form-control" id="guest_discount" name="guest_discount" value="<?php echo $discount; ?>" type="number" onblur="setDiscountValFromInputtedVal('guest','<?php echo $maximum_discount_allowed; ?>');" />
                             </div>
                             <button class="btn btn-default pull-left" data-toggle="button" onclick="showDiscountModal('guest');">
                                 <i class="fa fa-list"></i>
                             </button>
 
-                                                      
+
 
                         </div>
 
                         <div class="form-group">
                             <div class="alert alert-danger" role="alert" id="guest_discount_val_error_msg" style="display:none;">
-                
+
                             </div>
                         </div>
 
                         <div class="form-group">
-                        <label for="guest_price_total" class="col-sm-2 control-label">Price: Total</label>
+                            <label for="guest_price_total" class="col-sm-2 control-label">Price: Total</label>
                             <div class="col-sm-2">
                                 <input <?php echo $disabled; ?> readonly class=" form-control" id="guest_price_total" name="guest_price_total" value="<?php echo $price_total; ?>" type="number" />
-                            </div>  
+                            </div>
+
+                            <label for="guest_is_vat_exempted" class="col-sm-3 control-label">Exempt From Vat</label>
+                            <div class="col-lg-2 col-sm-2">
+                                <select <?php echo $disabled; ?> class="form-control " name="guest_is_vat_exempted" id="guest_is_vat_exempted">
+                                    <option value="0" <?php
+                                                        if ($is_vat_exempted === "0") {
+                                                            echo 'selected';
+                                                        }
+                                                        ?>>NO</option>
+                                    <option value="1" <?php
+                                                        if ($is_vat_exempted === "1") {
+                                                            echo 'selected';
+                                                        }
+                                                        ?>>YES</option>
+                                </select>
+                            </div>
                         </div>
 
-                        
+
 
                         <div class="form-group ">
                             <label for="guest_invoice" class="col-sm-1 control-label">Invoice</label>
                             <div class="col-lg-2 col-sm-2">
                                 <select <?php echo $disabled; ?> class="form-control " name="guest_invoice" id="guest_invoice">
                                     <option value="none" <?php
-                                    if ($invoice === "none") {
-                                        echo 'selected';
-                                    }
-                                    ?>>NONE</option>
+                                                            if ($invoice === "none") {
+                                                                echo 'selected';
+                                                            }
+                                                            ?>>NONE</option>
                                     <option value="client" <?php
-                                    if ($invoice === "client") {
-                                        echo 'selected';
-                                    }
-                                    ?>>CLIENT</option>
+                                                            if ($invoice === "client") {
+                                                                echo 'selected';
+                                                            }
+                                                            ?>>CLIENT</option>
                                     <option value="agency" <?php
-                                    if ($invoice === "agency") {
-                                        echo 'selected';
-                                    }
-                                    ?>>AGENCY</option>
+                                                            if ($invoice === "agency") {
+                                                                echo 'selected';
+                                                            }
+                                                            ?>>AGENCY</option>
 
-                                </select>                                                                 
+                                </select>
                             </div>
 
                             <label for="guest_comp_nights" class="col-sm-1 control-label">Comp.Nights</label>
@@ -439,37 +455,37 @@ if (!empty($nights_error)) {
 
                             <label for="guest_comp_visits" class="col-sm-1 control-label">Comp.Visits</label>
                             <div class="col-lg-2 col-sm-2">
-                                <select readonly  class="form-control " name="guest_comp_visits" id="guest_comp_visits">
+                                <select readonly class="form-control " name="guest_comp_visits" id="guest_comp_visits">
                                     <option value="no" <?php
-                                    if ($comp_visits === "no") {
-                                        echo 'selected';
-                                    }
-                                    ?>>NO</option>
+                                                        if ($comp_visits === "no") {
+                                                            echo 'selected';
+                                                        }
+                                                        ?>>NO</option>
                                     <option value="yes" <?php
-                                    if ($comp_visits === "yes") {
-                                        echo 'selected';
-                                    }
-                                    ?>>YES</option>                                   
+                                                        if ($comp_visits === "yes") {
+                                                            echo 'selected';
+                                                        }
+                                                        ?>>YES</option>
 
-                                </select>                                                                 
-                            </div> 
+                                </select>
+                            </div>
 
                             <label for="guest_block_pos" class="col-sm-1 control-label">BLOCK POS</label>
                             <div class="col-lg-2 col-sm-2">
                                 <select <?php echo $disabled; ?> class="form-control " name="guest_block_pos" id="guest_block_pos">
                                     <option value="no" <?php
-                                    if ($block_pos === "no") {
-                                        echo 'selected';
-                                    }
-                                    ?>>NO</option>
+                                                        if ($block_pos === "no") {
+                                                            echo 'selected';
+                                                        }
+                                                        ?>>NO</option>
                                     <option value="yes" <?php
-                                    if ($block_pos === "yes") {
-                                        echo 'selected';
-                                    }
-                                    ?>>YES</option>                                  
+                                                        if ($block_pos === "yes") {
+                                                            echo 'selected';
+                                                        }
+                                                        ?>>YES</option>
 
-                                </select>                                                                 
-                            </div> 
+                                </select>
+                            </div>
 
                         </div>
 
@@ -477,11 +493,11 @@ if (!empty($nights_error)) {
                     </div>
                 </div>
                 <div class="pull-right">
-                    <?php if($action !="view"){?>
+                    <?php if ($action != "view") { ?>
                         <input class="btn btn-success btn-sm" type="submit" name="submit" value="Save" />
                     <?php } ?>
-                    
-                    <button type="button" class="btn btn-default" onclick='closeWindow("<?php echo $mode."\",\"guest\",\"".$page_number;?>");'>Cancel</button>
+
+                    <button type="button" class="btn btn-default" onclick='closeWindow("<?php echo $mode . "\",\"guest\",\"" . $page_number; ?>");'>Cancel</button>
                 </div>
                 <div class="clearfix"></div>
                 </form>
@@ -494,10 +510,10 @@ if (!empty($nights_error)) {
 <div role="dialog" id="contact_prompt_modal" class="modal fade">
     <div class="modal-dialog" style="width: 600px;">
         <div class="modal-content">
-            <div class="modal-header panel-heading dark" >                
+            <div class="modal-header panel-heading dark">
                 <h4 class="modal-title" style="text-align:center">Message</h4>
             </div>
-            <div class="modal-body">                
+            <div class="modal-body">
                 <div class="panel-body">
                     <div class="row">
                         <div class="form">
@@ -514,7 +530,7 @@ if (!empty($nights_error)) {
             </div>
             <div class="modal-footer">
                 <button type="button" onclick="" class="btn btn-default" data-dismiss="modal">OK</button>
-                <button type="button" class="btn btn-default" data-dismiss="modal">CANCEL</button>                
+                <button type="button" class="btn btn-default" data-dismiss="modal">CANCEL</button>
             </div>
         </div>
     </div>
@@ -523,10 +539,10 @@ if (!empty($nights_error)) {
 <div role="dialog" id="roomtype_popup_modal" class="modal fade">
     <div class="modal-dialog" style="width: 800px;">
         <div class="modal-content">
-            <div class="modal-header panel-heading dark" >                
+            <div class="modal-header panel-heading dark">
                 <h4 class="modal-title" style="text-align:center">Room Types</h4>
             </div>
-            <div class="modal-body">                
+            <div class="modal-body">
                 <header class="panel-heading">
                     <!--Rooms-->
                     <div>
@@ -551,7 +567,7 @@ if (!empty($nights_error)) {
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-danger" data-dismiss="modal">CANCEL</button>                
+                <button type="button" class="btn btn-danger" data-dismiss="modal">CANCEL</button>
             </div>
         </div>
     </div>
@@ -560,10 +576,10 @@ if (!empty($nights_error)) {
 <div role="dialog" id="room_number_popup_modal" class="modal fade">
     <div class="modal-dialog" style="width: 800px;">
         <div class="modal-content">
-            <div class="modal-header panel-heading dark" >                
+            <div class="modal-header panel-heading dark">
                 <h4 class="modal-title" style="text-align:center">Rooms</h4>
             </div>
-            <div class="modal-body">                
+            <div class="modal-body">
                 <header class="panel-heading">
                     <!--Rooms-->
                     <div>
@@ -588,7 +604,7 @@ if (!empty($nights_error)) {
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-danger" data-dismiss="modal">CANCEL</button>                
+                <button type="button" class="btn btn-danger" data-dismiss="modal">CANCEL</button>
             </div>
         </div>
     </div>
@@ -597,10 +613,10 @@ if (!empty($nights_error)) {
 <div role="dialog" id="price_rate_popup_modal" class="modal fade">
     <div class="modal-dialog" style="width: 800px;">
         <div class="modal-content">
-            <div class="modal-header panel-heading dark" >                
+            <div class="modal-header panel-heading dark">
                 <h4 class="modal-title" style="text-align:center">Price Rates</h4>
             </div>
-            <div class="modal-body">                
+            <div class="modal-body">
                 <header class="panel-heading">
                     <!--Rooms-->
                     <div>
@@ -625,7 +641,7 @@ if (!empty($nights_error)) {
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-danger" data-dismiss="modal">CANCEL</button>                
+                <button type="button" class="btn btn-danger" data-dismiss="modal">CANCEL</button>
             </div>
         </div>
     </div>
@@ -634,17 +650,17 @@ if (!empty($nights_error)) {
 <div role="dialog" id="guest_discount_popup_modal" class="modal fade">
     <div class="modal-dialog" style="width: 800px;">
         <div class="modal-content">
-            <div class="modal-header panel-heading dark" >                
+            <div class="modal-header panel-heading dark">
                 <h4 class="modal-title" style="text-align:center">DISCOUNTS</h4>
             </div>
-            <div class="modal-body">                
+            <div class="modal-body">
                 <header class="panel-heading">
                     <!--Discount-->
                     <div>
                         <div class="">
                             <div class="form-group ">
                                 <div class="col-sm-12">
-                                    Discount should not be higher than <?php echo $maximum_discount_allowed;?> %
+                                    Discount should not be higher than <?php echo $maximum_discount_allowed; ?> %
                                 </div>
                             </div>
                         </div>
@@ -656,24 +672,20 @@ if (!empty($nights_error)) {
 
                 <div class="panel-body">
                     <div class="alert alert-danger" role="alert" id="guest_discount_error_msg" style="display:none;">
-                    
+
                     </div>
                     <div class="" id="guest_discount_popup_data">
                         <label for="guest_discount_rate_inputed" class="col-sm-2 control-label">Percentage(%)</label>
-                            <div class="col-sm-4">
-                                <input class=" form-control" id="guest_discount_rate_inputed" name="guest_discount_rate_inputed" type="number" min="0" max="<?php echo $maximum_discount_allowed;?>"/>
-                            </div> 
+                        <div class="col-sm-4">
+                            <input class=" form-control" id="guest_discount_rate_inputed" name="guest_discount_rate_inputed" type="number" min="0" max="<?php echo $maximum_discount_allowed; ?>" />
+                        </div>
                     </div>
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-success" onclick="setDiscountValFromInputedPercentage('guest','<?php echo $maximum_discount_allowed;?>');" >OK</button>
-                <button type="button" class="btn btn-danger" data-dismiss="modal">CLOSE</button>                
+                <button type="button" class="btn btn-success" onclick="setDiscountValFromInputedPercentage('guest','<?php echo $maximum_discount_allowed; ?>');">OK</button>
+                <button type="button" class="btn btn-danger" data-dismiss="modal">CLOSE</button>
             </div>
         </div>
     </div>
 </div>
-
-
-
-
