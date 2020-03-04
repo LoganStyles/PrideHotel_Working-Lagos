@@ -2139,12 +2139,12 @@ class Resv_model extends App_model
         $res['message'] = "Failed: VAT not exempted for reservation " . $reservation_id;
 
         //update reservation prices for this reservation
-        $this->db->set('is_vat_exempted',1);
-        $this->db->where('reservation_id',$reservation_id);
+        $this->db->set('is_vat_exempted', 1);
+        $this->db->where('reservation_id', $reservation_id);
         $this->db->update('reservationpriceitems');
 
         //get elligible records
-        $query_folio = "SELECT ID,vat,vatpercent,description,reservation_id from reservationfolioitems where reservation_id=" . $reservation_id;
+        $query_folio = "SELECT ID,vat,vatpercent,description,reservation_id,price,credit from reservationfolioitems where reservation_id=" . $reservation_id;
 
         $query =  $this->db->query($query_folio);
         if ($query->num_rows() > 0) {
@@ -2174,6 +2174,10 @@ class Resv_model extends App_model
         $oldVatPercent = $selectedRow['vatpercent'];
         $folio_ID = $selectedRow['ID'];
         $description = $selectedRow['description'];
+        //uncomment this to remove service charge
+        // $price = $selectedRow['price'];
+        // $credit = $selectedRow['credit'];
+        // $service_charge_account_number=0;
 
         //set vat to zero for this reservation
         $this->db->set('vat', 0);
@@ -2181,8 +2185,28 @@ class Resv_model extends App_model
         $this->db->where('ID', $folio_ID);
         $this->db->update('reservationfolioitems');
 
+        //uncomment this to remove service charge
+        // $this->db->select('*');
+        // $this->db->where('title', 'SC');
+        // $query = $this->db->get('account_saleitems');
+
+        // if ($query->num_rows() >= 0) {
+        //     $row = $query->row_array();
+
+        //     $service_charge_account_number = $row["ID"];
+        // }
+
+        // $this->db->set('price', 0);
+        // $this->db->set('credit', 0);
+        // $this->db->where('ID', $folio_ID);
+        // $this->db->where('account_number', $service_charge_account_number);
+        // $this->db->update('reservationfolioitems');
+
         //log this action
-        $description = "Folio Entry for ".$description ." from reservation: ". $reservation_id . " with vat rate " . $oldVatPercent . "% and vat value of " . $oldVat . " was VAT EXEMPTED by " . $this->session->us_signature;
+        $description = "Folio Entry with id: ".$folio_ID." for " . $description . " from reservation: " . $reservation_id . " with vat rate " . $oldVatPercent . "% and vat value of " . $oldVat;
+        //uncomment this to remove service charge
+        // $description.=" and price: ".$price.", credit: ".$credit;
+        $description .= " was VAT EXEMPTED by " . $this->session->us_signature;
         $log_id = $this->createLog("FOLIO", "vat exemption", $description, $oldVat, 0, $reason);
     }
 
@@ -2201,7 +2225,7 @@ class Resv_model extends App_model
         $service_charge_amount = 0;
         $description = $now = "";
         $existing_ID = 0;
-        $folio_room = "";
+        $folio_room = $is_vat_exempted = "";
 
         if ($query->num_rows() > 0) {
             $result = $query->row_array();
@@ -2247,7 +2271,7 @@ class Resv_model extends App_model
                 $service_charge_amount = floatval($folio_credit_total * $service_charge_ratio);
             }
 
-            $q_charge = "SELECT folio_room "
+            $q_charge = "SELECT folio_room,is_vat_exempted "
                 . "from reservationpriceitems "
                 . "where reservation_id='$reservation_id' ";
 
@@ -2255,41 +2279,46 @@ class Resv_model extends App_model
             if ($query->num_rows() > 0) {
                 $row = $query->row_array();
                 $folio_room = $row["folio_room"];
+                $is_vat_exempted = $row["is_vat_exempted"];
             }
 
-            //create array of values including acct_number & others
+            //uncomment this to apply vat exempted
+            // if ($is_vat_exempted == 0) {
 
-            $data = array(
-                'reservation_id' => $reservation_id,
-                'description' => $description,
-                'terminal' => "001",
-                'credit' => $service_charge_amount,
-                'price' => $service_charge_amount,
-                'qty' => 1,
-                'action' => 'sale',
-                'sub_folio' => $folio_room,
-                'account_number' => $service_charge_account_number,
-                'plu_group' => 1,
-                'plu' => 1,
-                'charge' => 'SC',
-                'pak' => '',
-                'reason' => $reason,
-                'signature_created' => $this->session->us_signature,
-                'date_created' => $now
-            );
+                //create array of values including acct_number & others to make a service charge entry in the folio
 
-            //if ID is not null perform update else insert
-            if ($existing_ID > 0) {
-                $this->db->where('ID', $existing_ID);
-                $this->db->update('reservationfolioitems', $data);
-            } else {
-                $this->db->insert('reservationfolioitems', $data);
-                $insert_id = $this->db->insert_id();
-            }
+                $data = array(
+                    'reservation_id' => $reservation_id,
+                    'description' => $description,
+                    'terminal' => "001",
+                    'credit' => $service_charge_amount,
+                    'price' => $service_charge_amount,
+                    'qty' => 1,
+                    'action' => 'sale',
+                    'sub_folio' => $folio_room,
+                    'account_number' => $service_charge_account_number,
+                    'plu_group' => 1,
+                    'plu' => 1,
+                    'charge' => 'SC',
+                    'pak' => '',
+                    'reason' => $reason,
+                    'signature_created' => $this->session->us_signature,
+                    'date_created' => $now
+                );
 
-            //return response
-            $res['response'] = "success";
-            $res['message'] = "Service Charge Successful";
+                //if ID is not null perform update else insert
+                if ($existing_ID > 0) {
+                    $this->db->where('ID', $existing_ID);
+                    $this->db->update('reservationfolioitems', $data);
+                } else {
+                    $this->db->insert('reservationfolioitems', $data);
+                    $insert_id = $this->db->insert_id();
+                }
+
+                //return response
+                $res['response'] = "success";
+                $res['message'] = "Service Charge Successful";
+            // }
         }
 
         return json_encode($res);
